@@ -76,3 +76,31 @@ Dockerfile, package.json, package-lock.json
 ## 9. 열린 것
 
 실제 release-gate와의 연동 시험은 하지 못했다(모의 서버만). 게이트웨이 경로는 CR-002(헤드가 deploy에 전달). CR-001은 D69로 답을 받아 반영했다.
+
+## 10. 작업 단위 2: 실패 사례 검토 화면 (I7 FailureStore)
+
+확인한 것: `HTTP.md` I7 표(`get_case`, `list_cases`, `get_trace`, 검토 게시 `POST /v1/cases/{id}/review`), `FailureCase` 스키마, `INTERFACES.md` I7(비식별 trace만 있음), 문진 스키마 `CONTRACT_VERSION=1`의 `UtteranceParserInput`, `ResponseGeneratorInput`, `ParserOutput`, `GeneratorOutput`. ops-feedback 리포지토리는 읽지 않았다.
+
+**메뉴.** 같은 앱 안에서 `출고 승인`(`#/`, `#/s/{id}`)과 `실패 사례 검토`(`#/cases`, `#/cases/{id}`)를 전환한다.
+
+**흐름.** 목록(기본 `review_status=PENDING`, 최신 버전만, 상태 필터) → 사례 열기 → 검토 기록.
+- 사례 화면: 실패 유형, 탐지 방법, 출처 릴리스, 계약 버전, 문항 세트, 현재 버전, 이전 버전(`?version=`) 보기. 비식별 trace(`GET /v1/deidentified-traces/{ref}`)에서 구조 정보(turn_index, 파서 항목 수·의도, 판정 출력 키, 생성기 동작, 대체 출력 여부)를 뽑아 보이고 `parser_input`·`parser_output`·`judge_output`·`generator_input`·`generator_output`은 펼쳐 볼 수 있다. 자유 문자열은 `[MASKED]`일 수 있다. TurnTrace 내부 구조는 확인한 범위(최상위 필드)만 쓰고, 모르는 구조는 건너뛴다.
+- 검토 결정: `CONFIRMED`(확정), `DISMISSED`(기각), `PENDING`(대기로 되돌림). DISMISSED/PENDING은 본문에 `review_status`만 보낸다.
+- CONFIRMED: 종류(`expected_kind` PARSER|GENERATOR)를 고르고, 고쳐 쓴 입력(`reviewed_input`)과 선택 정답(`expected`)을 JSON으로 쓴다. 입력이나 정답을 쓰면 종류가 필수다. "trace의 입력으로 채우기" 버튼은 마스킹된 값을 편집창에 넣어 줄 뿐이고 검토자가 고쳐 써야 한다(마스킹 그대로는 모의 서버가 거절).
+- **전송 전 스키마 검증**: 종류가 PARSER면 입력은 `UtteranceParserInput`, 정답은 `ParserOutput`, GENERATOR면 `ResponseGeneratorInput`, `GeneratorOutput`. 검증기는 `scripts/gen-schemas.mjs`가 `../survey-service/schema/schemas`를 읽어 Ajv standalone 코드로 만든다(`generated/survey-validators.cjs`). CSP가 eval을 막으므로 런타임 컴파일을 쓰지 않는다. 검증 실패는 오류 목록(경로와 규칙, 값은 싣지 않음)을 보이고 전송하지 않는다. 서버가 하는 "정답이 trace의 입력과 맞는지" 검사는 클라이언트가 할 수 없어 서버 응답(400)을 그대로 보인다.
+- 개인정보 경고 문구를 검토 폼 맨 위에 보인다. 입력 내용은 메모리에만 있고 저장소·콘솔에 남기지 않는다(위생 시험이 소스 검색).
+- 중복 클릭: 같은 사례+같은 본문은 요청이 끝나기 전에 한 번만 간다. 같은 검토를 다시 보내면 서버가 200으로 같은 결과(화면은 "이미 기록된 같은 검토"). 연결이 끊기면 같은 검토를 다시 보내도 안전하다고 안내한다.
+- 오류: 400 INVALID_RECORD는 서버 문구를 보이고 사례 화면에 남는다. 403은 reviewer 권한 없음 안내, 404, 503은 재시도 안내.
+
+**HTTP 대응.**
+
+| 화면 동작 | 호출 |
+| --- | --- |
+| 목록 | `GET /v1/cases?review_status=&latest_only=true` (필터에 `failure_type`, `source_release_id` 지원) |
+| 사례 | `GET /v1/cases/{id}?version=` |
+| trace | `GET /v1/deidentified-traces/{deidentified_trace_ref}` |
+| 검토 | `POST /v1/cases/{id}/review` 본문 `{review_status, expected?, expected_kind?, reviewed_input?}` → 201 새 버전 / 200 같은 검토 |
+
+**모의 서버(I7).** 사례: `fc-1`(PENDING, PARSER), `fc-2`(PENDING, GENERATOR), `fc-3`(PENDING, 종류 미정), `fc-403`(검토가 403), `fc-4`(v1 PENDING → v2 CONFIRMED), `fc-5`(v1 PENDING → v2 DISMISSED). 400은 형식 위반과 마스킹된 입력 그대로 보냈을 때, 403은 `fc-403`, 같은 검토 재전송은 200. 출력은 시험에서 `FailureCase`·`BoundaryError` 스키마로 검증한다.
+
+**생성물 정책(미정, CR-003).** 문진 스키마의 복사본은 두지 않고 생성 스크립트가 읽는다. 다만 이미지 빌드(CI)에는 `../survey-service`가 없으므로 생성물 `generated/survey-validators.cjs`(스키마를 내장한 코드)를 커밋하고, 시험이 원본과 일치하는지 검사한다(원본이 있을 때). 이 방식이 허용되는지 헤드가 정해야 한다.

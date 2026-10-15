@@ -4,7 +4,7 @@ import { buildGroups, sliceKinds, worseCount, type Cell, type MetricRow } from "
 import type { ReviewReport, SubmissionView } from "../api/types.ts";
 
 type Child = Node | string | null | undefined | false;
-function h(tag: string, attrs: Record<string, string | boolean | ((e: Event) => void)> = {}, ...kids: Child[]): HTMLElement {
+export function h(tag: string, attrs: Record<string, string | boolean | ((e: Event) => void)> = {}, ...kids: Child[]): HTMLElement {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (typeof v === "function") el.addEventListener(k.replace(/^on/, ""), v);

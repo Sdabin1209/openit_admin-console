@@ -7,13 +7,14 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY api ./api
 COPY app ./app
+COPY generated ./generated
 COPY scripts ./scripts
 RUN node scripts/build.mjs
 
 FROM node:24.14.0-alpine3.22
 ARG REVISION=unknown
 ARG BOUNDARY_CONTRACTS=v1.3.3
-ARG SURVEY_SCHEMA=n/a
+ARG SURVEY_SCHEMA=1
 LABEL io.openit.service="admin-console" \
       io.openit.revision="${REVISION}" \
       io.openit.contracts.boundary="${BOUNDARY_CONTRACTS}" \

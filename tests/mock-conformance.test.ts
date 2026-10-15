@@ -70,3 +70,18 @@ test("결정 응답과 오류가 스키마를 통과한다", async () => {
   const denied = await post({ ...base, submission_id: "sub-await-403", decision: "APPROVE" });
   assert.equal(denied.status, 403); check("BoundaryError", denied.body);
 });
+
+test("모의 FailureStore 출력이 FailureCase 스키마를 통과한다", async () => {
+  const list = await j("/v1/cases?latest_only=false");
+  assert.equal(list.status, 200);
+  assert.equal(list.body.items.length, 8);
+  for (const it of list.body.items) check("FailureCase", it);
+  const post = (b: unknown) => j("/v1/cases/fc-1/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+  const bad = await post({ review_status: "CONFIRMED", expected: { items: [] } });
+  assert.equal(bad.status, 400); check("BoundaryError", bad.body);
+  const ok = await post({ review_status: "CONFIRMED", expected_kind: "PARSER", expected: { items: [] }, reviewed_input: { utterance: "가상", last_directive: null, awaiting_questions: [], question_names: [], answered_slots: [], guide_list: [] } });
+  assert.equal(ok.status, 201); check("FailureCase", ok.body);
+  const denied = await j("/v1/cases/fc-403/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review_status: "DISMISSED" }) });
+  assert.equal(denied.status, 403); check("BoundaryError", denied.body);
+  assert.equal((await j("/v1/cases/zzz")).status, 404);
+});

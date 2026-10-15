@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["api", "app", "mock-server", "tests"]
+  "include": ["api", "app", "mock-server", "tests", "generated/*.d.cts"]
 }

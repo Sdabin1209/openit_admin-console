@@ -26,6 +26,7 @@ test("Dockerfile: non-root, 라벨, 잠금 파일 설치, 태그 고정", () => 
   for (const k of ["io.openit.service", "io.openit.revision", "io.openit.contracts.boundary", "io.openit.contracts.survey-schema", "io.openit.turn-engine", "io.openit.model-runtime"]) assert.ok(d.includes(k), k);
   assert.match(d, /npm ci/);
   assert.ok(!/:latest/.test(d));
+  assert.match(d, /COPY generated/);
   assert.ok(existsSync(new URL("../package-lock.json", import.meta.url)));
   assert.ok(!/(TOKEN|SECRET|PASSWORD)\s*=/.test(d));
 });

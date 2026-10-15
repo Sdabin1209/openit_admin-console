@@ -13,3 +13,9 @@ tr.worse { background: color-mix(in srgb, var(--bad) 12%, transparent); }
 button { font: inherit; padding: 4px 12px; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
 dialog { max-width: 520px; }
+nav a { margin-right: 16px; padding: 4px 0; }
+nav a[aria-current="page"] { font-weight: bold; border-bottom: 3px solid currentColor; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; }
+.facts dt { font-weight: bold; } .facts dd { margin: 0; }
+.notice.warn { border-left-color: #b26a00; }
+pre { overflow: auto; border: 1px solid var(--line); padding: 8px; max-height: 320px; }

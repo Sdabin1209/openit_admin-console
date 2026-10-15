@@ -72,3 +72,36 @@ export interface DecideRequest {
 
 /** 보고서와, 서버가 낸 그 보고서의 해시(X-Openit-Report-Hash). */
 export interface LoadedReport { report: ReviewReport; reportHash: string }
+
+// ---- I7 FailureStore (ops-feedback) ----
+export type ReviewStatus = "PENDING" | "CONFIRMED" | "DISMISSED";
+export type ExpectedKind = "PARSER" | "GENERATOR";
+
+export interface FailureCase {
+  pipeline_schema_version: string;
+  case_id: string;
+  version: number;
+  created_at: string;
+  source_release_id: string;
+  runtime_contract_version: number;
+  deidentified: true;
+  deidentified_trace_ref: string;
+  failure_type: string;
+  detection_method: string; // RULE | MODEL | HUMAN | FEEDBACK | 모르는 값
+  review_status: string; // ReviewStatus | 모르는 값
+  expected?: Record<string, unknown>;
+  expected_kind?: string;
+  reviewed_input?: Record<string, unknown>;
+  question_set?: ArtifactRef;
+  ext?: Record<string, unknown>;
+}
+
+export interface ReviewRequest {
+  review_status: ReviewStatus;
+  expected?: Record<string, unknown>;
+  expected_kind?: ExpectedKind;
+  reviewed_input?: Record<string, unknown>;
+}
+
+/** 비식별 TurnTrace. 구조만 읽고 모르는 필드는 그대로 둔다. */
+export type DeidentifiedTrace = Record<string, unknown>;

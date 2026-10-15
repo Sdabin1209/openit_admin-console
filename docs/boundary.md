@@ -6,3 +6,9 @@
 - 스키마 복사본은 없다. 시험이 `../boundary-contracts/schemas`를 읽어 모의 서버 출력을 검증한다.
 - 장애 영향: 이 콘솔이 죽어도 문진 서비스와 게이트의 자동 검사는 영향이 없다. 출고 승인만 막힌다(게이트 API로 직접 승인은 가능). 게이트가 죽으면 목록·보고서·결정이 UNAVAILABLE로 안내되고, 결정 전송 중 연결이 끊기면 같은 결정을 다시 보내도 안전하다(서버 멱등).
 - 변경 요청: `docs/change-requests/`의 CR-001(해결), CR-002.
+
+## 작업 단위 2: 실패 사례 검토 (I7, 소비)
+- 소비하는 계약: I7 FailureStore의 `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/deidentified-traces/{ref}`, `POST /v1/cases/{id}/review`(쓰기 역할 `reviewer`). 스키마 `FailureCase`와 문진 스키마(`CONTRACT_VERSION=1`) 입력·출력 4종(검증 전용).
+- 소유 저장소 없음. 입력 내용(reviewed_input, expected)은 메모리에만 두고 저장소·콘솔에 남기지 않는다.
+- 장애 영향: ops-feedback이 죽으면 이 메뉴만 UNAVAILABLE 안내가 뜬다. 출고 승인 화면에는 영향이 없다.
+- 변경 요청: CR-003.
