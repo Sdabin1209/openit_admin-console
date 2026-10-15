@@ -1,0 +1,15 @@
+:root { color-scheme: light dark; --bad: #b3261e; --line: #8886; }
+body { font-family: system-ui, "Noto Sans KR", sans-serif; margin: 0 auto; max-width: 1200px; padding: 0 16px 48px; line-height: 1.5; }
+.grid { border-collapse: collapse; width: 100%; margin: 8px 0 16px; }
+.grid th, .grid td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+.grid td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.uncomputable { font-style: italic; text-decoration: underline dotted; }
+td.none { opacity: .7; }
+tr.worse { background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.worse-mark { color: var(--bad); }
+.group.safety { border: 2px solid var(--line); padding: 0 12px; margin-bottom: 16px; }
+.muted { opacity: .75; }
+.notice { padding: 8px 12px; border: 1px solid var(--line); border-left: 6px solid var(--bad); }
+button { font: inherit; padding: 4px 12px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
+dialog { max-width: 520px; }
