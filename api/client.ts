@@ -1,9 +1,8 @@
 // 게이트(I5) HTTP 클라이언트. 같은 출처의 /v1을 부르고 Authorization은 다루지 않는다(게이트웨이가 붙인다).
-import { sha256Hash } from "./jcs.ts";
 import type { DecideRequest, GateApproval, LoadedReport, ReviewReport, SubmissionView } from "./types.ts";
 
 export type ErrorKind =
-  | "STALE_REPORT" | "NOT_FOUND" | "PERMISSION_DENIED" | "INVALID_RECORD" | "CONFLICT"
+  | "STALE_REPORT" | "ALREADY_DECIDED" | "NOT_FOUND" | "PERMISSION_DENIED" | "INVALID_RECORD" | "CONFLICT"
   | "FAILED_PRECONDITION" | "UNAVAILABLE" | "BAD_RESPONSE" | "UNKNOWN";
 
 export class ApiError extends Error {
@@ -27,19 +26,17 @@ const BY_STATUS: Record<number, ErrorKind> = {
   400: "INVALID_RECORD", 403: "PERMISSION_DENIED", 404: "NOT_FOUND", 409: "CONFLICT", 412: "FAILED_PRECONDITION", 503: "UNAVAILABLE",
 };
 
-/** STALE_REPORT가 BoundaryError 어디에 담기는지 계약에 없다(CR-001). code/details/message 어디든 있으면 낡은 보고서로 본다. */
-export function isStaleBody(body: unknown): boolean {
-  try {
-    return JSON.stringify(body).includes("STALE_REPORT");
-  } catch {
-    return false;
-  }
-}
+export const REPORT_HASH_HEADER = "X-Openit-Report-Hash";
 
 function toError(status: number, body: unknown): ApiError {
   const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
   const message = typeof b.message === "string" ? b.message : `HTTP ${status}`;
-  if (status === 409 && isStaleBody(body)) return new ApiError("STALE_REPORT", status, message);
+  if (status === 409) {
+    // 409의 사유는 details.reason으로만 구분한다(HTTP.md D69). 문자열 검색은 하지 않는다.
+    const reason = (b.details && typeof b.details === "object" ? (b.details as Record<string, unknown>).reason : undefined);
+    if (reason === "STALE_REPORT") return new ApiError("STALE_REPORT", status, message);
+    if (reason === "ALREADY_DECIDED") return new ApiError("ALREADY_DECIDED", status, message);
+  }
   const kind = (typeof b.code === "string" && BY_CODE[b.code]) || BY_STATUS[status] || (status >= 500 ? "UNAVAILABLE" : "UNKNOWN");
   const retryable = kind === "UNAVAILABLE" || status >= 500;
   return new ApiError(kind, status, message, retryable);
@@ -73,7 +70,7 @@ export class GateClient {
     this.fetchFn = opts.fetch ?? ((...a) => fetch(...a));
   }
 
-  private async json(method: string, path: string, body?: unknown): Promise<{ status: number; data: unknown }> {
+  private async json(method: string, path: string, body?: unknown): Promise<{ status: number; data: unknown; headers: Headers }> {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), this.timeoutMs);
     let res: Response;
@@ -98,7 +95,7 @@ export class GateClient {
       if (res.ok) throw new ApiError("BAD_RESPONSE", res.status, "응답이 JSON이 아니다");
     }
     if (!res.ok) throw toError(res.status, data);
-    return { status: res.status, data };
+    return { status: res.status, data, headers: res.headers };
   }
 
   async listAwaiting(cursor?: string, limit = 100): Promise<{ items: SubmissionView[]; nextCursor: string | null }> {
@@ -115,11 +112,13 @@ export class GateClient {
     return checkSubmission(data);
   }
 
-  /** 보고서를 받아 그 JSON 그대로 해시한다. 화면이 보여 주는 것과 해시 대상이 같다. */
+  /** 보고서와 서버가 낸 해시(응답 헤더). 해시는 계산하지 않고 그대로 돌려보낸다. */
   async getReviewReport(id: string): Promise<LoadedReport> {
-    const { data } = await this.json("GET", `/v1/submissions/${encodeURIComponent(id)}/review-report`);
+    const { data, headers } = await this.json("GET", `/v1/submissions/${encodeURIComponent(id)}/review-report`);
     const report = checkReport(data);
-    return { report, reportHash: sha256Hash(data) };
+    const reportHash = headers.get(REPORT_HASH_HEADER);
+    need(!!reportHash && /^sha256:[0-9a-f]{64}$/.test(reportHash), `${REPORT_HASH_HEADER} 헤더`);
+    return { report, reportHash: reportHash! };
   }
 
   async decide(req: DecideRequest): Promise<{ approval: GateApproval; replay: boolean }> {

@@ -106,8 +106,3 @@ export function sliceKinds(report: ReviewReport): string[] {
 export function worseCount(report: ReviewReport): number {
   return report.comparisons.map(toRow).filter((r) => r.worse).length;
 }
-
-const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-export function validApproverId(s: string): boolean {
-  return ID_RE.test(s);
-}

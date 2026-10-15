@@ -37,9 +37,8 @@ test("승인 버튼 → 확인창 → 확정 → 완료, 확정 버튼은 전송
     const c = s.ctl();
     c.subscribe(() => render(root, c));
     await c.openReport("sub-await-slow");
-    const approver = q<HTMLInputElement>("#approver")!;
-    approver.value = "trainer-1";
-    approver.dispatchEvent(new dom.window.Event("input"));
+    assert.equal(q("#approver"), null, "승인자 ID 입력창이 없다");
+    assert.ok(q("#approver-note")!.textContent!.includes("게이트웨이가 인증한 사용자로 기록됨"));
     q("#approve")!.click();
     assert.ok(q("#confirm"), "확인창");
     assert.equal(s.mock.postCount(), 0);
@@ -60,7 +59,6 @@ test("반려 사유가 없으면 확인창이 열리지 않고 경고가 보인�
     const c = s.ctl();
     c.subscribe(() => render(root, c));
     await c.openReport("sub-await");
-    c.setDraft({ approverId: "trainer-1" });
     q("#reject")!.click();
     await tick();
     assert.equal(q("#confirm"), null);

@@ -1,5 +1,7 @@
 # CR-001: 승인자 식별, report_hash 계산 주체, STALE_REPORT 표현
 
+**상태: 해결(D69).** 헤드 회신: 해시는 서버 헤더 `X-Openit-Report-Hash`를 그대로 돌려보냄, 409 사유는 `details.reason`(STALE_REPORT|ALREADY_DECIDED), 승인자는 게이트웨이의 `X-Openit-User`. 아래는 원래 요청 기록이다. 브라우저의 해시 구현은 삭제했다.
+
 - 요청 영역: admin-console, 대상: 헤드(boundary-contracts 소유), 영향: release-gate, deploy
 - 근거: `HTTP.md` I5 decide 행, `CONVENTIONS.md` 2절, `ReviewReport`/`GateApproval`/`BoundaryError` 스키마(v1.3.3)를 읽고 확인한 결과.
 

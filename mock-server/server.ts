@@ -2,11 +2,18 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
-import { sha256Hash } from "../api/jcs.ts";
+import { createHash } from "node:crypto";
 import type { GateApproval } from "../api/types.ts";
 import { baseReport, initialScenarios, type Scenario } from "./scenarios.ts";
 
-export interface MockOptions { staticDir?: string; slowMs?: number }
+// 모의 서버 전용 해시. 클라이언트는 이 값을 계산하지 않고 헤더로 받아 돌려보낸다.
+function sha256Hash(v: unknown): string {
+  const canon = (x: unknown): string => Array.isArray(x) ? `[${x.map(canon).join(",")}]`
+    : x && typeof x === "object" ? `{${Object.keys(x).sort().map((k) => JSON.stringify(k) + ":" + canon((x as Record<string, unknown>)[k])).join(",")}}` : JSON.stringify(x);
+  return "sha256:" + createHash("sha256").update(canon(v)).digest("hex");
+}
+
+export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string }
 export interface MockHandle { server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; currentHash: (id: string) => string | null }
 
 const V = "1.3";
@@ -44,6 +51,9 @@ export function createMock(opts: MockOptions = {}): MockHandle {
     const allowed = new Set(["submission_id", "decision", "reason", "approver_id", "approver_role", "report_hash", "pipeline_schema_version", "ext"]);
     const bad = Object.keys(b).filter((k) => !allowed.has(k));
     if (bad.length) return err(res, 400, "INVALID_RECORD", `모르는 필드: ${bad.join(",")}`);
+    const hdr = req.headers["x-openit-user"];
+    const user = typeof hdr === "string" && hdr ? hdr : opts.gatewayUser; // 게이트웨이가 붙인 헤더(없으면 모의가 흉내)
+    if (user) b.approver_id = user; // 헤더가 있으면 본문 값은 무시
     for (const k of ["submission_id", "decision", "approver_id", "approver_role"]) {
       if (typeof b[k] !== "string" || !b[k]) return err(res, 400, "INVALID_RECORD", `${k} 필수`);
     }
@@ -56,15 +66,14 @@ export function createMock(opts: MockOptions = {}): MockHandle {
     const prior = approvals.find((a) => a.submission_id === s.view.submission_id);
     if (prior) {
       if (prior.decision === b.decision) return send(res, 200, prior);
-      return err(res, 409, "CONFLICT", "같은 제출에 다른 결정이 이미 있다");
+      return err(res, 409, "CONFLICT", "같은 제출에 다른 결정이 이미 있다", { reason: "ALREADY_DECIDED" });
     }
     if (s.view.status !== "AWAITING_APPROVAL") return err(res, 412, "FAILED_PRECONDITION", `승인 대기 상태가 아니다: ${s.view.status}`);
     if (s.behavior === "slow") await new Promise((r) => setTimeout(r, opts.slowMs ?? 300));
     if (s.behavior === "stale" && s.reportVersion === 1) s.reportVersion = 2; // 승인자가 보는 사이 보고서가 바뀐 것을 흉내
     const current = sha256Hash(reportOf(s));
     if (b.report_hash !== undefined && b.report_hash !== current) {
-      // STALE_REPORT를 BoundaryError 어디에 담는지 계약에 없다(CR-001). 모의는 message와 details 둘 다에 둔다.
-      return err(res, 409, "CONFLICT", "STALE_REPORT: 보고서가 바뀌었다", { reason: "STALE_REPORT" });
+      return err(res, 409, "CONFLICT", "보고서가 바뀌었다", { reason: "STALE_REPORT" });
     }
     const n = approvals.length + 1;
     const a: GateApproval = {
@@ -98,8 +107,11 @@ export function createMock(opts: MockOptions = {}): MockHandle {
         if (!s) return err(res, 404, "NOT_FOUND", "제출이 없다");
         if (!m[2]) return send(res, 200, s.view);
         if (!s.hasReport) return err(res, 409, "CONFLICT", "자동 검사가 끝나지 않았다");
-        return send(res, 200, reportOf(s));
+        const rep = reportOf(s);
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Openit-Report-Hash": sha256Hash(rep) });
+        return res.end(JSON.stringify(rep));
       }
+      if (p === "/config.json") return send(res, 200, { dev_approver_id: opts.devApproverId ?? null });
       if (req.method === "POST" && p === "/v1/approvals") return await decide(req, res);
       if (req.method === "GET" && opts.staticDir && !p.startsWith("/v1")) {
         const rel = normalize(p === "/" ? "/index.html" : p).replace(/^(\.\.[/\\])+/, "");

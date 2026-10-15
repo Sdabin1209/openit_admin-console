@@ -1,7 +1,7 @@
 // 화면 상태 기계. DOM 없음. 중복 요청은 한 번만 보낸다.
 import { ApiError, type GateClient } from "../api/client.ts";
 import type { Decision, GateApproval, LoadedReport, SubmissionView } from "../api/types.ts";
-import { validApproverId, type SortKey } from "./model.ts";
+import type { SortKey } from "./model.ts";
 
 export const APPROVER_ROLE = "release-approver";
 
@@ -15,7 +15,7 @@ export interface State {
   loaded: LoadedReport | null;
   /** 결정 전에 승인자가 본 보고서의 해시. confirming/submitting 동안 고정된다. */
   pending: { decision: Decision; reason?: string; reportHash: string } | null;
-  draft: { approverId: string; reason: string };
+  draft: { reason: string };
   notice: { kind: "stale" | "conflict" | "denied" | "retry" | "invalid"; text: string } | null;
   result: { approval: GateApproval; replay: boolean } | null;
   error: string | null;
@@ -26,13 +26,16 @@ export interface State {
 export class Controller {
   state: State = {
     phase: "list-loading", items: [], nextCursor: null, submissionId: null, loaded: null, pending: null,
-    draft: { approverId: "", reason: "" }, notice: null, result: null, error: null, sliceKind: "ALL_KINDS", sort: "default",
+    draft: { reason: "" }, notice: null, result: null, error: null, sliceKind: "ALL_KINDS", sort: "default",
   };
   private listeners = new Set<() => void>();
   private inflight = new Set<string>();
   private readonly api: GateClient;
-  constructor(api: GateClient) {
+  /** 개발 모드 설정(ADMIN_DEV_APPROVER_ID). 있을 때만 본문에 approver_id를 보낸다. */
+  readonly devApproverId: string | null;
+  constructor(api: GateClient, devApproverId: string | null = null) {
     this.api = api;
+    this.devApproverId = devApproverId;
   }
 
   subscribe(fn: () => void): () => void {
@@ -101,11 +104,7 @@ export class Controller {
   requestDecision(decision: Decision): void {
     const s = this.state;
     if (s.phase !== "report" || !s.loaded) return;
-    const approverId = s.draft.approverId.trim();
     const reason = s.draft.reason.trim();
-    if (!validApproverId(approverId)) {
-      return this.set({ notice: { kind: "invalid", text: "승인자 ID를 영문자·숫자·._:- 로 입력하라(128자 이내)." } });
-    }
     if (decision === "REJECT" && !reason) {
       return this.set({ notice: { kind: "invalid", text: "반려에는 사유가 필수다." } });
     }
@@ -132,7 +131,7 @@ export class Controller {
       const result = await this.api.decide({
         submission_id: s.submissionId,
         decision: p.decision,
-        approver_id: s.draft.approverId.trim(),
+        ...(this.devApproverId ? { approver_id: this.devApproverId } : {}),
         approver_role: APPROVER_ROLE,
         ...(p.reason ? { reason: p.reason } : {}),
         report_hash: p.reportHash,
@@ -150,7 +149,7 @@ export class Controller {
       // 보고서가 바뀌었다. 새로 불러오고, 승인자가 다시 읽고 다시 결정하게 한다(자동 재전송 없음).
       return this.openReport(id, { kind: "stale", text: "그 사이 보고서가 바뀌었다. 새 보고서를 불러왔으니 다시 읽고 결정하라." });
     }
-    if (e instanceof ApiError && e.kind === "CONFLICT") {
+    if (e instanceof ApiError && (e.kind === "ALREADY_DECIDED" || e.kind === "CONFLICT")) {
       return this.set({ phase: "report", pending: null, notice: { kind: "conflict", text: "이 제출에는 이미 다른 결정이 기록되어 있다. 목록을 새로 불러와 확인하라." } });
     }
     if (e instanceof ApiError && e.kind === "PERMISSION_DENIED") {

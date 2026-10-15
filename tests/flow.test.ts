@@ -2,11 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ApiError } from "../api/client.ts";
-import { sha256Hash } from "../api/jcs.ts";
 import { buildGroups } from "../app/model.ts";
 import { startMock } from "./helpers.ts";
 
-const draft = (c: ReturnType<Awaited<ReturnType<typeof startMock>>["ctl"]>, id = "trainer-1", reason = "") => c.setDraft({ approverId: id, reason });
+const draft = (c: ReturnType<Awaited<ReturnType<typeof startMock>>["ctl"]>, _unused = "", reason = "") => c.setDraft({ reason });
 
 test("목록은 승인 대기만 보인다", async () => {
   const s = await startMock();
@@ -49,7 +48,7 @@ test("승인: 확인창을 거치고 report_hash를 동봉한다", async () => {
     const c = s.ctl();
     await c.openReport("sub-await");
     const seen = c.state.loaded!.reportHash;
-    assert.equal(seen, s.mock.currentHash("sub-await")); // 받은 JSON의 해시 = 서버가 계산한 해시
+    assert.equal(seen, s.mock.currentHash("sub-await")); // 서버가 헤더로 낸 해시를 그대로 쓴다
     draft(c);
     c.requestDecision("APPROVE");
     assert.equal(c.state.phase, "confirming");
@@ -59,6 +58,7 @@ test("승인: 확인창을 거치고 report_hash를 동봉한다", async () => {
     assert.equal(s.mock.approvals.length, 1);
     assert.equal(s.mock.approvals[0].report_hash, seen);
     assert.equal(s.mock.approvals[0].approver_role, "release-approver");
+    assert.equal(s.mock.approvals[0].approver_id, "gw-user-1", "승인자는 게이트웨이 헤더 값");
   } finally { await s.close(); }
 });
 
@@ -73,7 +73,7 @@ test("확인창에서 취소하면 전송하지 않는다", async () => {
   } finally { await s.close(); }
 });
 
-test("반려는 사유가 필수이고 승인자 ID 형식을 검사한다", async () => {
+test("반려는 사유가 필수다", async () => {
   const s = await startMock();
   try {
     const c = s.ctl();
@@ -82,9 +82,6 @@ test("반려는 사유가 필수이고 승인자 ID 형식을 검사한다", asy
     c.requestDecision("REJECT");
     assert.equal(c.state.phase, "report");
     assert.equal(c.state.notice?.kind, "invalid");
-    draft(c, "나쁜 id", "사유");
-    c.requestDecision("REJECT");
-    assert.equal(c.state.phase, "report");
     draft(c, "trainer-1", "안전 지표 악화");
     c.requestDecision("REJECT");
     assert.equal(c.state.phase, "confirming");
@@ -179,10 +176,47 @@ test("연결 실패는 UNAVAILABLE이고 재시도 안내를 낸다", async () =
   assert.equal(c.state.phase, "report");
 });
 
-test("해시는 받은 JSON 전체(ext 포함)에서 계산한다", async () => {
+test("해시는 계산하지 않고 응답 헤더 값을 그대로 쓴다", async () => {
   const s = await startMock();
   try {
-    const raw = await (await fetch(`${s.base}/v1/submissions/sub-await/review-report`)).json();
-    assert.equal((await s.client.getReviewReport("sub-await")).reportHash, sha256Hash(raw));
+    const r = await fetch(`${s.base}/v1/submissions/sub-await/review-report`);
+    assert.equal((await s.client.getReviewReport("sub-await")).reportHash, r.headers.get("X-Openit-Report-Hash"));
   } finally { await s.close(); }
+});
+
+test("헤더가 없는 보고서 응답은 거부한다", async () => {
+  const { GateClient } = await import("../api/client.ts");
+  const fake = (async () => new Response(JSON.stringify({ submission_id: "x", checks: [], comparisons: [], subject: {} }), { status: 200, headers: { "Content-Type": "application/json" } })) as typeof fetch;
+  await assert.rejects(new GateClient({ fetch: fake }).getReviewReport("x"), (e: unknown) => e instanceof ApiError && e.kind === "BAD_RESPONSE");
+});
+
+test("409 사유는 details.reason으로만 구분한다(문자열 검색 없음)", async () => {
+  const { GateClient } = await import("../api/client.ts");
+  const mk = (body: unknown) => new GateClient({ fetch: (async () => new Response(JSON.stringify(body), { status: 409 })) as typeof fetch });
+  const req = { submission_id: "x", decision: "APPROVE" as const, approver_role: "release-approver", report_hash: "sha256:" + "0".repeat(64) };
+  const e1 = await mk({ code: "CONFLICT", message: "STALE_REPORT 라고 적혀 있어도", retryable: false }).decide(req).catch((e) => e);
+  assert.equal(e1.kind, "CONFLICT");
+  const e2 = await mk({ code: "CONFLICT", message: "m", retryable: false, details: { reason: "STALE_REPORT" } }).decide(req).catch((e) => e);
+  assert.equal(e2.kind, "STALE_REPORT");
+});
+
+test("개발 모드: 설정 값이 있을 때만 본문에 approver_id를 보낸다", async () => {
+  const dev = await startMock(10, { dev: "dev-trainer" });
+  try {
+    const c = dev.ctl();
+    await c.openReport("sub-await");
+    c.requestDecision("APPROVE");
+    await c.confirm();
+    assert.equal(c.state.phase, "done");
+    assert.equal(dev.mock.approvals[0].approver_id, "dev-trainer");
+  } finally { await dev.close(); }
+  // 설정도 헤더도 없으면 서버가 거절한다
+  const none = await startMock(10, { dev: undefined as unknown as string });
+  try {
+    const c = none.ctl();
+    await c.openReport("sub-await");
+    c.requestDecision("APPROVE");
+    await c.confirm();
+    assert.equal(c.state.phase, "error");
+  } finally { await none.close(); }
 });

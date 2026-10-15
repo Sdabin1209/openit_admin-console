@@ -86,8 +86,7 @@ function reportView(st: State, c: Controller, rep: ReviewReport): HTMLElement {
 function decisionForm(st: State, c: Controller, busy: boolean): HTMLElement {
   return h("form", { class: "decision", onsubmit: (e) => e.preventDefault() },
     h("h3", {}, "결정"),
-    h("p", {}, h("label", { for: "approver" }, "승인자 ID "),
-      h("input", { id: "approver", type: "text", value: st.draft.approverId, autocomplete: "off", maxlength: "128", oninput: (e) => c.setDraft({ approverId: (e.target as HTMLInputElement).value }) })),
+    h("p", { id: "approver-note", class: "muted" }, c.devApproverId ? `개발 모드: 승인자 ${c.devApproverId}로 기록됨` : "게이트웨이가 인증한 사용자로 기록됨"),
     h("p", {}, h("label", { for: "reason" }, "반려 사유 (반려할 때 필수) "), h("br"),
       h("textarea", { id: "reason", rows: "3", cols: "60", oninput: (e) => c.setDraft({ reason: (e.target as HTMLTextAreaElement).value }) }, st.draft.reason)),
     h("p", {},
@@ -104,7 +103,7 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
     h("p", {}, `제출 ${st.submissionId}`),
     h("p", {}, `보고서 해시 ${p.reportHash.slice(0, 19)}… (화면에 보이는 보고서)`),
     p.reason && h("p", {}, `사유: ${p.reason}`),
-    h("p", {}, `승인자 ${st.draft.approverId.trim()}`),
+    h("p", {}, c.devApproverId ? `승인자 ${c.devApproverId} (개발 모드)` : "승인자: 게이트웨이가 인증한 사용자"),
     h("p", { class: "muted" }, "확정하면 이 결정이 기록되고 되돌릴 수 없다."),
     h("p", {},
       h("button", { type: "button", id: "confirm-yes", disabled: sending, onclick: () => void c.confirm() }, sending ? "전송 중…" : approve ? "승인 확정" : "반려 확정"), " ",

@@ -63,11 +63,12 @@ export interface GateApproval {
 export interface DecideRequest {
   submission_id: string;
   decision: Decision;
-  approver_id: string;
+  /** 게이트웨이가 X-Openit-User를 붙이면 서버가 무시한다. 개발 모드 설정이 있을 때만 보낸다. */
+  approver_id?: string;
   approver_role: string;
   reason?: string;
   report_hash: string;
 }
 
-/** 보고서와, 승인자가 본 그 보고서의 해시(받은 JSON 그대로 계산). */
+/** 보고서와, 서버가 낸 그 보고서의 해시(X-Openit-Report-Hash). */
 export interface LoadedReport { report: ReviewReport; reportHash: string }

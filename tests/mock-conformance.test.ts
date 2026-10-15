@@ -5,7 +5,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { baseReport } from "../mock-server/scenarios.ts";
-import { sha256Hash } from "../api/jcs.ts";
 import { startMock } from "./helpers.ts";
 
 const dir = new URL("../../boundary-contracts/schemas/", import.meta.url);
@@ -50,7 +49,9 @@ test("보고서(v1, v2)와 목록과 제출 조회가 스키마를 통과한다"
 
 test("결정 응답과 오류가 스키마를 통과한다", async () => {
   const post = (b: unknown) => j("/v1/approvals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
-  const hash = sha256Hash((await j("/v1/submissions/sub-await/review-report")).body);
+  const rr = await fetch(s.base + "/v1/submissions/sub-await/review-report");
+  const hash = rr.headers.get("X-Openit-Report-Hash")!;
+  assert.match(hash, /^sha256:[0-9a-f]{64}$/);
   const base = { submission_id: "sub-await", approver_id: "t1", approver_role: "release-approver" };
   const rej = await post({ ...base, decision: "REJECT", report_hash: hash });
   assert.equal(rej.status, 400); check("BoundaryError", rej.body);
@@ -60,10 +61,12 @@ test("결정 응답과 오류가 스키마를 통과한다", async () => {
   assert.equal(again.status, 200);
   const other = await post({ ...base, decision: "REJECT", reason: "x", report_hash: hash });
   assert.equal(other.status, 409); check("BoundaryError", other.body);
+  assert.equal(other.body.details.reason, "ALREADY_DECIDED");
   const view = await j("/v1/submissions/sub-await");
   assert.equal(view.body.status, "PASSED"); check("SubmissionView", view.body);
   const stale = await post({ ...base, submission_id: "sub-await-stale", decision: "APPROVE", report_hash: hash });
   assert.equal(stale.status, 409); check("BoundaryError", stale.body);
+  assert.equal(stale.body.details.reason, "STALE_REPORT");
   const denied = await post({ ...base, submission_id: "sub-await-403", decision: "APPROVE" });
   assert.equal(denied.status, 403); check("BoundaryError", denied.body);
 });
