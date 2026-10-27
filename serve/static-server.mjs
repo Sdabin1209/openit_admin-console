@@ -7,6 +7,7 @@ import { extname, join, normalize, resolve } from "node:path";
 const root = resolve(process.env.STATIC_DIR ?? "dist");
 const port = Number(process.env.PORT ?? 8080);
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8" };
+// 왜: no-store는 보고서·사례 내용을 캐시에 남기지 않으려는 것, CSP는 인라인/외부 스크립트 차단(docs/adr/0006).
 const HEADERS = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",

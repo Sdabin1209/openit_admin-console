@@ -18,7 +18,7 @@ export async function startMock(slowMs = 150, opts: { gatewayUser?: string; dev?
 }
 
 /** 조건 대기: 시간은 실패 상한일 뿐 통과 조건이 아니다. 조건이 참이 되는 즉시 돌아온다. */
-export async function waitFor(cond: () => unknown, what = "조건", limitMs = 15000): Promise<void> {
+export async function waitFor(cond: () => unknown, what = "조건", limitMs = 15000 /* 부하에서도 실패하지 않을 넉넉한 상한, 측정 안 함(docs/adr/0010) */): Promise<void> {
   const end = Date.now() + limitMs;
   for (;;) {
     let ok = false;

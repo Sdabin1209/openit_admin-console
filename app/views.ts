@@ -69,7 +69,7 @@ function reportView(st: State, c: Controller, rep: ReviewReport): HTMLElement {
   return h("section", {},
     h("p", {}, h("a", { href: "#/" }, "← 목록")),
     h("h2", {}, `승인 요청 보고서 ${rep.submission_id}`),
-    h("p", { class: "muted" }, `생성 ${fmtTime(rep.generated_at)} · 현재 활성 릴리스 ${rep.active_release_id ?? "없음"} · 보고서 해시 ${st.loaded!.reportHash.slice(0, 19)}…`),
+    h("p", { class: "muted" }, `생성 ${fmtTime(rep.generated_at)} · 현재 활성 릴리스 ${rep.active_release_id ?? "없음"} · 보고서 해시 ${st.loaded!.reportHash.slice(0, 19)}…` /* 19 = 'sha256:'+12자, 눈 대조용 앞부분(docs/adr/0010). 전송 값은 전체 */),
     st.notice && h("p", { class: `notice ${st.notice.kind}`, role: "alert" }, st.notice.text),
     h("p", { class: "muted" }, "이 화면은 합격·불합격을 판단하지 않는다. 임계치가 없고 '나빠짐'은 활성 릴리스와 비교한 참고 표시다. 판단은 승인자가 한다."),
     h("p", {}, `지표 ${rep.comparisons.length}개 중 나빠짐 표시 ${worseCount(rep)}개`),

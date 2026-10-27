@@ -54,6 +54,7 @@ export class Http {
   private readonly timers: Timers;
   constructor(opts: HttpOptions = {}) {
     this.base = (opts.baseUrl ?? "").replace(/\/$/, "");
+    // 15000ms: 값의 근거 기록 없음(측정 안 함). docs/adr/0010. 본문을 다 읽을 때까지 적용한다.
     this.timeoutMs = opts.timeoutMs ?? 15000;
     this.fetchFn = opts.fetch ?? ((...a) => fetch(...a));
     this.timers = opts.timers ?? { set: (fn, ms) => setTimeout(fn, ms), clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };

@@ -30,7 +30,7 @@ export class GateClient {
     return this.http.json(method, path, body);
   }
 
-  async listAwaiting(cursor?: string, limit = 100): Promise<{ items: SubmissionView[]; nextCursor: string | null }> {
+  async listAwaiting(cursor?: string, limit = 100 /* 쪽 크기: 근거 기록 없음, docs/adr/0010 */): Promise<{ items: SubmissionView[]; nextCursor: string | null }> {
     const q = new URLSearchParams({ status: "AWAITING_APPROVAL", limit: String(limit) });
     if (cursor) q.set("cursor", cursor);
     const { data } = await this.json("GET", `/v1/submissions?${q}`);

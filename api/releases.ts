@@ -43,6 +43,7 @@ export class ReleasesClient {
     const out: ReleaseSummary[] = [];
     let cursor: string | null = null;
     for (let i = 0; i < 20; i++) {
+      // 쪽 크기 500, 최대 20쪽: 근거 기록 없음(릴리스 수 측정 안 함), docs/adr/0010. 20쪽을 넘으면 오래된 릴리스가 빠진다.
       const q = new URLSearchParams({ limit: "500" });
       if (cursor) q.set("cursor", cursor);
       const { data } = await this.http.json("GET", `/v1/releases?${q}`);

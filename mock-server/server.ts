@@ -80,7 +80,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       return err(res, 409, "CONFLICT", "같은 제출에 다른 결정이 이미 있다", { reason: "ALREADY_DECIDED" });
     }
     if (s.view.status !== "AWAITING_APPROVAL") return err(res, 412, "FAILED_PRECONDITION", `승인 대기 상태가 아니다: ${s.view.status}`);
-    if (s.behavior === "slow") await new Promise((r) => setTimeout(r, opts.slowMs ?? 300));
+    if (s.behavior === "slow") await new Promise((r) => setTimeout(r, opts.slowMs ?? 300 /* 모의 지연 시나리오용 임의 값, 근거 없음(시험은 조건 대기) */));
     if (s.behavior === "stale" && s.reportVersion === 1) s.reportVersion = 2; // 승인자가 보는 사이 보고서가 바뀐 것을 흉내
     const current = sha256Hash(reportOf(s));
     if (b.report_hash !== undefined && b.report_hash !== current) {
