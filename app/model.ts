@@ -56,7 +56,7 @@ export function toRow(c: Comparison, index: number): MetricRow {
     key: `${index}`,
     role: c.role,
     name: c.name,
-    group: GROUP_ORDER.includes(c.group) ? c.group : "OTHER",
+    group: c.group || "OTHER", // 모르는 그룹 이름도 그대로 둔다(아래 buildGroups가 기타 뒤에 보인다)
     sliceKind: slice.kind,
     sliceLabel: slice.kind === "ALL" ? "전체" : `${slice.kind}: ${slice.value}`,
     candidate,
@@ -87,14 +87,16 @@ function cmpNum(a: number | null, b: number | null): number {
 export function buildGroups(report: ReviewReport, opts: ViewOptions): MetricGroup[] {
   const rows = report.comparisons.map(toRow).filter((r) => opts.sliceKind === "ALL_KINDS" || r.sliceKind === opts.sliceKind);
   const groups: MetricGroup[] = [];
-  for (const g of GROUP_ORDER) {
+  const unknown = [...new Set(rows.map((r) => r.group))].filter((g) => !GROUP_ORDER.includes(g));
+  for (const g of [...GROUP_ORDER, ...unknown]) {
     const gr = rows.filter((r) => r.group === g);
     if (!gr.length) continue;
+    gr.sort((a, b) => a.role.localeCompare(b.role)); // A/B를 나란히 묶는다(안정 정렬이라 보고서 순서는 역할 안에서 유지)
     if (opts.sort === "name") gr.sort((a, b) => a.name.localeCompare(b.name) || a.role.localeCompare(b.role));
     else if (opts.sort === "candidate") gr.sort((a, b) => cmpNum(a.sortCandidate, b.sortCandidate));
     else if (opts.sort === "delta") gr.sort((a, b) => cmpNum(a.sortDelta, b.sortDelta));
     else if (opts.sort === "worse") gr.sort((a, b) => Number(b.worse) - Number(a.worse));
-    groups.push({ group: g, label: GROUP_LABEL[g], rows: gr });
+    groups.push({ group: g, label: GROUP_LABEL[g] ?? `${g} (새 그룹)`, rows: gr });
   }
   return groups;
 }

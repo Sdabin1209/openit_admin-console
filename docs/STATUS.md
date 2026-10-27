@@ -24,3 +24,9 @@
 - 한 일: `scripts/gen-schemas.mjs`가 `../boundary-contracts/schemas`(ActionExtractionInput, ActionExtraction, ResponseRequest, ResponseText)를 읽도록 바꾸고 `generated/contract-validators.cjs`(이름 변경)를 재생성. `expected_kind` LORA_A/LORA_B, LORA_B의 정답은 문자열(화면은 문장 그대로 입력). 알 수 없는 kind는 '알 수 없음' 표시. trace 구조 정보를 v2 TurnTrace 필드(extract_*, response_*)로 교체. 모의 서버 v2 모양과 pipeline_schema_version 2.0. Dockerfile ARG v2.0.2. 문서(boundary, design, README), `docs/runbook.md`.
 - 남은 일: 실제 ops-feedback v2 서버와 연동 시험, 실제 브라우저 확인, CI digest(D24). 게이트 쪽 `ReviewReport` 화면이 v2 지표(LORA_A/LORA_B)를 읽는지는 모의 기준으로만 확인했다.
 - 막힌 것: CR-003(생성물 커밋 정책) 헤드 결정 대기.
+
+## 작업 단위 4 (v2 ReviewReport 화면 확인)
+- 확인한 것: 화면(`app/model.ts`, `app/views.ts`)은 지표 이름·분리 기준(slice kind)을 해석하지 않고 `comparisons[]`의 값을 그대로 그린다. 그래서 v2 지표 이름(`action_accuracy` 등)과 `ACTION`·`REASON` 같은 새 분리 기준은 코드 변경 없이 보인다. 계약 `METRICS.md`는 아직 v1 이름이고 v2 이름은 `head/docs/metrics-v2-proposal.md`의 제안이다(미확정).
+- 고친 곳: (1) 모르는 `group`이 모두 '기타'로 합쳐져 이름이 사라지던 것을 이름을 지킨 채 맨 뒤에 '(새 그룹)'으로 보이게 했다. (2) 같은 그룹 안에서 LORA_A 행이 LORA_B보다 먼저 오게 하고 역할 칸을 'LORA_A (추출)'/'LORA_B (응답)'로 표시, 행에 `data-role`을 붙였다. (3) 모의 서버 보고서에 v2 지표 행(ACTION 분리 기준, 기준 없음 포함)을 더하고 시험용 `setReport`를 추가했다.
+- 시험: `tests/v2-report-ui.test.ts`(jsdom DOM 단언: 이름·값·기준값·차이·A/B·모르는 이름/그룹/분리 기준·SAFETY 없는 보고서·활성 릴리스 없음·공식 예시). 브라우저 시험은 아니다.
+- 남은 일: 실제 release-gate가 내는 v2 보고서로 확인, 실제 브라우저 확인. SAFETY 구성이 바뀌면(제안서 2절) 화면의 '안전 그룹 맨 위' 규칙은 SAFETY 지표가 없을 때 그냥 빠진다.

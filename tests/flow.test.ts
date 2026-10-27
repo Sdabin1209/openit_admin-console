@@ -23,7 +23,7 @@ test("보고서 모델: SAFETY가 맨 위, n=0은 계산 못 함, 값을 보이�
     const { report } = await s.client.getReviewReport("sub-await");
     const groups = buildGroups(report, { sliceKind: "ALL_KINDS", sort: "default" });
     assert.equal(groups[0].group, "SAFETY");
-    assert.equal(groups.at(-1)!.group, "OTHER"); // 모르는 그룹 NEW_GROUP은 OTHER
+    assert.equal(groups.at(-1)!.group, "NEW_GROUP"); // 모르는 그룹은 이름을 지키고 맨 뒤에 둔다
     const unc = groups[0].rows.find((r) => r.sliceLabel.includes("UNSEEN"))!;
     assert.equal(unc.candidate.kind, "uncomputable");
     assert.equal(unc.candidate.text, "계산 못 함");

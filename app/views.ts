@@ -49,8 +49,8 @@ function metricTable(rows: MetricRow[]): HTMLElement {
   return h("table", { class: "grid metrics" },
     h("thead", {}, h("tr", {}, ...["역할", "지표", "분리 기준", "후보 값", "표본 수", "기준값(활성 릴리스)", "기준 표본 수", "차이", "참고"].map((t) => h("th", { scope: "col" }, t)))),
     h("tbody", {}, ...rows.map((r) =>
-      h("tr", { class: r.worse ? "worse" : "" },
-        h("td", {}, r.role), h("td", {}, r.name, h("small", { class: "muted" }, ` (${r.direction})`)), h("td", {}, r.sliceLabel),
+      h("tr", { class: r.worse ? "worse" : "", "data-role": r.role },
+        h("td", {}, r.role === "LORA_A" ? "LORA_A (추출)" : r.role === "LORA_B" ? "LORA_B (응답)" : r.role), h("td", {}, r.name, h("small", { class: "muted" }, ` (${r.direction})`)), h("td", {}, r.sliceLabel),
         cell(r.candidate), h("td", { class: "num" }, r.candidateN), cell(r.baseline), h("td", { class: "num" }, r.baselineN), cell(r.delta),
         h("td", {}, r.worse ? h("strong", { class: "worse-mark" }, "▲ 나빠짐(참고)") : r.worseKnown ? "—" : "")))));
 }

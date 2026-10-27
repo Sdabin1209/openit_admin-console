@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import type { GateApproval } from "../api/types.ts";
 import { createCasesMock } from "./cases.ts";
 import { baseReport, initialScenarios, type Scenario } from "./scenarios.ts";
+import type { ReviewReport } from "../api/types.ts";
 
 // 모의 서버 전용 해시. 클라이언트는 이 값을 계산하지 않고 헤더로 받아 돌려보낸다.
 function sha256Hash(v: unknown): string {
@@ -15,7 +16,7 @@ function sha256Hash(v: unknown): string {
 }
 
 export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string }
-export interface MockHandle { cases: ReturnType<typeof createCasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; currentHash: (id: string) => string | null }
+export interface MockHandle { cases: ReturnType<typeof createCasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 const V = "2.0";
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
@@ -25,7 +26,9 @@ export function createMock(opts: MockOptions = {}): MockHandle {
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
+  const overrides = new Map<string, ReviewReport>(); // 시험용: 다른 보고서를 흘려 보낸다
   const reset = () => {
+    overrides.clear();
     scenarios = new Map(initialScenarios().map((s) => [s.view.submission_id, s]));
     approvals.length = 0;
     posts = 0;
@@ -33,7 +36,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
   };
   reset();
 
-  const reportOf = (s: Scenario) => baseReport(s.view.submission_id, s.reportVersion);
+  const reportOf = (s: Scenario) => overrides.get(s.view.submission_id) ?? baseReport(s.view.submission_id, s.reportVersion);
   const send = (res: ServerResponse, status: number, body: unknown) => {
     res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(body));
@@ -130,5 +133,5 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       return err(res, 503, "UNAVAILABLE", "모의 서버 내부 오류");
     }
   });
-  return { cases, server, approvals, postCount: () => posts, reset, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
+  return { cases, server, approvals, postCount: () => posts, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
 }
