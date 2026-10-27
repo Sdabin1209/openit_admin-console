@@ -2,6 +2,7 @@
 import type { Controller, State } from "./controller.ts";
 import { buildGroups, sliceKinds, worseCount, type Cell, type MetricRow } from "./model.ts";
 import type { ReviewReport, SubmissionView } from "../api/types.ts";
+import { fmtTime } from "./time.ts";
 
 type Child = Node | string | null | undefined | false;
 export function h(tag: string, attrs: Record<string, string | boolean | ((e: Event) => void)> = {}, ...kids: Child[]): HTMLElement {
@@ -34,7 +35,7 @@ function listView(st: State, c: Controller): HTMLElement {
         h("thead", {}, h("tr", {}, ...["제출 ID", "제출 시각", "제출 역할", "대상", ""].map((t) => h("th", { scope: "col" }, t)))),
         h("tbody", {}, ...st.items.map((s) =>
           h("tr", {},
-            h("td", {}, s.submission_id), h("td", {}, s.submitted_at), h("td", {}, s.submitted_by_role),
+            h("td", {}, s.submission_id), h("td", {}, fmtTime(s.submitted_at)), h("td", {}, s.submitted_by_role),
             h("td", {}, subjectText(s.subject)),
             h("td", {}, h("button", { type: "button", onclick: () => { location.hash = `#/s/${encodeURIComponent(s.submission_id)}`; } }, "보고서 열기")),
           ))))
@@ -68,7 +69,7 @@ function reportView(st: State, c: Controller, rep: ReviewReport): HTMLElement {
   return h("section", {},
     h("p", {}, h("a", { href: "#/" }, "← 목록")),
     h("h2", {}, `승인 요청 보고서 ${rep.submission_id}`),
-    h("p", { class: "muted" }, `생성 ${rep.generated_at} · 현재 활성 릴리스 ${rep.active_release_id ?? "없음"} · 보고서 해시 ${st.loaded!.reportHash.slice(0, 19)}…`),
+    h("p", { class: "muted" }, `생성 ${fmtTime(rep.generated_at)} · 현재 활성 릴리스 ${rep.active_release_id ?? "없음"} · 보고서 해시 ${st.loaded!.reportHash.slice(0, 19)}…`),
     st.notice && h("p", { class: `notice ${st.notice.kind}`, role: "alert" }, st.notice.text),
     h("p", { class: "muted" }, "이 화면은 합격·불합격을 판단하지 않는다. 임계치가 없고 '나빠짐'은 활성 릴리스와 비교한 참고 표시다. 판단은 승인자가 한다."),
     h("p", {}, `지표 ${rep.comparisons.length}개 중 나빠짐 표시 ${worseCount(rep)}개`),
@@ -87,8 +88,9 @@ function decisionForm(st: State, c: Controller, busy: boolean): HTMLElement {
   return h("form", { class: "decision", onsubmit: (e) => e.preventDefault() },
     h("h3", {}, "결정"),
     h("p", { id: "approver-note", class: "muted" }, c.devApproverId ? `개발 모드: 승인자 ${c.devApproverId}로 기록됨` : "게이트웨이가 인증한 사용자로 기록됨"),
+    h("p", { class: "muted", id: "reason-pii" }, "사유는 기록으로 남는다. 환자 이름·주민번호·연락처 같은 개인정보를 쓰지 마라."),
     h("p", {}, h("label", { for: "reason" }, "반려 사유 (반려할 때 필수) "), h("br"),
-      h("textarea", { id: "reason", rows: "3", cols: "60", oninput: (e) => c.setDraft({ reason: (e.target as HTMLTextAreaElement).value }) }, st.draft.reason)),
+      h("textarea", { id: "reason", "aria-describedby": "reason-pii", rows: "3", cols: "60", oninput: (e) => c.setDraft({ reason: (e.target as HTMLTextAreaElement).value }) }, st.draft.reason)),
     h("p", {},
       h("button", { type: "button", id: "approve", disabled: busy, onclick: () => c.requestDecision("APPROVE") }, "승인…"), " ",
       h("button", { type: "button", id: "reject", disabled: busy, onclick: () => c.requestDecision("REJECT") }, "반려…")));
@@ -99,16 +101,22 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
   const sending = st.phase === "submitting";
   const approve = p.decision === "APPROVE";
   const dlg = h("dialog", { id: "confirm", "aria-labelledby": "confirm-title" },
-    h("h2", { id: "confirm-title" }, approve ? "승인하시겠습니까?" : "반려하시겠습니까?"),
+    h("h2", { id: "confirm-title", tabindex: "-1" }, approve ? "승인하시겠습니까?" : "반려하시겠습니까?"),
     h("p", {}, `제출 ${st.submissionId}`),
     h("p", {}, `보고서 해시 ${p.reportHash.slice(0, 19)}… (화면에 보이는 보고서)`),
     p.reason && h("p", {}, `사유: ${p.reason}`),
     h("p", {}, c.devApproverId ? `승인자 ${c.devApproverId} (개발 모드)` : "승인자: 게이트웨이가 인증한 사용자"),
     h("p", { class: "muted" }, "확정하면 이 결정이 기록되고 되돌릴 수 없다."),
     h("p", {},
-      h("button", { type: "button", id: "confirm-yes", disabled: sending, onclick: () => void c.confirm() }, sending ? "전송 중…" : approve ? "승인 확정" : "반려 확정"), " ",
-      h("button", { type: "button", id: "confirm-no", disabled: sending, onclick: () => c.cancelConfirm() }, "취소")));
-  queueMicrotask(() => { const d = dlg as HTMLDialogElement; if (!d.open) { if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", ""); } });
+      h("button", { type: "button", id: "confirm-no", autofocus: true, disabled: sending, onclick: () => c.cancelConfirm() }, "취소"), " ",
+      h("button", { type: "button", id: "confirm-yes", disabled: sending, onclick: () => void c.confirm() }, sending ? "전송 중…" : approve ? "승인 확정" : "반려 확정")));
+  // 첫 포커스는 취소 버튼이다. Enter 연타로 결정이 확정되지 않게 한다(확정은 의도적으로 Tab으로 옮겨야 한다).
+  queueMicrotask(() => {
+    const d = dlg as HTMLDialogElement;
+    if (!d.open) { if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", ""); }
+    if (!sending) (dlg.querySelector("#confirm-no") as HTMLElement | null)?.focus();
+    else (dlg.querySelector("#confirm-title") as HTMLElement | null)?.focus();
+  });
   dlg.addEventListener("cancel", (e) => { e.preventDefault(); if (!sending) c.cancelConfirm(); });
   return dlg;
 }
@@ -135,6 +143,10 @@ export function render(root: HTMLElement, c: Controller): void {
       root.append(h("section", {},
         h("h2", {}, r.approval.decision === "APPROVE" ? "승인했다" : "반려했다"),
         h("p", {}, `제출 ${r.approval.submission_id} · 결정 번호 ${r.approval.approval_id}${r.replay ? " (이미 기록된 같은 결정)" : ""}`),
+        h("dl", { class: "facts", id: "done-facts" },
+          h("dt", {}, "기록된 승인자"), h("dd", {}, `${r.approval.approver_id} (${r.approval.approver_role})`),
+          h("dt", {}, "결정 시각"), h("dd", {}, fmtTime(r.approval.decided_at)),
+          h("dt", {}, "서버가 기록한 결정"), h("dd", {}, r.approval.decision)),
         h("p", {}, h("a", { href: "#/" }, "목록으로"))));
       break;
     }

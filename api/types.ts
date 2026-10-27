@@ -126,7 +126,7 @@ export interface ReleaseSummary {
   lora_b?: ArtifactRef;
 }
 
-/** 롤백 요청 본문. 행위자·역할은 보내지 않는다(게이트웨이 헤더 X-Openit-User를 서버가 쓴다). */
+/** 롤백 요청 본문(requested_by_role 제외). 클라이언트가 requested_by_role을 계약대로 붙인다. 행위자는 게이트웨이 헤더 X-Openit-User를 서버가 쓴다. */
 export interface RollbackBody {
   pipeline_schema_version: string;
   request_id: string;

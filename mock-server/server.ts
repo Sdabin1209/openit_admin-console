@@ -16,15 +16,17 @@ function sha256Hash(v: unknown): string {
   return "sha256:" + createHash("sha256").update(canon(v)).digest("hex");
 }
 
-export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string }
+export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string; now?: () => string }
 export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
+export const defaultNow = (): string => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const V = "2.0";
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
 
 export function createMock(opts: MockOptions = {}): MockHandle {
-  const cases = createCasesMock();
-  const releases = createReleasesMock(opts.gatewayUser);
+  const now = opts.now ?? defaultNow;
+  const cases = createCasesMock(now);
+  const releases = createReleasesMock(opts.gatewayUser, now);
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
@@ -88,7 +90,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
     const a: GateApproval = {
       pipeline_schema_version: V, approval_id: `ap-${n}`, submission_id: s.view.submission_id, decision: String(b.decision),
       ...(typeof b.reason === "string" ? { reason: b.reason } : {}), approver_id: String(b.approver_id), approver_role: String(b.approver_role),
-      decided_at: new Date().toISOString().replace(/\.\d+Z$/, "Z"), report_hash: (b.report_hash as string | undefined) ?? current,
+      decided_at: now(), report_hash: (b.report_hash as string | undefined) ?? current,
     };
     approvals.push(a);
     s.view = { ...s.view, status: a.decision === "APPROVE" ? "PASSED" : "REJECTED_HUMAN", approval_id: a.approval_id, decision_id: `dec-${n}`,

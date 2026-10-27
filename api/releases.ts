@@ -21,6 +21,9 @@ export function checkReceipt(x: unknown): RollbackReceipt {
   return r;
 }
 
+/** 활성화·롤백 요청의 역할(계약: INTERFACES.md 허용 역할 표의 operator). */
+export const REQUESTED_BY_ROLE = "operator";
+
 export class ReleasesClient {
   private readonly http: Http;
   constructor(opts: HttpOptions = {}) {
@@ -53,13 +56,19 @@ export class ReleasesClient {
   }
 
   async activate(releaseId: string): Promise<ActivePointer> {
-    const { data } = await this.http.json("POST", "/v1/activate", { release_id: releaseId });
-    return checkPointer(data);
+    // 계약(HTTP.md I5): 본문은 {release_id, requested_by_role}. 역할 값은 operator(INTERFACES.md). 서버는 역할을 토큰·헤더로 정하고 이 값은 기록용이다.
+    const { data } = await this.http.json("POST", "/v1/activate", { release_id: releaseId, requested_by_role: REQUESTED_BY_ROLE });
+    const p = checkPointer(data);
+    need(p.release_id === releaseId, "응답의 활성 릴리스가 요청과 다르다");
+    return p;
   }
 
   async rollback(body: RollbackBody): Promise<RollbackReceipt> {
-    const { data } = await this.http.json("POST", "/v1/rollback", body);
-    return checkReceipt(data);
+    const { data } = await this.http.json("POST", "/v1/rollback", { ...body, requested_by_role: REQUESTED_BY_ROLE });
+    const r = checkReceipt(data);
+    need(r.request_id === body.request_id, "응답의 request_id가 요청과 다르다");
+    need(r.status === "REJECTED" || (!!r.active_pointer && r.active_pointer.release_id === body.to_release_id), "적용됐다는 응답의 활성 릴리스가 요청 대상과 다르다");
+    return r;
   }
 }
 

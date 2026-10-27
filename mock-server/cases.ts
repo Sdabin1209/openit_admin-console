@@ -50,7 +50,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 
 export interface CasesMock { store: Map<string, FailureCase[]>; reviewPosts: () => number; reset: () => void; handle: (req: IncomingMessage, res: ServerResponse, url: URL, send: Send, err: Err, readBody: () => Promise<unknown>) => Promise<boolean> }
 
-export function createCasesMock(): CasesMock {
+export function createCasesMock(now: () => string = () => new Date().toISOString().replace(/\.\d+Z$/, "Z")): CasesMock {
   let store = initialCases();
   let posts = 0;
   const m: CasesMock = {
@@ -115,7 +115,7 @@ export function createCasesMock(): CasesMock {
         const last = vs[vs.length - 1];
         if (last.review_status === b.review_status && same(last.expected, b.expected) && same(last.reviewed_input, b.reviewed_input)
           && (b.expected_kind === undefined ? true : last.expected_kind === b.expected_kind)) return send(res, 200, last), true;
-        const next: FailureCase = { ...last, version: last.version + 1, created_at: new Date().toISOString().replace(/\.\d+Z$/, "Z"), review_status: String(b.review_status) };
+        const next: FailureCase = { ...last, version: last.version + 1, created_at: now(), review_status: String(b.review_status) };
         for (const k of ["expected", "expected_kind", "reviewed_input"] as const) { if (b[k] !== undefined) (next as unknown as Record<string, unknown>)[k] = b[k]; else delete next[k]; }
         if (b.expected_kind === undefined && last.expected_kind) next.expected_kind = last.expected_kind;
         vs.push(next);

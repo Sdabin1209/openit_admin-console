@@ -36,3 +36,9 @@
 - 시험: `npm test` 66개 통과, 건너뜀 0, 실패 0(새 20개: 흐름 10, DOM 6, 계약 스키마 4). 흐름은 활성화→이력 갱신, 롤백, 멱등, 403, 409, 412, 네트워크. 스키마는 `../boundary-contracts/schemas`로 `ActivePointer`, `ReleaseManifest`, `RollbackReceipt`, `BoundaryError`를 검증. `npm run typecheck` 통과. `npm run smoke` 통과.
 - 확인 못 한 것: 실제 release-gate와 연동(`requested_by_role` 없는 본문을 받는지, 409/412의 실제 조건, 릴리스 목록에 PASS 아닌 것이 있는지), 실제 브라우저, 게이트웨이 경로(현재 Caddyfile에 없음).
 - 막힌 것: CR-004(게이트웨이 경로 네 개와 operator 역할, `ActivePointer`의 행위자·이력, `requested_by_role` 필수 여부).
+
+## 작업 단위 6 (전수 점검 지적 수정, 간헐 실패 제거)
+- 간헐 실패: `ops-ui` 시험이 고정 100ms 대기 뒤 단언해 CPU 부하에서 깨졌다(부하 병렬 40회 중 14회 실패 재현, 순차 20회는 0). `tests/helpers.ts`의 `waitFor`(조건 대기, 시간은 실패 상한)로 바꿨다.
+- 점검 지적 수정: 승인 확인창 첫 포커스를 취소 버튼으로(M4), 활성화·롤백 본문에 `requested_by_role: operator`(HTTP.md I5, INTERFACES.md 허용 역할; M1), 승인 완료 화면에 서버가 기록한 승인자·시각 표시와 활성 포인터 행위자 '표시할 수 없다' 이유 명시(M2), 응답 대조, 2xx 비JSON은 '서버 응답 이상', 활성화 확인에 되돌리기 안내, 본문 읽기까지 시간 제한, 잘못된 주소 인코딩 처리, 화면 전환 시 포커스 이동과 문서 제목, UTC 원문+현지 시각 병기, 사유 입력란 개인정보 경고, XSS 음성 시험. 타이머·시계·요청 ID 생성기를 주입 가능하게 하고 모의 서버 시각을 고정 시계로, 시험 사이 JSDOM 화면을 비움.
+- 하지 않은 것: M3(활성화 요청에 포인터 버전 검사·요청 ID)는 계약 변경이라 CR-005로 제안. M5(인증·HTTPS)는 U5/D-A. `npm audit`은 오프라인이라 확인 못 함.
+- 시험의 이웃 폴더 의존: `tests/mock-conformance`, `ops-conformance`, `schemas-generated`, `v2-report-ui`는 `../boundary-contracts`(읽기 전용, 워크스페이스 규칙이 허용)의 스키마·예제를 읽는다. 이 폴더가 없으면 해당 시험은 실패하거나 건너뛴다.

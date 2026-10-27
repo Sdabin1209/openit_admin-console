@@ -1,5 +1,5 @@
 // 릴리스 운영 화면의 실제 DOM 그리기(app/ops-view.ts)를 jsdom에서 돌린다. 브라우저 시험은 아니다.
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { ReleasesClient } from "../api/releases.ts";
@@ -7,6 +7,8 @@ import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/admin/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
+// 시험 간 공유 상태 초기화: 같은 JSDOM을 쓰므로 매 시험 앞에서 화면을 비운다.
+beforeEach(() => { dom.window.document.querySelector("#app")!.replaceChildren(); dom.window.document.querySelectorAll("dialog").forEach((d) => d.remove()); });
 const { renderOps } = await import("../app/ops-view.ts");
 const { OpsController } = await import("../app/ops-controller.ts");
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;

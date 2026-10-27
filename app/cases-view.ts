@@ -1,4 +1,5 @@
 // 실패 사례 검토 화면 그리기. textContent만 쓴다. 입력 내용을 저장소·콘솔에 남기지 않는다.
+import { fmtTime } from "./time.ts";
 import type { CasesController, CaseState } from "./cases-controller.ts";
 import { h } from "./views.ts";
 import type { FailureCase } from "../api/types.ts";
@@ -47,7 +48,7 @@ function caseList(st: CaseState, c: CasesController): HTMLElement {
           h("thead", {}, h("tr", {}, ...["사례 ID", "버전", "실패 유형", "탐지 방법", "출처 릴리스", "검토 상태", "생성 시각", ""].map((t) => h("th", { scope: "col" }, t)))),
           h("tbody", {}, ...st.cases.map((k) => h("tr", {},
             h("td", {}, k.case_id), h("td", { class: "num" }, String(k.version)), h("td", {}, k.failure_type), h("td", {}, k.detection_method),
-            h("td", {}, k.source_release_id), h("td", {}, STATUS_LABEL[k.review_status] ?? k.review_status), h("td", {}, k.created_at),
+            h("td", {}, k.source_release_id), h("td", {}, STATUS_LABEL[k.review_status] ?? k.review_status), h("td", {}, fmtTime(k.created_at)),
             h("td", {}, h("button", { type: "button", onclick: () => { location.hash = `#/cases/${encodeURIComponent(k.case_id)}`; } }, "열기"))))))
       : h("p", { class: "muted" }, "해당하는 사례가 없다."));
 }
@@ -89,10 +90,10 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
       f.status === "CONFIRMED" && h("div", {},
         h("p", {}, h("label", { for: "kind" }, "종류 "), kindSel),
         h("p", {}, h("label", { for: "input-text" }, "고쳐 쓴 입력(reviewed_input, JSON, 선택) — 개인정보 없는 문장으로"), h("br"),
-          h("textarea", { id: "input-text", rows: "10", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ inputText: (e.target as HTMLTextAreaElement).value }) }, f.inputText), h("br"),
+          h("textarea", { id: "input-text", "aria-describedby": "pii-warning", rows: "10", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ inputText: (e.target as HTMLTextAreaElement).value }) }, f.inputText), h("br"),
           h("button", { type: "button", id: "prefill", disabled: busy || !st.trace || !f.kind, onclick: () => c.prefillFromTrace() }, "trace의 입력으로 채우기(마스킹된 값, 반드시 고쳐 쓸 것)")),
         h("p", {}, h("label", { for: "expected-text" }, f.kind === "LORA_B" ? "정답(expected, 응답 문장 그대로, 선택)" : "정답(expected, JSON, 선택)"), h("br"),
-          h("textarea", { id: "expected-text", rows: "6", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ expectedText: (e.target as HTMLTextAreaElement).value }) }, f.expectedText))),
+          h("textarea", { id: "expected-text", "aria-describedby": "pii-warning", rows: "6", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ expectedText: (e.target as HTMLTextAreaElement).value }) }, f.expectedText))),
       h("p", {}, h("button", { type: "button", id: "submit-review", disabled: busy, onclick: () => void c.submit() }, busy ? "전송 중…" : "검토 기록"))));
 }
 

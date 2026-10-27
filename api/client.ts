@@ -58,6 +58,9 @@ export class GateClient {
     const { status, data } = await this.json("POST", "/v1/approvals", req);
     const a = data as GateApproval;
     need(!!a && typeof a.approval_id === "string", "GateApproval");
+    // 응답 대조: 완료 화면이 사람이 누른 결정과 같은 것을 보이는지 확인한다(다르면 성공으로 보이지 않는다).
+    need(a.submission_id === req.submission_id && a.decision === req.decision, "응답의 제출·결정이 요청과 다르다");
+    need(a.report_hash === undefined || a.report_hash === req.report_hash, "응답의 report_hash가 요청과 다르다");
     return { approval: a, replay: status === 200 };
   }
 }

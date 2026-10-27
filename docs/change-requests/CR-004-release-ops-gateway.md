@@ -18,7 +18,7 @@
 
 ## 2. 계약에서 확인할 것
 1. **활성화한 사람과 포인터 이력이 없다.** `ActivePointer`에는 행위자 필드가 없고(`ext`뿐), I4에 포인터 변경 이력 조회가 없다. 화면은 현재 포인터(릴리스 ID, 활성화 시각, 포인터 버전, 원인)와 `GET /v1/releases` 목록만 보인다. D85가 '활성화한 사람'과 이력을 요구하면 `ActivePointer`에 `activated_by`(MINOR 정식 필드) 또는 `GET /v1/active-pointer/history`를 추가해 달라.
-2. **`requested_by_role` 필수 여부.** `RollbackRequest.schema.json`은 `requested_by_role`을 필수로 두고 `HTTP.md`는 activate 본문에 `{release_id, requested_by_role}`를 쓴다. 한편 `PUBLIC_API.md` E절은 서버가 본문 값을 믿지 않고 헤더로 정한다고 한다. 이 화면은 자기 신고 값을 보내지 않기로 했으므로 본문에서 뺐다. release-gate가 이 필드가 없는 본문을 받는지 확인하지 못했다. 거절하면 400이 나므로, 스키마에서 선택으로 바꾸거나(권장) 필드를 서버가 무시한다고 명시해 달라. 시험(`tests/ops-conformance.test.ts`)은 본문이 스키마와 이 필드 하나만 다름을 고정해 둔다.
+2. **`requested_by_role` 필수 여부.** `RollbackRequest.schema.json`은 `requested_by_role`을 필수로 두고 `HTTP.md`는 activate 본문에 `{release_id, requested_by_role}`를 쓴다. 한편 `PUBLIC_API.md` E절은 서버가 본문 값을 믿지 않고 헤더로 정한다고 한다. **갱신(작업 단위 6)**: 계약 문서에서 역할 값이 `operator`임을 확인했으므로(INTERFACES.md 허용 역할 표) 이제 계약대로 `requested_by_role: operator`를 보낸다. 서버는 이 값을 믿지 않고 기록용으로 둔다(PUBLIC_API.md E절). 이 항목은 해소됐다. 시험(`tests/ops-conformance.test.ts`)은 본문이 `RollbackRequest` 스키마를 그대로 통과함을 고정한다.
 3. **롤백 대상 의미.** "이전 릴리스"를 계약이 정의하지 않는다. 화면은 `GET /v1/releases`(최신부터)에서 현재 활성 바로 다음의 더 오래된 릴리스를 기본값으로 두고 운영자가 더 오래된 것 중에서 고를 수 있게 했다. 직전에 활성이던 릴리스와 다를 수 있다.
 4. **롤백 요청 필드.** `evidence_refs`는 최소 1개라 화면이 근거 ID 입력을 필수로 받는다. `request_id`는 화면이 만들고, 같은 확인 단계의 재전송은 같은 값이다(멱등 가정, 서버 규칙은 확인하지 못함).
 5. **오류 모양.** 403/409/412의 `BoundaryError.details.reason`(예: 포인터가 그사이 바뀜) 값을 계약이 정하지 않았다. 화면은 상태 코드로만 구분한다. 게이트웨이의 403은 JSON이 아닌 문장일 수 있고 화면은 그것도 처리한다.

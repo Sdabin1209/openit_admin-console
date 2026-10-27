@@ -16,7 +16,7 @@ export interface State {
   /** 결정 전에 승인자가 본 보고서의 해시. confirming/submitting 동안 고정된다. */
   pending: { decision: Decision; reason?: string; reportHash: string } | null;
   draft: { reason: string };
-  notice: { kind: "stale" | "conflict" | "denied" | "retry" | "invalid"; text: string } | null;
+  notice: { kind: "stale" | "badresponse" | "conflict" | "denied" | "retry" | "invalid"; text: string } | null;
   result: { approval: GateApproval; replay: boolean } | null;
   error: string | null;
   sliceKind: string;
@@ -52,6 +52,7 @@ export class Controller {
   }
   private describe(e: ApiError): string {
     switch (e.kind) {
+      case "BAD_RESPONSE": return `서버 응답 이상: 서버가 계약과 다른 응답을 돌려줬다(${e.message}). 실패와는 다르다. 같은 일이 반복되면 게이트 운영자에게 알려라.`;
       case "UNAVAILABLE": return "게이트에 연결하지 못했다. 잠시 뒤 다시 시도하라.";
       case "PERMISSION_DENIED": return "권한이 없다. 이 계정은 출고 승인 역할(release-approver)이 아니다.";
       case "NOT_FOUND": return "대상을 찾을 수 없다.";
@@ -154,6 +155,9 @@ export class Controller {
     }
     if (e instanceof ApiError && e.kind === "PERMISSION_DENIED") {
       return this.set({ phase: "report", pending: null, notice: { kind: "denied", text: "권한이 없다. 이 계정은 출고 승인 역할이 아니다." } });
+    }
+    if (e instanceof ApiError && e.kind === "BAD_RESPONSE") {
+      return this.set({ phase: "report", pending: null, notice: { kind: "badresponse", text: `서버 응답 이상: 결정이 기록됐는지 이 화면에서는 확인하지 못했다(${e.message}). 목록을 새로 불러와 이 제출이 아직 대기 중인지 확인하라. 같은 결정을 다시 보내도 한 번만 기록된다.` } });
     }
     if (e instanceof ApiError && e.retryable) {
       return this.set({ phase: "report", pending: null, notice: { kind: "retry", text: "게이트에 연결하지 못했다. 결정이 기록되었는지 알 수 없으니, 같은 결정을 다시 보내도 안전하다(같은 결정은 한 번만 기록된다)." } });

@@ -62,7 +62,7 @@ test("활성화·롤백 응답과 오류가 스키마를 통과한다", async ()
   s.mock.releases.setOperator(true);
 });
 
-test("클라이언트의 롤백 본문은 RollbackRequest 스키마와 requested_by_role 하나만 다르다(CR-004)", async () => {
+test("클라이언트의 롤백 본문은 RollbackRequest 스키마를 그대로 지킨다(requested_by_role: operator)", async () => {
   s.mock.reset();
   const api = new ReleasesClient({ baseUrl: s.base });
   const { OpsController } = await import("../app/ops-controller.ts");
@@ -72,9 +72,6 @@ test("클라이언트의 롤백 본문은 RollbackRequest 스키마와 requested
   c.setField({ confirmText: c.state.pending!.target, reason: "사유", evidenceText: "fc-1" });
   await c.submit();
   const body = s.mock.releases.log().at(-1)!.body;
-  const errs = errors("RollbackRequest", body);
-  assert.equal(errs.length, 1, JSON.stringify(errs));
-  assert.equal(errs[0].keyword, "required");
-  assert.equal((errs[0].params as { missingProperty: string }).missingProperty, "requested_by_role");
-  assert.deepEqual(errors("RollbackRequest", { ...body, requested_by_role: "x" }), []);
+  assert.deepEqual(errors("RollbackRequest", body), []);
+  assert.equal(body.requested_by_role, "operator");
 });

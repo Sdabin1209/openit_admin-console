@@ -20,7 +20,7 @@ function manifest(n: number): ReleaseSummary & Record<string, unknown> {
 
 export interface OpsLogEntry { path: string; actor: string | null; body: Record<string, unknown> }
 
-export function createReleasesMock(gatewayUser?: string) {
+export function createReleasesMock(gatewayUser?: string, now: () => string = () => new Date().toISOString().replace(/\.\d+Z$/, "Z")) {
   let operator = true;
   let conflictNext = false;
   let releases: (ReleaseSummary & Record<string, unknown>)[] = [];
@@ -34,7 +34,7 @@ export function createReleasesMock(gatewayUser?: string) {
     pointer = { pipeline_schema_version: V, release_id: "rel-0003", pointer_version: 3, activated_at: "2026-10-14T00:00:00Z", cause: "ACTIVATE" };
   };
   reset();
-  const ts = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  const ts = now;
 
   async function handle(req: IncomingMessage, res: ServerResponse, url: URL, send: Send, err: Err, body: () => Promise<unknown>): Promise<boolean> {
     const p = url.pathname;

@@ -1,11 +1,13 @@
 // 실제 DOM 그리기(app/views.ts)를 jsdom에서 돌려 화면을 확인한다. 브라우저 시험은 아니다(레이아웃·접근성 도구 검사는 못 한다).
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
+// 시험 간 공유 상태 초기화: 같은 JSDOM을 쓰므로 매 시험 앞에서 화면을 비운다.
+beforeEach(() => { dom.window.document.querySelector("#app")!.replaceChildren(); dom.window.document.querySelectorAll("dialog").forEach((d) => d.remove()); });
 const { render } = await import("../app/views.ts");
 
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;

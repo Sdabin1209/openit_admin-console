@@ -12,7 +12,7 @@
 | 입력 | ops-feedback | I7 FailureStore: `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/deidentified-traces/{ref}` | 실패 사례, 비식별 trace |
 | 출력 | release-gate | I5: `POST /v1/approvals` | 승인/반려 결정(`report_hash` 포함) |
 | 입력 | release-gate | I4: `GET /v1/active-pointer`, `GET /v1/releases` | 현재 활성 포인터, 릴리스 목록(이력) |
-| 출력 | release-gate | I5: `POST /v1/activate`, `POST /v1/rollback` | 릴리스 활성화, 롤백 요청(operator 역할만. 행위자는 서버가 `X-Openit-User`로 기록하며 본문에 보내지 않는다) |
+| 출력 | release-gate | I5: `POST /v1/activate`, `POST /v1/rollback` | 릴리스 활성화, 롤백 요청(operator 역할만. 본문에 `requested_by_role: operator`를 계약대로 보내고, 행위자는 서버가 `X-Openit-User`로 기록한다. 본문에 이름은 보내지 않는다) |
 | 출력 | ops-feedback | I7: `POST /v1/cases/{id}/review` | 검토 결과(확정/기각/대기) |
 | 중계 | deploy 게이트웨이 | 같은 출처의 `/v1` | 사람 인증, 토큰, `X-Openit-User` 부착. 이 이미지는 `/v1`을 프록시하지 않는다 |
 

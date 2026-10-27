@@ -27,7 +27,7 @@ test("불러오기: 활성 포인터와 릴리스 이력, 활성화·롤백 후�
   } finally { await s.close(); }
 });
 
-test("활성화: 확인 입력이 틀리면 보내지 않고, 맞으면 영수증과 이력이 갱신된다. 본문에 행위자·역할이 없다", async () => {
+test("활성화: 확인 입력이 틀리면 보내지 않고, 맞으면 영수증과 이력이 갱신된다. 본문에 행위자가 없고 역할은 operator다", async () => {
   const { s, c } = await setup();
   try {
     c.startActivate("rel-0004");
@@ -45,7 +45,7 @@ test("활성화: 확인 입력이 틀리면 보내지 않고, 맞으면 영수�
     assert.deepEqual(activateCandidates(c.state.releases, c.state.pointer), []);
     const log = s.mock.releases.log();
     assert.equal(log.length, 1);
-    assert.deepEqual(Object.keys(log[0].body), ["release_id"]);
+    assert.deepEqual(log[0].body, { release_id: "rel-0004", requested_by_role: "operator" }, "계약(HTTP.md I5): {release_id, requested_by_role}");
     assert.equal(log[0].actor, "gw-user-1", "행위자는 게이트웨이 헤더로 정해진다");
   } finally { await s.close(); }
 });
@@ -67,7 +67,7 @@ test("롤백: 기본 대상은 가장 가까운 이전 릴리스, 사유·근거
     assert.equal(rb?.active_pointer?.cause, "ROLLBACK");
     assert.equal(c.state.pointer?.release_id, "rel-0002");
     const body = s.mock.releases.log()[0].body;
-    assert.deepEqual(Object.keys(body).sort(), ["evidence_refs", "from_release_id", "pipeline_schema_version", "reason", "request_id", "requested_at", "to_release_id"]);
+    assert.deepEqual(Object.keys(body).sort(), ["evidence_refs", "from_release_id", "pipeline_schema_version", "reason", "request_id", "requested_at", "requested_by_role", "to_release_id"]);
     assert.equal(body.from_release_id, "rel-0003");
     assert.deepEqual(body.evidence_refs, ["fc-1", "fc-2"]);
     // 롤백 뒤에는 방금 내린 릴리스가 활성화 후보가 된다
