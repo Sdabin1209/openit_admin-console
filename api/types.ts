@@ -75,7 +75,7 @@ export interface LoadedReport { report: ReviewReport; reportHash: string }
 
 // ---- I7 FailureStore (ops-feedback) ----
 export type ReviewStatus = "PENDING" | "CONFIRMED" | "DISMISSED";
-export type ExpectedKind = "PARSER" | "GENERATOR";
+export type ExpectedKind = "LORA_A" | "LORA_B";
 
 export interface FailureCase {
   pipeline_schema_version: string;
@@ -89,7 +89,7 @@ export interface FailureCase {
   failure_type: string;
   detection_method: string; // RULE | MODEL | HUMAN | FEEDBACK | 모르는 값
   review_status: string; // ReviewStatus | 모르는 값
-  expected?: Record<string, unknown>;
+  expected?: Record<string, unknown> | string; // LORA_A면 ActionExtraction(객체), LORA_B면 ResponseText(문자열)
   expected_kind?: string;
   reviewed_input?: Record<string, unknown>;
   question_set?: ArtifactRef;
@@ -98,7 +98,7 @@ export interface FailureCase {
 
 export interface ReviewRequest {
   review_status: ReviewStatus;
-  expected?: Record<string, unknown>;
+  expected?: Record<string, unknown> | string;
   expected_kind?: ExpectedKind;
   reviewed_input?: Record<string, unknown>;
 }

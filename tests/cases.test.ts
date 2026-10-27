@@ -1,11 +1,11 @@
 // 실패 사례 검토 흐름: 모의 FailureStore(I7)와 컨트롤러.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VALID_GENERATOR_INPUT, VALID_PARSER_INPUT } from "../mock-server/cases.ts";
+import { VALID_LORA_A_INPUT, VALID_LORA_B_INPUT } from "../mock-server/cases.ts";
 import { traceFacts } from "../app/cases-view.ts";
 import { startMock } from "./helpers.ts";
 
-const GOOD_INPUT = JSON.stringify({ ...VALID_PARSER_INPUT, utterance: "가상의 사람이 머리가 아프다고 말한다" });
+const GOOD_INPUT = JSON.stringify({ ...VALID_LORA_A_INPUT, current_question: "머리가 아프신가요?", user_utterance: "가상의 사람이 머리가 아프다고 말한다" });
 
 test("목록: 기본은 PENDING 최신 버전, 필터가 동작한다", async () => {
   const s = await startMock();
@@ -29,8 +29,9 @@ test("사례 열기: 비식별 trace의 구조 정보와 이전 버전", async (
     assert.equal(c.state.current!.version, 2);
     assert.ok(c.state.trace);
     const facts = Object.fromEntries(traceFacts(c.state.trace!));
-    assert.equal(facts["파서 의도"], "ANSWER");
-    assert.equal(facts["생성기 동작"], "ASK_NEXT");
+    assert.equal(facts["LoRA-A 동작(action)"], "NEXT");
+    assert.equal(facts["LoRA-A 추출 상태"], "OK");
+    assert.equal(facts["LoRA-B 응답 결과"], "ok");
     await c.openCase("fc-4", 1);
     assert.equal(c.state.current!.review_status, "PENDING");
     await c.openCase("nope");
@@ -57,15 +58,15 @@ test("CONFIRMED + 고쳐 쓴 입력 + 정답: 스키마를 통과해야 전송�
   try {
     const c = s.cases();
     await c.openCase("fc-1");
-    assert.equal(c.state.form.kind, "PARSER"); // 사례의 expected_kind
-    c.setForm({ inputText: GOOD_INPUT, expectedText: JSON.stringify({ items: [] }) });
+    assert.equal(c.state.form.kind, "LORA_A"); // 사례의 expected_kind
+    c.setForm({ inputText: GOOD_INPUT, expectedText: JSON.stringify({ action: "NEXT", next_item: "END", values: [] }) });
     await c.submit();
     assert.equal(c.state.phase, "done");
     const saved = s.mock.cases.store.get("fc-1")!.at(-1)!;
     assert.equal(saved.review_status, "CONFIRMED");
-    assert.equal(saved.expected_kind, "PARSER");
-    assert.deepEqual(saved.expected, { items: [] });
-    assert.equal(saved.reviewed_input!.utterance, "가상의 사람이 머리가 아프다고 말한다");
+    assert.equal(saved.expected_kind, "LORA_A");
+    assert.deepEqual(saved.expected, { action: "NEXT", next_item: "END", values: [] });
+    assert.equal(saved.reviewed_input!.user_utterance, "가상의 사람이 머리가 아프다고 말한다");
   } finally { await s.close(); }
 });
 
@@ -77,20 +78,20 @@ test("스키마 검증 실패는 전송 전에 막는다(문법, 객체, 필수 
     c.setForm({ inputText: GOOD_INPUT });
     await c.submit();
     assert.ok(c.state.errors[0].includes("종류"));
-    c.setFormAndRender({ kind: "PARSER" });
+    c.setFormAndRender({ kind: "LORA_A" });
     c.setForm({ inputText: "{ 깨진 json" });
     await c.submit();
     assert.ok(c.state.errors.some((e) => e.includes("JSON 문법")));
     c.setForm({ inputText: "[1]" });
     await c.submit();
     assert.ok(c.state.errors.some((e) => e.includes("JSON 객체")));
-    c.setForm({ inputText: JSON.stringify({ utterance: "x" }) }); // 필수 필드 빠짐
+    c.setForm({ inputText: JSON.stringify({ user_utterance: "x" }) }); // 필수 필드 빠짐
     await c.submit();
     assert.ok(c.state.errors.some((e) => e.includes("required") || e.includes("필수") || e.includes("must have")), c.state.errors.join("|"));
-    c.setForm({ inputText: JSON.stringify(VALID_GENERATOR_INPUT) }); // PARSER인데 생성기 입력
+    c.setForm({ inputText: JSON.stringify(VALID_LORA_B_INPUT) }); // LORA_A인데 LORA_B 입력
     await c.submit();
     assert.ok(c.state.errors.length > 0);
-    c.setForm({ inputText: GOOD_INPUT, expectedText: JSON.stringify({ response_text: "x", is_fallback: false }) }); // PARSER인데 GeneratorOutput
+    c.setForm({ inputText: GOOD_INPUT, expectedText: JSON.stringify({ response_text: "x" }) }); // LORA_A인데 ActionExtraction이 아닌 정답
     await c.submit();
     assert.ok(c.state.errors.some((e) => e.startsWith("정답")));
     assert.equal(s.mock.cases.reviewPosts(), 0, "하나도 전송되지 않았다");
@@ -98,15 +99,24 @@ test("스키마 검증 실패는 전송 전에 막는다(문법, 객체, 필수 
   } finally { await s.close(); }
 });
 
-test("GENERATOR 입력과 정답도 검증을 통과해 전송된다", async () => {
+test("LORA_B 입력과 정답(응답 문장)도 검증을 통과해 전송된다", async () => {
   const s = await startMock();
   try {
     const c = s.cases();
     await c.openCase("fc-2");
-    const gi = { ...VALID_GENERATOR_INPUT, utterance: "가상 문장" };
-    c.setForm({ inputText: JSON.stringify(gi), expectedText: JSON.stringify({ response_text: "네, 알겠습니다.", is_fallback: false }) });
+    assert.equal(c.state.form.kind, "LORA_B");
+    const gi = { ...VALID_LORA_B_INPUT, topic: "가상 주제", next: { question_id: "Q1.D01", text: "약을 드시나요?", type: "NEXT" } };
+    c.setForm({ inputText: JSON.stringify(gi), expectedText: "네, 알겠습니다. 약을 드시고 계신가요?" });
     await c.submit();
     assert.equal(c.state.phase, "done");
+    const saved = s.mock.cases.store.get("fc-2")!.at(-1)!;
+    assert.equal(saved.expected_kind, "LORA_B");
+    assert.equal(saved.expected, "네, 알겠습니다. 약을 드시고 계신가요?");
+    // LORA_B의 정답은 문자열이어야 한다(빈 문자열은 전송 전에 막는다)
+    await c.openCase("fc-1");
+    c.setFormAndRender({ kind: "LORA_B" });
+    c.setForm({ expectedText: "   " });
+    assert.equal(c.buildRequest()?.expected, undefined);
   } finally { await s.close(); }
 });
 

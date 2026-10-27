@@ -24,8 +24,8 @@
 | `api/` | I5/I7 HTTP 클라이언트와 타입. UI와 무관 |
 | `mock-server/` | 모의 게이트(I5)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
 | `serve/static-server.mjs` | 이미지에서 쓰는 정적 서버(`/healthz`, `/readyz`, `/config.json`) |
-| `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(문진 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
-| `generated/` | 생성된 문진 스키마 검증기(커밋됨. 정책은 CR-003에서 헤드 결정 대기) |
+| `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
+| `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열)(커밋됨. 정책은 CR-003에서 헤드 결정 대기) |
 | `tests/` | `node:test` 시험(jsdom 포함) |
 | `Dockerfile` | 다단계 빌드, non-root(`node`), 포트 8080 |
 | `docs/` | 아래 7절 |
@@ -63,10 +63,8 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- 이 세션(`npm test`): 42개 중 40 통과, 2 실패. 타입 검사는 통과.
-  - `generated/survey-validators.cjs가 원본 스키마와 같다`: `../survey-service/schema/schemas/UtteranceParserInput.json`이 없어서 실패. 현재 작업 사본에는 그 파일이 없다.
-  - `모의 FailureStore 출력이 FailureCase 스키마를 통과한다`: 모의 서버의 `expected_kind`(PARSER|GENERATOR)가 현재 `boundary-contracts` 작업 사본(`v2.0.2` 이후)의 열거(`LORA_A`, `LORA_B`)와 다르다.
-  - 원인 추정(미확인): 문서는 `boundary-contracts v1.3.3`과 문진 스키마 v1 입출력 4종을 기준으로 쓰였고, 이웃은 그 뒤 v2.0.2로 올라갔다(G11, 헤드 STATUS). Dockerfile 라벨도 `v1.3.3`이다.
+- `npm test` 42개 전부 통과, `npm run typecheck` 통과. 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- 계약 기준은 boundary-contracts v2.0.2다(Dockerfile ARG, 생성 검증기, 모의 서버).
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
 
@@ -91,4 +89,4 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 | `docs/STATUS.md` | 한 일, 남은 일, 막힌 것 |
 | `docs/change-requests/` | CR-001(해결), CR-002, CR-003 |
 
-런북(`docs/runbook.md`)은 이 리포에 없다(CLAUDE.md는 런북을 두라고 하지만 아직 쓰이지 않았다).
+런북: `docs/runbook.md`.

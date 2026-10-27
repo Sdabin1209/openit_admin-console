@@ -33,7 +33,7 @@ test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async 
     assert.equal(s.mock.cases.reviewPosts(), 0);
     // 고쳐 쓴 입력으로 전송
     const ta2 = q<HTMLTextAreaElement>("#input-text")!;
-    ta2.value = JSON.stringify({ utterance: "가상 문장", last_directive: null, awaiting_questions: [], question_names: [], answered_slots: [], guide_list: [] });
+    ta2.value = JSON.stringify({ question_id: "Q1.D03", current_question: "고혈압이 있으신가요?", user_utterance: "가상 문장", state: {} });
     ta2.dispatchEvent(new dom.window.Event("input"));
     q("#submit-review")!.click();
     await tick(100);

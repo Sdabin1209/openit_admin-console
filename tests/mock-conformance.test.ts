@@ -79,8 +79,12 @@ test("모의 FailureStore 출력이 FailureCase 스키마를 통과한다", asyn
   const post = (b: unknown) => j("/v1/cases/fc-1/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
   const bad = await post({ review_status: "CONFIRMED", expected: { items: [] } });
   assert.equal(bad.status, 400); check("BoundaryError", bad.body);
-  const ok = await post({ review_status: "CONFIRMED", expected_kind: "PARSER", expected: { items: [] }, reviewed_input: { utterance: "가상", last_directive: null, awaiting_questions: [], question_names: [], answered_slots: [], guide_list: [] } });
+  const ok = await post({ review_status: "CONFIRMED", expected_kind: "LORA_A", expected: { action: "NEXT", next_item: "END", values: [] }, reviewed_input: { question_id: "Q1.D03", current_question: "고혈압이 있으신가요?", user_utterance: "가상", state: {} } });
   assert.equal(ok.status, 201); check("FailureCase", ok.body);
+  const oldKind = await post({ review_status: "CONFIRMED", expected_kind: "PARSER" }); // v1 값은 v2에서 없어졌다
+  assert.equal(oldKind.status, 400); check("BoundaryError", oldKind.body);
+  const text = await j("/v1/cases/fc-2/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review_status: "CONFIRMED", expected_kind: "LORA_B", expected: "네, 알겠습니다." }) });
+  assert.equal(text.status, 201); check("FailureCase", text.body); // LORA_B의 정답은 문자열
   const denied = await j("/v1/cases/fc-403/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ review_status: "DISMISSED" }) });
   assert.equal(denied.status, 403); check("BoundaryError", denied.body);
   assert.equal((await j("/v1/cases/zzz")).status, 404);

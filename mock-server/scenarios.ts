@@ -30,7 +30,7 @@ export function baseReport(id: string, version = 1): ReviewReport {
     cmp("LORA_B", "future_metric", "NEW_GROUP", 0.5, 10, 0.5, 10, true, false),
   ];
   const r: ReviewReport = {
-    pipeline_schema_version: "1.3",
+    pipeline_schema_version: "2.0",
     submission_id: id,
     generated_at: "2026-10-15T00:00:00Z",
     subject: SUBJECT,

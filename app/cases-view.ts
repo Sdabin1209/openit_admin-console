@@ -11,19 +11,28 @@ function section(trace: Record<string, unknown>, key: string): unknown {
   return trace[key];
 }
 const get = (o: unknown, ...path: string[]): unknown => path.reduce<unknown>((a, k) => (a && typeof a === "object" ? (a as Record<string, unknown>)[k] : undefined), o);
+/** v2의 expected_kind는 LORA_A/LORA_B. 모르는 값(예: v1의 PARSER/GENERATOR)은 '알 수 없음'으로 표시하고 expected의 형태로 추정하지 않는다. */
+export function expectedKindLabel(k: FailureCase): string {
+  const v = k.expected_kind;
+  if (v === undefined) return "—";
+  if (v === "LORA_A") return "LORA_A (행동 추출)";
+  if (v === "LORA_B") return "LORA_B (응답 문장)";
+  return `알 수 없음 (${v})`;
+}
 const show = (x: unknown): string => (x === undefined || x === null ? "—" : typeof x === "object" ? JSON.stringify(x) : String(x));
 
 /** 비식별 trace에서 구조 정보만 뽑는다. 값은 마스킹되어 있을 수 있다. 모르는 구조는 건너뛴다. */
 export function traceFacts(trace: Record<string, unknown>): [string, string][] {
-  const items = get(trace, "parser_output", "items");
+  const values = get(trace, "extract_output", "values");
   return [
-    ["turn_index", show(trace.turn_index)],
     ["계약 버전", show(trace.contract_version)],
-    ["파서 항목 수", Array.isArray(items) ? String(items.length) : "—"],
-    ["파서 의도", show(get(trace, "parser_output", "intent"))],
-    ["판정 출력", show(get(trace, "judge_output") ? Object.keys(get(trace, "judge_output") as object).join(", ") : undefined)],
-    ["생성기 동작", show(get(trace, "generator_input", "directive", "action"))],
-    ["생성기 대체 출력 여부", show(get(trace, "generator_output", "is_fallback"))],
+    ["LoRA-A 추출 상태", show(trace.extract_status)],
+    ["LoRA-A 시도 횟수", show(trace.extract_attempts)],
+    ["LoRA-A 동작(action)", show(get(trace, "extract_output", "action"))],
+    ["LoRA-A 값 개수", Array.isArray(values) ? String(values.length) : "—"],
+    ["검증 통과", show(trace.validation_ok)],
+    ["LoRA-B 동작(action)", show(get(trace, "response_input", "action"))],
+    ["LoRA-B 응답 결과", show(trace.response_outcome)],
   ];
 }
 
@@ -47,7 +56,7 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
   const busy = st.phase === "submitting";
   const f = st.form;
   const kindSel = h("select", { id: "kind", disabled: busy, onchange: (e) => c.setFormAndRender({ kind: (e.target as HTMLSelectElement).value as "" }) },
-    h("option", { value: "" }, "(선택)"), h("option", { value: "PARSER" }, "PARSER (UtteranceParserInput / ParserOutput)"), h("option", { value: "GENERATOR" }, "GENERATOR (ResponseGeneratorInput / GeneratorOutput)"));
+    h("option", { value: "" }, "(선택)"), h("option", { value: "LORA_A" }, "LORA_A (ActionExtractionInput / ActionExtraction)"), h("option", { value: "LORA_B" }, "LORA_B (ResponseRequest / ResponseText)"));
   (kindSel as HTMLSelectElement).value = f.kind;
   const statusSel = h("select", { id: "review-status", disabled: busy, onchange: (e) => c.setFormAndRender({ status: (e.target as HTMLSelectElement).value as "PENDING" }) },
     h("option", { value: "CONFIRMED" }, "확정 (CONFIRMED)"), h("option", { value: "DISMISSED" }, "기각 (DISMISSED)"), h("option", { value: "PENDING" }, "대기로 되돌림 (PENDING)"));
@@ -58,7 +67,7 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
     h("h2", {}, `사례 ${k.case_id} (버전 ${k.version})`),
     h("dl", { class: "facts" },
       ...([["실패 유형", k.failure_type], ["탐지 방법", k.detection_method], ["출처 릴리스", k.source_release_id], ["런타임 계약 버전", String(k.runtime_contract_version)],
-        ["검토 상태", STATUS_LABEL[k.review_status] ?? k.review_status], ["정답 종류", k.expected_kind ?? "—"],
+        ["검토 상태", STATUS_LABEL[k.review_status] ?? k.review_status], ["정답 종류", expectedKindLabel(k)],
         ["문항 세트", k.question_set ? `${k.question_set.id}@${k.question_set.version}` : "—"]] as [string, string][]).flatMap(([a, b]) => [h("dt", {}, a), h("dd", {}, b)])),
     k.version > 1 && h("p", {}, "버전 보기: ", ...versions.map((v) => h("button", { type: "button", disabled: v === k.version && false, onclick: () => void c.openCase(k.case_id, v) }, `v${v}`)), " ",
       h("button", { type: "button", onclick: () => void c.openCase(k.case_id) }, "최신")),
@@ -66,11 +75,11 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
     h("p", { class: "muted" }, "자유 문자열은 [MASKED]로 가려져 있을 수 있다."),
     st.traceError ? h("p", { class: "notice error", role: "alert" }, `trace를 읽지 못했다: ${st.traceError}`)
       : st.trace ? h("div", {}, h("dl", { class: "facts" }, ...traceFacts(st.trace).flatMap(([a, b]) => [h("dt", {}, a), h("dd", {}, b)])),
-          ...["parser_input", "parser_output", "judge_output", "generator_input", "generator_output"].map((key) =>
+          ...["extract_input", "extract_output", "validation_violations", "response_input", "response_output"].map((key) =>
             h("details", {}, h("summary", {}, key), h("pre", {}, JSON.stringify(section(st.trace!, key) ?? null, null, 2)))))
       : h("p", { class: "muted", role: "status" }, "trace 불러오는 중…"),
     k.reviewed_input && h("div", {}, h("h3", {}, "기존에 고쳐 쓴 입력"), h("pre", {}, JSON.stringify(k.reviewed_input, null, 2))),
-    k.expected && h("div", {}, h("h3", {}, "기존 정답"), h("pre", {}, JSON.stringify(k.expected, null, 2))),
+    k.expected && h("div", {}, h("h3", {}, "기존 정답"), h("pre", {}, typeof k.expected === "string" ? k.expected : JSON.stringify(k.expected, null, 2))),
     h("form", { class: "decision", onsubmit: (e) => e.preventDefault() },
       h("h3", {}, "검토"),
       h("p", { class: "notice warn", id: "pii-warning", role: "note" }, PII_WARNING),
@@ -82,7 +91,7 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
         h("p", {}, h("label", { for: "input-text" }, "고쳐 쓴 입력(reviewed_input, JSON, 선택) — 개인정보 없는 문장으로"), h("br"),
           h("textarea", { id: "input-text", rows: "10", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ inputText: (e.target as HTMLTextAreaElement).value }) }, f.inputText), h("br"),
           h("button", { type: "button", id: "prefill", disabled: busy || !st.trace || !f.kind, onclick: () => c.prefillFromTrace() }, "trace의 입력으로 채우기(마스킹된 값, 반드시 고쳐 쓸 것)")),
-        h("p", {}, h("label", { for: "expected-text" }, "정답(expected, JSON, 선택)"), h("br"),
+        h("p", {}, h("label", { for: "expected-text" }, f.kind === "LORA_B" ? "정답(expected, 응답 문장 그대로, 선택)" : "정답(expected, JSON, 선택)"), h("br"),
           h("textarea", { id: "expected-text", rows: "6", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ expectedText: (e.target as HTMLTextAreaElement).value }) }, f.expectedText))),
       h("p", {}, h("button", { type: "button", id: "submit-review", disabled: busy, onclick: () => void c.submit() }, busy ? "전송 중…" : "검토 기록"))));
 }

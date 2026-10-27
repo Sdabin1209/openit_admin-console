@@ -72,7 +72,7 @@ export class CasesController {
     this.set({ phase: "case-loading", current: null, trace: null, traceError: null, form: emptyForm(), errors: [], notice: null, result: null, error: null });
     try {
       const c = await this.api.get(id, version);
-      const form: CaseForm = { ...emptyForm(), kind: c.expected_kind === "PARSER" || c.expected_kind === "GENERATOR" ? c.expected_kind : "" };
+      const form: CaseForm = { ...emptyForm(), kind: c.expected_kind === "LORA_A" || c.expected_kind === "LORA_B" ? c.expected_kind : "" };
       this.set({ phase: "case", current: c, form });
       try {
         this.set({ trace: await this.api.getTrace(c.deidentified_trace_ref) });
@@ -97,7 +97,7 @@ export class CasesController {
   prefillFromTrace(): void {
     const { form, trace } = this.state;
     if (!trace || !form.kind) return;
-    const src = trace[form.kind === "PARSER" ? "parser_input" : "generator_input"];
+    const src = trace[form.kind === "LORA_A" ? "extract_input" : "response_input"];
     if (src && typeof src === "object") this.setFormAndRender({ inputText: JSON.stringify(src, null, 2) });
   }
 
@@ -109,7 +109,7 @@ export class CasesController {
     const req: ReviewRequest = { review_status: "CONFIRMED" };
     const hasInput = form.inputText.trim() !== "";
     const hasExpected = form.expectedText.trim() !== "";
-    if ((hasInput || hasExpected) && !form.kind) errors.push("입력을 쓰려면 종류(PARSER/GENERATOR)를 고르라.");
+    if ((hasInput || hasExpected) && !form.kind) errors.push("입력을 쓰려면 종류(LORA_A/LORA_B)를 고르라.");
     if (form.kind && (hasInput || hasExpected)) {
       req.expected_kind = form.kind;
       if (hasInput) {
@@ -122,12 +122,20 @@ export class CasesController {
         }
       }
       if (hasExpected) {
-        const p = parseObject(form.expectedText);
-        if (!p.ok) errors.push(...p.errors.map((m) => `정답: ${m}`));
-        else {
-          const errs = validateExpected(form.kind, p.value);
+        if (form.kind === "LORA_B") {
+          // ResponseText: JSON이 아니라 응답 문장 그대로(문자열)
+          const text = form.expectedText.trim();
+          const errs = validateExpected("LORA_B", text);
           if (errs.length) errors.push(...errs.map((m) => `정답 ${m}`));
-          else req.expected = p.value;
+          else req.expected = text;
+        } else {
+          const p = parseObject(form.expectedText);
+          if (!p.ok) errors.push(...p.errors.map((m) => `정답: ${m}`));
+          else {
+            const errs = validateExpected(form.kind, p.value);
+            if (errs.length) errors.push(...errs.map((m) => `정답 ${m}`));
+            else req.expected = p.value;
+          }
         }
       }
     }

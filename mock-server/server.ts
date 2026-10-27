@@ -17,7 +17,7 @@ function sha256Hash(v: unknown): string {
 export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string }
 export interface MockHandle { cases: ReturnType<typeof createCasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; currentHash: (id: string) => string | null }
 
-const V = "1.3";
+const V = "2.0";
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
 
 export function createMock(opts: MockOptions = {}): MockHandle {
