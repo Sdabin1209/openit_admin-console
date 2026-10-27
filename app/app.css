@@ -19,3 +19,5 @@ nav a[aria-current="page"] { font-weight: bold; border-bottom: 3px solid current
 .facts dt { font-weight: bold; } .facts dd { margin: 0; }
 .notice.warn { border-left-color: #b26a00; }
 pre { overflow: auto; border: 1px solid var(--line); padding: 8px; max-height: 320px; }
+.notice.ok { border-left-color: #1e7e34; }
+.notice.conflict, .notice.denied, .notice.precondition, .notice.network, .notice.invalid, .notice.notfound, .notice.other { border-left-color: var(--bad); }

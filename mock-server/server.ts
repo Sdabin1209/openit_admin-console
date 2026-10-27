@@ -5,6 +5,7 @@ import { extname, join, normalize } from "node:path";
 import { createHash } from "node:crypto";
 import type { GateApproval } from "../api/types.ts";
 import { createCasesMock } from "./cases.ts";
+import { createReleasesMock } from "./releases.ts";
 import { baseReport, initialScenarios, type Scenario } from "./scenarios.ts";
 import type { ReviewReport } from "../api/types.ts";
 
@@ -16,13 +17,14 @@ function sha256Hash(v: unknown): string {
 }
 
 export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string }
-export interface MockHandle { cases: ReturnType<typeof createCasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
+export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 const V = "2.0";
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
 
 export function createMock(opts: MockOptions = {}): MockHandle {
   const cases = createCasesMock();
+  const releases = createReleasesMock(opts.gatewayUser);
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
@@ -33,6 +35,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
     approvals.length = 0;
     posts = 0;
     cases.reset();
+    releases.reset();
   };
   reset();
 
@@ -117,6 +120,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Openit-Report-Hash": sha256Hash(rep) });
         return res.end(JSON.stringify(rep));
       }
+      if (await releases.handle(req, res, url, send, err, () => body(req))) return;
       if (await cases.handle(req, res, url, send, err, () => body(req))) return;
       if (p === "/config.json") return send(res, 200, { dev_approver_id: opts.devApproverId ?? null });
       if (req.method === "POST" && p === "/v1/approvals") return await decide(req, res);
@@ -133,5 +137,5 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       return err(res, 503, "UNAVAILABLE", "모의 서버 내부 오류");
     }
   });
-  return { cases, server, approvals, postCount: () => posts, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
+  return { cases, releases, server, approvals, postCount: () => posts, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
 }

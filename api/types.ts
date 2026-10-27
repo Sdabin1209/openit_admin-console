@@ -105,3 +105,43 @@ export interface ReviewRequest {
 
 /** 비식별 TurnTrace. 구조만 읽고 모르는 필드는 그대로 둔다. */
 export type DeidentifiedTrace = Record<string, unknown>;
+
+/** 활성 포인터(ActivePointer). cause는 모르는 값을 받아들인다. 행위자 필드는 계약에 없다(CR-004). */
+export interface ActivePointer {
+  pipeline_schema_version: string;
+  release_id: string;
+  pointer_version: number;
+  activated_at: string;
+  cause: string; // ACTIVATE | ROLLBACK | 모르는 값
+  ext?: Record<string, unknown>;
+}
+
+/** 릴리스 목록에서 화면이 쓰는 부분(ReleaseManifest의 일부). */
+export interface ReleaseSummary {
+  release_id: string;
+  created_at: string;
+  gate_decision_id: string;
+  question_set?: ArtifactRef;
+  lora_a?: ArtifactRef;
+  lora_b?: ArtifactRef;
+}
+
+/** 롤백 요청 본문. 행위자·역할은 보내지 않는다(게이트웨이 헤더 X-Openit-User를 서버가 쓴다). */
+export interface RollbackBody {
+  pipeline_schema_version: string;
+  request_id: string;
+  requested_at: string;
+  from_release_id: string;
+  to_release_id: string;
+  reason: string;
+  evidence_refs: string[];
+}
+
+export interface RollbackReceipt {
+  pipeline_schema_version: string;
+  request_id: string;
+  status: string; // APPLIED | REJECTED | 모르는 값
+  reason?: string;
+  active_pointer?: ActivePointer;
+  decided_at: string;
+}
