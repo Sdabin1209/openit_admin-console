@@ -3,13 +3,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { ReleasesClient } from "../api/releases.ts";
-import { startMock } from "./helpers.ts";
+import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/admin/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 const { renderOps } = await import("../app/ops-view.ts");
 const { OpsController } = await import("../app/ops-controller.ts");
-const tick = (ms = 40) => new Promise((r) => setTimeout(r, ms));
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;
 const input = (el: HTMLInputElement | HTMLTextAreaElement, v: string) => { el.value = v; el.dispatchEvent(new dom.window.Event("input")); };
 
@@ -47,7 +46,7 @@ test("활성화: 확인 입력 전에는 실행 버튼이 꺼져 있고, 입력�
     input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     assert.equal(q<HTMLButtonElement>("#ops-submit")!.disabled, false);
     q("#ops-submit")!.click();
-    await tick(100);
+    await waitFor(() => q("#ops-receipt") && q("#ops-active")?.textContent?.includes("rel-0004"), "활성화 영수증과 갱신된 활성 포인터");
     assert.ok(q("#ops-receipt")!.textContent!.includes("활성화했다"));
     assert.ok(q("#ops-receipt")!.textContent!.includes("rel-0004"));
     assert.ok(q("#ops-active")!.textContent!.includes("rel-0004"));
@@ -63,13 +62,13 @@ test("롤백: 대상 표시, 사유·근거 없으면 오류, 입력 후 영수�
     assert.equal(q("#ops-rollback-target")!.textContent, "rel-0002");
     input(q<HTMLInputElement>("#ops-confirm")!, "rel-0002");
     q("#ops-submit")!.click();
-    await tick();
+    await waitFor(() => q("#ops-errors")?.textContent?.includes("사유"), "사유 오류");
     assert.ok(q("#ops-errors")!.textContent!.includes("사유"));
     assert.ok(q("#ops-errors")!.textContent!.includes("근거"));
     input(q<HTMLTextAreaElement>("#ops-reason")!, "지연 증가");
     input(q<HTMLInputElement>("#ops-evidence")!, "fc-1");
     q("#ops-submit")!.click();
-    await tick(100);
+    await waitFor(() => q("#ops-receipt")?.textContent?.includes("롤백을 적용했다") && q("#ops-active")?.textContent?.includes("rel-0002"), "롤백 영수증과 갱신된 활성 포인터");
     assert.ok(q("#ops-receipt")!.textContent!.includes("롤백을 적용했다"));
     assert.ok(q("#ops-receipt")!.textContent!.includes("APPLIED"));
     assert.ok(q("#ops-active")!.textContent!.includes("rel-0002"));
@@ -95,7 +94,7 @@ test("오류 문구: 403 권한 없음, 409 충돌, 412 PASS 아님", async () =
     input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     s.mock.releases.setOperator(false);
     q("#ops-submit")!.click();
-    await tick(100);
+    await waitFor(() => q("#ops-notice")?.textContent?.includes("operator"), "403 안내");
     assert.ok(q("#ops-notice")!.textContent!.includes("operator"));
     s.mock.releases.setOperator(true);
 
@@ -103,7 +102,7 @@ test("오류 문구: 403 권한 없음, 409 충돌, 412 PASS 아님", async () =
     q(".activate-btn")!.click();
     input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     q("#ops-submit")!.click();
-    await tick(100);
+    await waitFor(() => q("#ops-notice")?.textContent?.includes("409"), "409 안내");
     assert.ok(q("#ops-notice")!.textContent!.includes("409"));
   } finally { await s.close(); }
 });

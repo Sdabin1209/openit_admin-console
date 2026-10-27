@@ -2,12 +2,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { startMock } from "./helpers.ts";
+import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/admin/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 const { renderCases } = await import("../app/cases-view.ts");
-const tick = (ms = 30) => new Promise((r) => setTimeout(r, ms));
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;
 
 test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async () => {
@@ -19,7 +18,7 @@ test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async 
     await c.openList();
     assert.equal(root.querySelectorAll("tbody tr").length, 4);
     await c.openCase("fc-1");
-    await tick();
+    await waitFor(() => q("#pii-warning"), "PII 경고");
     assert.ok(q("#pii-warning")!.textContent!.includes("개인정보를 쓰지 마라"));
     assert.ok(root.textContent!.includes("[MASKED]"), "마스킹된 trace가 보인다");
     assert.ok(root.textContent!.includes("PARSER_MISS"));
@@ -28,7 +27,7 @@ test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async 
     ta.value = "{ 깨짐";
     ta.dispatchEvent(new dom.window.Event("input"));
     q("#submit-review")!.click();
-    await tick();
+    await waitFor(() => q("#form-errors"), "폼 오류");
     assert.ok(q("#form-errors")!.textContent!.includes("JSON 문법"));
     assert.equal(s.mock.cases.reviewPosts(), 0);
     // 고쳐 쓴 입력으로 전송
@@ -36,8 +35,7 @@ test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async 
     ta2.value = JSON.stringify({ question_id: "Q1.D03", current_question: "고혈압이 있으신가요?", user_utterance: "가상 문장", state: {} });
     ta2.dispatchEvent(new dom.window.Event("input"));
     q("#submit-review")!.click();
-    await tick(100);
-    assert.ok(root.textContent!.includes("검토를 기록했다"));
+    await waitFor(() => root.textContent!.includes("검토를 기록했다"), "검토 기록 표시");
     assert.equal(s.mock.cases.reviewPosts(), 1);
   } finally { await s.close(); }
 });
@@ -49,7 +47,7 @@ test("DISMISSED를 고르면 입력 편집기가 사라진다", async () => {
     const c = s.cases();
     c.subscribe(() => renderCases(root, c));
     await c.openCase("fc-2");
-    await tick();
+    await waitFor(() => q("#input-text"), "입력 편집기");
     assert.ok(q("#input-text"));
     const sel = q<HTMLSelectElement>("#review-status")!;
     sel.value = "DISMISSED";

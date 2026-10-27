@@ -13,3 +13,15 @@ export async function startMock(slowMs = 150, opts: { gatewayUser?: string; dev?
   const client = new GateClient({ baseUrl: base });
   return { cases: () => new CasesController(new CasesClient({ baseUrl: base })), mock, base, client, ctl: () => new Controller(client, opts.dev ?? null), close: () => new Promise((r) => { mock.server.close(() => r()); mock.server.closeAllConnections(); }) };
 }
+
+/** 조건 대기: 시간은 실패 상한일 뿐 통과 조건이 아니다. 조건이 참이 되는 즉시 돌아온다. */
+export async function waitFor(cond: () => unknown, what = "조건", limitMs = 15000): Promise<void> {
+  const end = Date.now() + limitMs;
+  for (;;) {
+    let ok = false;
+    try { ok = !!cond(); } catch { ok = false; }
+    if (ok) return;
+    if (Date.now() > end) throw new Error(`waitFor 시간 초과: ${what}`);
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}

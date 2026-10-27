@@ -2,13 +2,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { startMock } from "./helpers.ts";
+import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 const { render } = await import("../app/views.ts");
 
-const tick = () => new Promise((r) => setTimeout(r, 20));
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;
 
 test("목록 → 보고서: SAFETY 그룹이 맨 위, n=0은 계산 못 함, 합격/불합격 문구 없음", async () => {
@@ -46,7 +45,7 @@ test("승인 버튼 → 확인창 → 확정 → 완료, 확정 버튼은 전송
     yes.click(); yes.click();
     assert.equal(c.state.phase, "submitting");
     assert.equal(q<HTMLButtonElement>("#confirm-yes")!.disabled, true);
-    await new Promise((r) => setTimeout(r, 400));
+    await waitFor(() => root.textContent!.includes("승인했다"), "승인 완료 표시");
     assert.equal(s.mock.postCount(), 1);
     assert.ok(root.textContent!.includes("승인했다"));
   } finally { await s.close(); }
@@ -60,8 +59,7 @@ test("반려 사유가 없으면 확인창이 열리지 않고 경고가 보인�
     c.subscribe(() => render(root, c));
     await c.openReport("sub-await");
     q("#reject")!.click();
-    await tick();
+    await waitFor(() => root.textContent!.includes("반려에는 사유가 필수다."), "사유 경고");
     assert.equal(q("#confirm"), null);
-    assert.ok(root.textContent!.includes("반려에는 사유가 필수다."));
   } finally { await s.close(); }
 });
