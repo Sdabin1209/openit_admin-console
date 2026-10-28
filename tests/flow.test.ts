@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ApiError } from "../api/client.ts";
 import { buildGroups } from "../app/model.ts";
+import { SAFETY_METRIC } from "../mock-server/scenarios.ts";
 import { startMock } from "./helpers.ts";
 
 const draft = (c: ReturnType<Awaited<ReturnType<typeof startMock>>["ctl"]>, _unused = "", reason = "") => c.setDraft({ reason });
@@ -31,7 +32,7 @@ test("보고서 모델: SAFETY가 맨 위, n=0은 계산 못 함, 값을 보이�
     assert.equal(unc.worse, false); // n=0이면 worse 값도 믿지 않는다
     const noBase = groups.flatMap((g) => g.rows).find((r) => r.baseline.kind === "none")!;
     assert.equal(noBase.baseline.text, "기준 없음");
-    const worse = groups[0].rows.find((r) => r.name === "risk_signal_recall" && r.sliceKind === "ALL")!;
+    const worse = groups[0].rows.find((r) => r.name === SAFETY_METRIC && r.sliceKind === "ALL")!;
     assert.equal(worse.worse, true);
     assert.equal(worse.delta.text, "-0.02");
     assert.equal(worse.baselineN, "120");

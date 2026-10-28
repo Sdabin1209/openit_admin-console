@@ -95,7 +95,7 @@ test("공식 예시 ReviewReport(계약 패키지)가 그대로 그려진다", a
   const ex = JSON.parse(readFileSync(new URL("../../boundary-contracts/examples/ReviewReport.json", import.meta.url), "utf8"));
   const { s } = await show({ ...ex, submission_id: "sub-await" });
   try {
-    const x = find(rows(), "LORA_A", "risk_signal_recall", "전체");
+    const x = find(rows(), "LORA_A", ex.comparisons[0].name, "전체");
     assert.deepEqual([x.cells[3], x.cells[5], x.cells[7], x.worse], ["0.97", "0.99", "-0.02", true]);
   } finally { await s.close(); }
 });
