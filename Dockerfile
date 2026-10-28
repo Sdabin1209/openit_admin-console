@@ -14,7 +14,7 @@ RUN node scripts/build.mjs
 # 왜 Caddy: 직접 만든 정적 서버 대신 표준 file_server를 쓴다(ADR 0018). 게이트웨이도 Caddy라 같은 도구다. 태그 고정(2-alpine이 아니라 정확한 버전).
 FROM caddy:2.11.7-alpine
 ARG REVISION=n/a
-ARG BOUNDARY_CONTRACTS=v2.2.1
+ARG BOUNDARY_CONTRACTS=v2.2.2
 # 문진 스키마는 계약 2.0부터 소비하지 않는다(모델 입출력은 boundary-contracts). ImageLabels(2.2.0): 쓰지 않으면 n/a.
 ARG SURVEY_SCHEMA=n/a
 LABEL io.openit.service="admin-console" \
