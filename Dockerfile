@@ -13,7 +13,7 @@ RUN node scripts/build.mjs
 
 FROM node:24.14.0-alpine3.22
 ARG REVISION=unknown
-ARG BOUNDARY_CONTRACTS=v2.0.2
+ARG BOUNDARY_CONTRACTS=v2.1.0
 ARG SURVEY_SCHEMA=1
 LABEL io.openit.service="admin-console" \
       io.openit.revision="${REVISION}" \
