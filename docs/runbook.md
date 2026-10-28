@@ -5,15 +5,14 @@
 ## 설치
 전제: Node 24 이상. 이미지 스모크에는 Docker와 curl.
 ```bash
-cd admin-console
-npm ci
+bash scripts/setup-env.sh   # node 버전 확인 + npm ci. 어느 폴더에서나 실행 가능
 ```
 
 ## 시험
 ```bash
 npm run typecheck
-npm test                       # 66개 통과, 건너뜀 0 (작업 단위 5 기준)
-node scripts/gen-schemas.mjs --check   # 생성 검증기가 ../boundary-contracts와 같은지(이웃 폴더 필요)
+npm test                       # 개수는 README 4절
+node scripts/gen-schemas.mjs --check   # 생성 검증기가 ../boundary-contracts와 같은지(이웃 폴더 필요. 없으면 종료 코드 2)
 npm run smoke                  # 이미지 빌드, /healthz, 라벨 확인(포트는 Docker가 배정)
 ```
 

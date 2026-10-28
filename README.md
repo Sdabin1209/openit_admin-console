@@ -50,8 +50,7 @@ flowchart LR
 전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 설정은 환경 변수(`PORT`, `STATIC_DIR`, 개발용 `ADMIN_DEV_APPROVER_ID`)로만 받는다.
 
 ```bash
-cd admin-console
-npm ci                # 설치(잠금 파일 기준)
+bash scripts/setup-env.sh   # 환경 준비의 정본: node 버전 확인 + npm ci(잠금 파일 기준, 멱등, 어느 폴더에서나)
 npm run typecheck     # 타입 검사
 npm test              # 시험
 npm run build         # dist/ 생성
@@ -60,8 +59,10 @@ npm start             # 정적 서버(PORT 기본 8080)
 npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker 필요, 포트는 Docker가 배정)
 ```
 
+`node scripts/gen-schemas.mjs [--check]`는 이웃 `boundary-contracts/schemas`(읽기 전용)가 있어야 돈다. 없으면 `boundary-contracts/schemas를 찾을 수 없다`를 내고 종료 코드 2로 끝난다. 일반 개발(`setup-env.sh`, typecheck, test, build)에는 이웃 폴더가 필요 없다. 생성 검증기와 원본의 일치를 보는 시험 1건은 이웃이 없으면 건너뛴다.
+
 이 세션에서 돌려 본 것: `npm run typecheck`(오류 없음), `npm test`(아래 4절).
-돌리지 않은 것: `npm ci`(`node_modules`가 이미 있어 그대로 씀), `npm run build`, `npm run mock`, `npm start`, `npm run smoke`(이미지 빌드).
+돌리지 않은 것: `npm run build`, `npm run mock`, `npm start`, `npm run smoke`(이미지 빌드).
 
 ## 4. 현재 상태
 
