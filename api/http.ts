@@ -25,7 +25,12 @@ const BY_STATUS: Record<number, ErrorKind> = {
   400: "INVALID_RECORD", 403: "PERMISSION_DENIED", 404: "NOT_FOUND", 409: "CONFLICT", 412: "FAILED_PRECONDITION", 503: "UNAVAILABLE",
 };
 
+// 계약 CONVENTIONS.md 9절(2.2.2): 전송 계층 한도 응답은 HTTP 서버(예: waitress)가 앱 앞에서 text/plain으로 낼 수 있어 본문을 믿지 않는다.
+// 본문과 무관하게 INVALID_RECORD, 재시도 안 함. 같은 요청을 다시 보내도 같은 한도에 걸리기 때문이다(RFC 9110 15.5.14·15.5.15, RFC 6585 5).
+const TRANSPORT_LIMIT: Record<number, string> = { 413: "요청이 너무 크다", 414: "요청 주소가 너무 길다", 431: "요청 헤더가 너무 크다" };
+
 export function toError(status: number, body: unknown): ApiError {
+  if (TRANSPORT_LIMIT[status]) return new ApiError("INVALID_RECORD", status, `${TRANSPORT_LIMIT[status]}(HTTP ${status}). 입력을 줄여 다시 보내라.`, false);
   const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
   const message = typeof b.message === "string" ? b.message : `HTTP ${status}`;
   if (status === 409) {

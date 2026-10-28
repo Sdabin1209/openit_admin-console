@@ -42,7 +42,7 @@ export function describeOpsError(e: unknown): { kind: NonNullable<OpsState["noti
     case "BAD_RESPONSE": return { kind: "badresponse", text: `서버 응답 이상: 서버가 계약과 다른 응답을 돌려줬다(${e.message}). 요청이 적용됐는지 알 수 없으니 새로고침으로 현재 활성 릴리스를 확인하라. 같은 일이 반복되면 게이트 운영자에게 알려라.` };
     case "UNAVAILABLE": return { kind: "network", text: "서버에 연결하지 못했다. 변경이 적용됐는지 알 수 없으니 새로고침으로 현재 활성 릴리스를 확인한 뒤 다시 시도하라." };
     case "NOT_FOUND": return { kind: "notfound", text: "대상 릴리스를 찾을 수 없다(404)." };
-    case "INVALID_RECORD": return { kind: "invalid", text: `요청이 거부됐다(400): ${e.message}` };
+    case "INVALID_RECORD": return { kind: "invalid", text: `요청이 거부됐다(${e.status || 400}): ${e.message}` };
     default: return { kind: "other", text: `요청에 실패했다: ${e.message}` };
   }
 }

@@ -56,3 +56,8 @@
 ## 작업 단위 4a (정적 서버를 Caddy file_server로, D111)
 - 한 일: `serve/static-server.mjs`와 `npm start`를 지우고 `serve/Caddyfile` + `caddy:2.11.7-alpine` 이미지로 바꿨다(ADR 0018, ADR 0006 대체). 동작 시험 `tests/static-behavior.test.ts`(7개)를 먼저 만들어 직접 만든 서버에서 통과를 확인한 뒤 이미지에서도 통과시켰다. `npm run smoke`가 이미지에 대해 이 시험과 SIGTERM 종료 코드 0을 확인한다.
 - 남은 일: 실제 브라우저에서 CSP 아래 번들 실행(이전부터), 연결 상한·timeout은 Caddy 기본값(측정 안 함).
+
+## 작업 단위 4c (전송 계층 한도 413/414/431, 계약 2.2.2 CONVENTIONS 9절)
+- 전에: 본문이 text/plain이면 `kind=UNKNOWN`, 메시지 `HTTP 413`이었다(재시도는 하지 않았으나 사용자 안내가 없었다). 본문이 retryable=true인 BoundaryError면 재시도 가능으로 읽을 수 있었다.
+- 고침: `api/http.ts` `toError`가 413/414/431을 본문과 무관하게 `INVALID_RECORD`, 재시도 불가, "요청이 너무 크다" 계열 안내로 읽는다. 릴리스 운영 화면의 "(400)" 고정 문구는 실제 상태 코드를 쓴다. 시험 `tests/transport-limits.test.ts` 9개. 자동 재시도는 원래 없다(재시도는 사용자가 누른다).
+- 확인 못 한 것: 실제 waitress가 내는 응답(모의 fetch로만 확인).
