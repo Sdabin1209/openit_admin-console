@@ -35,7 +35,9 @@ export function toError(status: number, body: unknown): ApiError {
     if (reason === "ALREADY_DECIDED") return new ApiError("ALREADY_DECIDED", status, message);
   }
   const kind = (typeof b.code === "string" && BY_CODE[b.code]) || BY_STATUS[status] || (status >= 500 ? "UNAVAILABLE" : "UNKNOWN");
-  const retryable = kind === "UNAVAILABLE" || status >= 500;
+  // 계약 CONVENTIONS.md: 호출자는 code와 retryable로 행동한다. 본문 retryable(필수 boolean)을 쓰고,
+  // 본문이 BoundaryError가 아닐 때(게이트웨이의 502 HTML 등)만 HTTP.md의 "5xx는 UNAVAILABLE(재시도 가능)"로 대신한다(docs/adr/0015).
+  const retryable = typeof b.retryable === "boolean" ? b.retryable : kind === "UNAVAILABLE" || status >= 500;
   return new ApiError(kind, status, message, retryable);
 }
 
