@@ -174,3 +174,23 @@ test("연결 실패는 재시도 안내", async () => {
   await c.submit();
   assert.equal(c.state.notice?.kind, "retry");
 });
+
+// AC-01: 목록은 next_cursor를 끝까지 따라가야 한다. 기대값은 계약 HTTP.md 공통 목록 규칙(limit 기본 100·최대 500, cursor, next_cursor)에서 나왔다.
+test("목록: 한 쪽(100건)을 넘는 사례를 next_cursor를 따라 모두 가져온다", async () => {
+  const { CasesClient } = await import("../api/cases.ts");
+  const s = await startMock();
+  try {
+    const seed = s.mock.cases.store.get("fc-1")![0];
+    for (let i = 0; i < 250; i++) {
+      const id = `fc-bulk-${String(i).padStart(3, "0")}`;
+      s.mock.cases.store.set(id, [{ ...seed, case_id: id, deidentified_trace_ref: `tr-${id}` }]);
+    }
+    // 서버가 계약대로 쪽을 나누는지 먼저 확인(첫 쪽 100건 + next_cursor).
+    const raw = await (await fetch(`${s.base}/v1/cases?review_status=PENDING&latest_only=true`)).json() as { items: unknown[]; next_cursor: string | null };
+    assert.equal(raw.items.length, 100);
+    assert.ok(raw.next_cursor);
+    const all = await new CasesClient({ baseUrl: s.base }).list({ review_status: "PENDING" });
+    assert.equal(all.length, 254);
+    assert.equal(new Set(all.map((c) => c.case_id)).size, 254, "중복 없이");
+  } finally { await s.close(); }
+});

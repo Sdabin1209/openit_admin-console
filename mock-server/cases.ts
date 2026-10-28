@@ -69,7 +69,16 @@ export function createCasesMock(now: () => string = () => new Date().toISOString
           if (want) items = items.filter((c) => c[field] === want);
         }
         items.sort((a, b) => a.case_id.localeCompare(b.case_id));
-        return send(res, 200, { items, next_cursor: null }), true;
+        // 쪽나누기: 계약 HTTP.md 공통 목록 규칙(I7). 쿼리 limit(기본 100, 최대 500)·cursor, 응답 {items, next_cursor}.
+        // cursor는 클라이언트에게 불투명한 문자열이다. 모의는 정렬된 목록의 시작 위치를 문자열로 쓴다.
+        const rawLimit = q.get("limit");
+        const limit = rawLimit === null ? 100 : Number(rawLimit);
+        if (!Number.isInteger(limit) || limit < 1) return err(res, 400, "INVALID_RECORD", "limit은 1 이상의 정수여야 한다"), true;
+        const rawCursor = q.get("cursor");
+        const start = rawCursor === null ? 0 : Number(rawCursor);
+        if (!Number.isInteger(start) || start < 0) return err(res, 400, "INVALID_RECORD", "cursor가 맞지 않다"), true;
+        const size = Math.min(500, limit);
+        return send(res, 200, { items: items.slice(start, start + size), next_cursor: start + size < items.length ? String(start + size) : null }), true;
       }
       let mm = /^\/v1\/cases\/([^/]+)$/.exec(p);
       if (req.method === "GET" && mm) {

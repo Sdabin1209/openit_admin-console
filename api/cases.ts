@@ -16,13 +16,25 @@ export class CasesClient {
   }
 
   async list(f: { review_status?: string; failure_type?: string; source_release_id?: string; latest_only?: boolean } = {}): Promise<FailureCase[]> {
-    const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== "") q.set(k, String(v));
-    if (!q.has("latest_only")) q.set("latest_only", "true");
-    const { data } = await this.http.json("GET", `/v1/cases?${q}`);
-    const d = data as { items?: unknown[] };
-    need(!!d && Array.isArray(d.items), "목록");
-    return d.items!.map(checkCase);
+    const base = new URLSearchParams();
+    for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== "") base.set(k, String(v));
+    if (!base.has("latest_only")) base.set("latest_only", "true");
+    // 계약 HTTP.md 공통 목록 규칙: next_cursor가 null이 될 때까지 따라간다. 따르지 않으면 첫 쪽(기본 100건) 밖의 사례가 조용히 사라진다(AC-01).
+    // 쪽 크기 500은 계약의 최대값. 최대 20쪽(1만 건)은 api/releases.ts와 같은 방어 상한이며 근거 기록 없음(측정 안 함), docs/adr/0010.
+    const out: FailureCase[] = [];
+    let cursor: string | null = null;
+    for (let i = 0; i < 20; i++) {
+      const q = new URLSearchParams(base);
+      q.set("limit", "500");
+      if (cursor) q.set("cursor", cursor);
+      const { data } = await this.http.json("GET", `/v1/cases?${q}`);
+      const d = data as { items?: unknown[]; next_cursor?: string | null };
+      need(!!d && Array.isArray(d.items), "목록");
+      out.push(...d.items!.map(checkCase));
+      cursor = d.next_cursor ?? null;
+      if (!cursor) return out;
+    }
+    throw new ApiError("UNKNOWN", 0, `사례가 ${out.length}건을 넘어 모두 읽지 못했다(20쪽 상한). 필터를 좁혀 달라`);
   }
 
   async get(id: string, version?: number): Promise<FailureCase> {
