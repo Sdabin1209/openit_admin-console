@@ -97,7 +97,7 @@ test("요청 ID 생성기와 시계를 주입하면 롤백 요청 본문이 결�
     const c = new OpsController(new ReleasesClient({ baseUrl: s.base }), () => FIXED_NOW, () => "fixed-uuid");
     await c.load();
     c.startRollback();
-    c.setField({ confirmText: c.state.pending!.target, reason: "r", evidenceText: "fc-1" });
+    c.setField({ reason: "r", evidenceText: "fc-1" });
     await c.submit();
     const b = s.mock.releases.log().at(-1)!.body;
     assert.equal(b.request_id, "rb-fixed-uuid");

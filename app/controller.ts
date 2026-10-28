@@ -14,7 +14,7 @@ export interface State {
   submissionId: string | null;
   loaded: LoadedReport | null;
   /** 결정 전에 승인자가 본 보고서의 해시. confirming/submitting 동안 고정된다. */
-  pending: { decision: Decision; reason?: string; reportHash: string } | null;
+  pending: { decision: Decision; reason?: string; reportHash: string; confirmText: string } | null;
   draft: { reason: string };
   notice: { kind: "stale" | "badresponse" | "conflict" | "denied" | "retry" | "invalid"; text: string } | null;
   result: { approval: GateApproval; replay: boolean } | null;
@@ -108,8 +108,18 @@ export class Controller {
     }
     this.set({
       phase: "confirming", notice: null,
-      pending: { decision, reason: decision === "REJECT" ? reason : undefined, reportHash: s.loaded.reportHash },
+      pending: { decision, reason: decision === "REJECT" ? reason : undefined, reportHash: s.loaded.reportHash, confirmText: "" },
     });
+  }
+
+  /** 확인창의 제출 ID 입력. 입력 중에는 다시 그리지 않는다(포커스 유지). */
+  setConfirmText(text: string): void {
+    if (this.state.pending) this.state = { ...this.state, pending: { ...this.state.pending, confirmText: text } };
+  }
+  /** 되돌릴 수 없는 결정이라 제출 ID를 그대로 입력해야 확정할 수 있다(앞뒤 공백만 무시, docs/adr/0014). */
+  confirmMatches(): boolean {
+    const s = this.state;
+    return !!s.pending && !!s.submissionId && s.pending.confirmText.trim() === s.submissionId;
   }
 
   cancelConfirm(): void {
@@ -120,6 +130,7 @@ export class Controller {
   async confirm(): Promise<void> {
     const s = this.state;
     if (s.phase !== "confirming" || !s.pending || !s.submissionId) return;
+    if (!this.confirmMatches()) return; // 입력이 맞지 않으면 보내지 않는다(버튼 잠금을 우회한 호출도 막는다)
     const key = `${s.submissionId}:${s.pending.decision}`;
     if (this.inflight.has(key)) return;
     this.inflight.add(key);

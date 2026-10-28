@@ -69,7 +69,7 @@ test("클라이언트의 롤백 본문은 RollbackRequest 스키마를 그대로
   const c = new OpsController(api);
   await c.load();
   c.startRollback();
-  c.setField({ confirmText: c.state.pending!.target, reason: "사유", evidenceText: "fc-1" });
+  c.setField({ reason: "사유", evidenceText: "fc-1" });
   await c.submit();
   const body = s.mock.releases.log().at(-1)!.body;
   assert.deepEqual(errors("RollbackRequest", body), []);

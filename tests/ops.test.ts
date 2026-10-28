@@ -13,7 +13,6 @@ async function setup() {
   await c.load();
   return { s, api, c };
 }
-const typeConfirm = (c: OpsController) => c.setField({ confirmText: c.state.pending!.target });
 
 test("불러오기: 활성 포인터와 릴리스 이력, 활성화·롤백 후보", async () => {
   const { s, c } = await setup();
@@ -27,15 +26,11 @@ test("불러오기: 활성 포인터와 릴리스 이력, 활성화·롤백 후�
   } finally { await s.close(); }
 });
 
-test("활성화: 확인 입력이 틀리면 보내지 않고, 맞으면 영수증과 이력이 갱신된다. 본문에 행위자가 없고 역할은 operator다", async () => {
+test("활성화: 확인 단계까지는 보내지 않고, 실행하면 영수증과 이력이 갱신된다. 본문에 행위자가 없고 역할은 operator다", async () => {
   const { s, c } = await setup();
   try {
     c.startActivate("rel-0004");
-    c.setField({ confirmText: "rel-0003" });
-    await c.submit();
     assert.equal(s.mock.releases.postCount(), 0);
-    assert.ok(c.state.errors[0].includes("정확히 입력"));
-    typeConfirm(c);
     await c.submit();
     assert.equal(c.state.receipt?.kind, "activate");
     assert.equal(c.state.receipt?.pointer?.release_id, "rel-0004");
@@ -55,7 +50,6 @@ test("롤백: 기본 대상은 가장 가까운 이전 릴리스, 사유·근거
   try {
     c.startRollback();
     assert.equal(c.state.pending?.target, "rel-0002");
-    typeConfirm(c);
     await c.submit();
     assert.equal(c.state.errors.length, 2);
     assert.equal(s.mock.releases.postCount(), 0);
@@ -91,7 +85,6 @@ test("403: operator가 아니면 불러오기도 활성화도 권한 안내", as
   const { s, c } = await setup();
   try {
     c.startActivate("rel-0004");
-    typeConfirm(c);
     s.mock.releases.setOperator(false);
     await c.submit();
     assert.equal(c.state.notice?.kind, "denied");
@@ -107,7 +100,7 @@ test("409: 경쟁 — 다른 운영자가 먼저 바꿨으면 알리고 현재 �
   const { s, c } = await setup();
   try {
     c.startRollback();
-    c.setField({ confirmText: "rel-0002", reason: "r", evidenceText: "fc-1" });
+    c.setField({ reason: "r", evidenceText: "fc-1" });
     s.mock.releases.externalActivate("rel-0004"); // 화면이 모르는 사이에 활성이 바뀜
     await c.submit();
     assert.equal(c.state.notice?.kind, "conflict");
@@ -123,7 +116,6 @@ test("409: 이미 활성인 릴리스를 활성화하면 충돌", async () => {
   try {
     s.mock.releases.forceConflictNext();
     c.startActivate("rel-0004");
-    typeConfirm(c);
     await c.submit();
     assert.equal(c.state.notice?.kind, "conflict");
   } finally { await s.close(); }
@@ -133,7 +125,6 @@ test("412: PASS가 아닌 릴리스는 서버가 거절하고 화면이 안내�
   const { s, c } = await setup();
   try {
     c.startActivate("rel-unapproved");
-    typeConfirm(c);
     await c.submit();
     assert.equal(c.state.notice?.kind, "precondition");
     assert.ok(c.state.notice!.text.includes("PASS"));
@@ -145,7 +136,6 @@ test("네트워크 오류: 적용 여부를 모른다고 알린다", async () =>
   const { s, c } = await setup();
   const base = s.base;
   c.startActivate("rel-0004");
-  typeConfirm(c);
   await s.close(); // 서버가 사라진다
   void base;
   await c.submit();

@@ -9,7 +9,6 @@ export type OpsKind = "activate" | "rollback";
 export interface Pending {
   kind: OpsKind;
   target: string; // 활성화할 / 되돌아갈 릴리스 ID
-  confirmText: string; // 운영자가 입력한 릴리스 ID
   reason: string; // 롤백 사유(활성화에는 쓰지 않는다)
   evidenceText: string; // 롤백 근거 ID(쉼표/공백 구분)
   requestId: string; // 같은 확인 단계의 재전송은 같은 ID(멱등)
@@ -109,35 +108,29 @@ export class OpsController {
 
   /** 확인 단계를 연다. 롤백 대상은 기본으로 가장 가까운 이전 릴리스. */
   startActivate(target: string): void {
-    this.set({ pending: { kind: "activate", target, confirmText: "", reason: "", evidenceText: "", requestId: this.newId("act") }, errors: [], notice: null, receipt: null });
+    this.set({ pending: { kind: "activate", target, reason: "", evidenceText: "", requestId: this.newId("act") }, errors: [], notice: null, receipt: null });
   }
   startRollback(target?: string): void {
     const cand = rollbackCandidates(this.state.releases, this.state.pointer);
     const t = target ?? cand[0]?.release_id;
     if (!t) return;
-    this.set({ pending: { kind: "rollback", target: t, confirmText: "", reason: "", evidenceText: "", requestId: this.newId("rb") }, errors: [], notice: null, receipt: null });
+    this.set({ pending: { kind: "rollback", target: t, reason: "", evidenceText: "", requestId: this.newId("rb") }, errors: [], notice: null, receipt: null });
   }
   cancel(): void {
     this.set({ pending: null, errors: [] });
   }
   /** 입력 중에는 다시 그리지 않는다(포커스 유지). */
-  setField(p: Partial<Pick<Pending, "confirmText" | "reason" | "evidenceText">>): void {
+  setField(p: Partial<Pick<Pending, "reason" | "evidenceText">>): void {
     if (this.state.pending) this.state = { ...this.state, pending: { ...this.state.pending, ...p } };
   }
   setTarget(target: string): void {
-    if (this.state.pending) this.set({ pending: { ...this.state.pending, target, confirmText: "" }, errors: [] });
-  }
-
-  confirmMatches(): boolean {
-    const p = this.state.pending;
-    return !!p && p.confirmText.trim() === p.target;
+    if (this.state.pending) this.set({ pending: { ...this.state.pending, target }, errors: [] });
   }
 
   async submit(): Promise<void> {
     const p = this.state.pending;
     if (!p || this.state.phase === "submitting") return;
     const errors: string[] = [];
-    if (p.confirmText.trim() !== p.target) errors.push("확인을 위해 대상 릴리스 ID를 정확히 입력하라.");
     const evidence = p.evidenceText.split(/[\s,]+/).filter(Boolean);
     if (p.kind === "rollback") {
       if (!p.reason.trim()) errors.push("롤백 사유를 적어라.");

@@ -47,6 +47,7 @@ test("화면은 승인 본문에 approver_id를 싣지 않는다", async () => {
     const c = new Controller(new GateClient({ baseUrl: base, fetch: rec }));
     await c.openReport("sub-await");
     c.requestDecision("APPROVE");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "done");
     assert.equal(bodies.length, 1);

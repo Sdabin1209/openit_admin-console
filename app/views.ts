@@ -100,6 +100,10 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
   const p = st.pending!;
   const sending = st.phase === "submitting";
   const approve = p.decision === "APPROVE";
+  // 되돌릴 수 없는 결정이라 제출 ID를 입력해야 확정 버튼이 켜진다(docs/adr/0014).
+  const yes = h("button", { type: "button", id: "confirm-yes", disabled: sending || !c.confirmMatches(), onclick: () => void c.confirm() }, sending ? "전송 중…" : approve ? "승인 확정" : "반려 확정");
+  const idInput = h("input", { id: "confirm-id", type: "text", autocomplete: "off", spellcheck: "false", disabled: sending, value: c.state.pending?.confirmText ?? "",
+    oninput: (e) => { c.setConfirmText((e.target as HTMLInputElement).value); if (!sending) { if (c.confirmMatches()) yes.removeAttribute("disabled"); else yes.setAttribute("disabled", ""); } } });
   const dlg = h("dialog", { id: "confirm", "aria-labelledby": "confirm-title" },
     h("h2", { id: "confirm-title", tabindex: "-1" }, approve ? "승인하시겠습니까?" : "반려하시겠습니까?"),
     h("p", {}, `제출 ${st.submissionId}`),
@@ -107,9 +111,10 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
     p.reason && h("p", {}, `사유: ${p.reason}`),
     h("p", {}, "승인자: 게이트웨이가 인증한 사용자"),
     h("p", { class: "muted" }, "확정하면 이 결정이 기록되고 되돌릴 수 없다."),
+    h("p", {}, h("label", { for: "confirm-id" }, `확인: 제출 ID(${st.submissionId})를 그대로 입력 `), idInput),
     h("p", {},
       h("button", { type: "button", id: "confirm-no", autofocus: true, disabled: sending, onclick: () => c.cancelConfirm() }, "취소"), " ",
-      h("button", { type: "button", id: "confirm-yes", disabled: sending, onclick: () => void c.confirm() }, sending ? "전송 중…" : approve ? "승인 확정" : "반려 확정")));
+      yes));
   // 첫 포커스는 취소 버튼이다. Enter 연타로 결정이 확정되지 않게 한다(확정은 의도적으로 Tab으로 옮겨야 한다).
   queueMicrotask(() => {
     const d = dlg as HTMLDialogElement;

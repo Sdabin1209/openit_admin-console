@@ -37,15 +37,11 @@ test("화면: 활성 릴리스, 이력, 활성화 후보, 롤백 대상", async 
   } finally { await s.close(); }
 });
 
-test("활성화: 확인 입력 전에는 실행 버튼이 꺼져 있고, 입력하면 켜지며, 영수증이 보인다", async () => {
+test("활성화: 확인 단계에서 실행하면 영수증이 보인다(대상 ID 입력은 요구하지 않는다, ADR 0014)", async () => {
   const { s, root } = await open();
   try {
     q(".activate-btn")!.click();
     assert.ok(q("#ops-confirm-form")!.textContent!.includes("rel-0004"));
-    assert.equal(q<HTMLButtonElement>("#ops-submit")!.disabled, true);
-    input(q<HTMLInputElement>("#ops-confirm")!, "rel-000");
-    assert.equal(q<HTMLButtonElement>("#ops-submit")!.disabled, true);
-    input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     assert.equal(q<HTMLButtonElement>("#ops-submit")!.disabled, false);
     q("#ops-submit")!.click();
     await waitFor(() => q("#ops-receipt") && q("#ops-active")?.textContent?.includes("rel-0004"), "활성화 영수증과 갱신된 활성 포인터");
@@ -62,7 +58,6 @@ test("롤백: 대상 표시, 사유·근거 없으면 오류, 입력 후 영수�
   try {
     q("#ops-rollback")!.click();
     assert.equal(q("#ops-rollback-target")!.textContent, "rel-0002");
-    input(q<HTMLInputElement>("#ops-confirm")!, "rel-0002");
     q("#ops-submit")!.click();
     await waitFor(() => q("#ops-errors")?.textContent?.includes("사유"), "사유 오류");
     assert.ok(q("#ops-errors")!.textContent!.includes("사유"));
@@ -77,7 +72,7 @@ test("롤백: 대상 표시, 사유·근거 없으면 오류, 입력 후 영수�
   } finally { await s.close(); }
 });
 
-test("롤백 대상을 바꾸면 확인 입력이 비워지고 새 대상을 요구한다", async () => {
+test("롤백 대상을 바꾸면 확인 문구의 대상이 바뀐다", async () => {
   const { s } = await open();
   try {
     q("#ops-rollback")!.click();
@@ -85,7 +80,7 @@ test("롤백 대상을 바꾸면 확인 입력이 비워지고 새 대상을 요
     sel.value = "rel-0001";
     sel.dispatchEvent(new dom.window.Event("change"));
     assert.equal(q("#ops-rollback-target")!.textContent, "rel-0001");
-    assert.equal(q<HTMLInputElement>("#ops-confirm")!.value, "");
+    assert.ok(q("#ops-confirm-form")!.textContent!.includes("rel-0001"));
   } finally { await s.close(); }
 });
 
@@ -93,7 +88,6 @@ test("오류 문구: 403 권한 없음, 409 충돌, 412 PASS 아님", async () =
   const { s } = await open();
   try {
     q(".activate-btn")!.click();
-    input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     s.mock.releases.setOperator(false);
     q("#ops-submit")!.click();
     await waitFor(() => q("#ops-notice")?.textContent?.includes("operator"), "403 안내");
@@ -102,7 +96,6 @@ test("오류 문구: 403 권한 없음, 409 충돌, 412 PASS 아님", async () =
 
     s.mock.releases.forceConflictNext();
     q(".activate-btn")!.click();
-    input(q<HTMLInputElement>("#ops-confirm")!, "rel-0004");
     q("#ops-submit")!.click();
     await waitFor(() => q("#ops-notice")?.textContent?.includes("409"), "409 안내");
     assert.ok(q("#ops-notice")!.textContent!.includes("409"));

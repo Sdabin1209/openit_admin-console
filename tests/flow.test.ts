@@ -54,6 +54,7 @@ test("승인: 확인창을 거치고 report_hash를 동봉한다", async () => {
     c.requestDecision("APPROVE");
     assert.equal(c.state.phase, "confirming");
     assert.equal(s.mock.postCount(), 0, "확인 전에는 전송하지 않는다");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "done");
     assert.equal(s.mock.approvals.length, 1);
@@ -86,6 +87,7 @@ test("반려는 사유가 필수다", async () => {
     draft(c, "trainer-1", "안전 지표 악화");
     c.requestDecision("REJECT");
     assert.equal(c.state.phase, "confirming");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "done");
     assert.equal(s.mock.approvals[0].decision, "REJECT");
@@ -101,6 +103,7 @@ test("409 STALE_REPORT: 새 보고서를 불러오고 다시 확인해야 하며
     await c.openReport("sub-await-stale");
     const first = c.state.loaded!.reportHash;
     draft(c); c.requestDecision("APPROVE");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "report");
     assert.equal(c.state.notice?.kind, "stale");
@@ -110,6 +113,7 @@ test("409 STALE_REPORT: 새 보고서를 불러오고 다시 확인해야 하며
     assert.ok(c.state.loaded!.report.notes!.some((n) => n.includes("갱신")));
     draft(c); c.requestDecision("APPROVE");
     assert.equal(c.state.phase, "confirming", "다시 확인창");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "done");
     assert.equal(s.mock.approvals[0].report_hash, c.state.loaded!.reportHash);
@@ -122,6 +126,7 @@ test("403 권한 오류는 알리고 기록하지 않는다", async () => {
     const c = s.ctl();
     await c.openReport("sub-await-403");
     draft(c); c.requestDecision("APPROVE");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     assert.equal(c.state.phase, "report");
     assert.equal(c.state.notice?.kind, "denied");
@@ -135,10 +140,12 @@ test("중복 클릭: 확정을 여러 번 눌러도 한 번만 간다", async ()
     const c = s.ctl();
     await c.openReport("sub-await-slow");
     draft(c); c.requestDecision("APPROVE");
+    c.setConfirmText(c.state.submissionId!);
     await Promise.all([c.confirm(), c.confirm(), c.confirm()]);
     assert.equal(s.mock.postCount(), 1);
     assert.equal(s.mock.approvals.length, 1);
     assert.equal(c.state.phase, "done");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm(); // 완료 뒤에도 무시
     assert.equal(s.mock.postCount(), 1);
   } finally { await s.close(); }
@@ -149,8 +156,8 @@ test("이미 다른 결정이 있으면(409 CONFLICT) 낡은 보고서와 구분
   try {
     const a = s.ctl(), b = s.ctl();
     await a.openReport("sub-await"); await b.openReport("sub-await");
-    draft(a); a.requestDecision("APPROVE"); await a.confirm();
-    draft(b, "trainer-2", "다른 의견"); b.requestDecision("REJECT"); await b.confirm();
+    draft(a); a.requestDecision("APPROVE"); a.setConfirmText(a.state.submissionId!); await a.confirm();
+    draft(b, "trainer-2", "다른 의견"); b.requestDecision("REJECT"); b.setConfirmText(b.state.submissionId!); await b.confirm();
     assert.equal(b.state.notice?.kind, "conflict");
     assert.equal(s.mock.approvals.length, 1);
   } finally { await s.close(); }
@@ -172,6 +179,7 @@ test("연결 실패는 UNAVAILABLE이고 재시도 안내를 낸다", async () =
   await c.openReport("sub-await");
   draft(c); c.requestDecision("APPROVE");
   await s.close();
+  c.setConfirmText(c.state.submissionId!);
   await c.confirm();
   assert.equal(c.state.notice?.kind, "retry");
   assert.equal(c.state.phase, "report");

@@ -44,6 +44,9 @@ test("승인 버튼 → 확인창 → 확정 → 완료, 확정 버튼은 전송
     assert.ok(q("#confirm"), "확인창");
     assert.equal(s.mock.postCount(), 0);
     const yes = q<HTMLButtonElement>("#confirm-yes")!;
+    assert.equal(yes.disabled, true, "제출 ID를 입력하기 전에는 확정할 수 없다");
+    const idBox = q<HTMLInputElement>("#confirm-id")!;
+    idBox.value = "sub-await-slow"; idBox.dispatchEvent(new dom.window.Event("input"));
     yes.click(); yes.click();
     assert.equal(c.state.phase, "submitting");
     assert.equal(q<HTMLButtonElement>("#confirm-yes")!.disabled, true);

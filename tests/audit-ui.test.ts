@@ -69,6 +69,7 @@ test("M2 승인 완료 화면: 서버가 기록한 승인자·결정·시각을 
     c.subscribe(() => render(root(), c));
     await c.openReport("sub-await");
     c.requestDecision("APPROVE");
+    c.setConfirmText(c.state.submissionId!);
     await c.confirm();
     await waitFor(() => q("#done-facts"), "완료 화면");
     const t = q("#done-facts")!.textContent!;
@@ -78,7 +79,7 @@ test("M2 승인 완료 화면: 서버가 기록한 승인자·결정·시각을 
   } finally { await s.close(); }
 });
 
-test("릴리스 운영: 확인창으로 포커스가 가고, 되돌리기 안내·개인정보 경고·행위자 표시 불가 이유가 보인다", async () => {
+test("릴리스 운영: 확인 단계의 취소 버튼으로 포커스가 가고, 되돌리기 안내·개인정보 경고·행위자 표시 불가 이유가 보인다", async () => {
   const s = await startMock();
   try {
     const c = new OpsController(new ReleasesClient({ baseUrl: s.base }), () => FIXED_NOW, () => "u");
@@ -87,7 +88,7 @@ test("릴리스 운영: 확인창으로 포커스가 가고, 되돌리기 안내
     assert.ok(q("#ops-active")!.textContent!.includes("2026-10-14T00:00:00Z (현지"), "UTC 원문 + 현지");
     assert.ok(q("#ops-active")!.textContent!.includes("표시할 수 없다"));
     q(".activate-btn")!.click();
-    assert.equal(dom.window.document.activeElement?.id, "ops-confirm", "포커스가 확인 입력으로 간다");
+    assert.equal(dom.window.document.activeElement?.id, "ops-cancel", "포커스가 취소 버튼으로 간다(ADR 0014)");
     assert.ok(q("#ops-undo-hint")!.textContent!.includes("롤백"));
     assert.ok(q("#ops-undo-hint")!.textContent!.includes("rel-0003"), "되돌아갈 릴리스를 보인다");
     q("#ops-cancel")!.click();

@@ -23,10 +23,8 @@ function confirmPanel(c: OpsController): HTMLElement | null {
   if (!p) return null;
   const busy = st.phase === "submitting";
   const from = st.pointer?.release_id ?? "—";
-  const submit = h("button", { type: "button", id: "ops-submit", disabled: busy || !c.confirmMatches(), onclick: () => void c.submit() },
+  const submit = h("button", { type: "button", id: "ops-submit", disabled: busy, onclick: () => void c.submit() },
     busy ? "전송 중…" : p.kind === "activate" ? "활성화 실행" : "롤백 실행");
-  const confirmInput = h("input", { id: "ops-confirm", type: "text", autocomplete: "off", spellcheck: "false", disabled: busy, value: p.confirmText,
-    oninput: (e) => { c.setField({ confirmText: (e.target as HTMLInputElement).value }); if (!busy) { if (c.confirmMatches()) submit.removeAttribute("disabled"); else submit.setAttribute("disabled", ""); } } });
   const head = p.kind === "activate"
     ? [h("h3", {}, "릴리스 활성화 확인"), h("p", {}, `서비스가 쓰는 릴리스를 ${from} 에서 `, h("strong", {}, p.target), " 로 바꾼다. 활성 포인터가 바뀌면 새 세션부터 이 릴리스를 쓴다."),
        h("p", { class: "muted", id: "ops-undo-hint" }, `잘못 활성화했다면 되돌릴 수 있다: 이 화면의 '이전 릴리스로 롤백…'을 쓴다(사유와 근거 ID가 필요하다). 이 활성화가 끝난 뒤 되돌아갈 릴리스는 ${from} 이다.`)]
@@ -48,7 +46,6 @@ function confirmPanel(c: OpsController): HTMLElement | null {
     ...head,
     h("p", { class: "muted" }, "처리한 사람은 게이트웨이가 인증한 계정으로 서버가 기록한다. 이 화면은 이름을 보내지 않고, 역할은 계약대로 operator로만 적어 보낸다(서버는 이 값을 믿지 않고 기록용으로만 둔다)."),
     st.errors.length > 0 && h("div", { class: "notice error", role: "alert", id: "ops-errors" }, h("ul", {}, ...st.errors.map((m) => h("li", {}, m)))),
-    h("p", {}, h("label", { for: "ops-confirm" }, `확인: 대상 릴리스 ID(${p.target})를 그대로 입력 `), confirmInput),
     h("p", {}, submit, " ", h("button", { type: "button", id: "ops-cancel", disabled: busy, onclick: () => c.cancel() }, "취소")));
 }
 
@@ -103,7 +100,7 @@ export function renderOps(root: HTMLElement, c: OpsController): void {
     h("p", { class: "muted" }, "릴리스 목록이다. 활성 포인터의 변경 이력(누가 언제 바꿨는지)은 게이트 API에 없다(CR-004)."),
     st.releases.length ? releaseTable(st.releases, ptr?.release_id ?? null, null) : h("p", { class: "muted" }, "릴리스가 없다.")));
   // 다시 그리면 포커스를 잃으므로, 사용자가 방금 한 일의 결과 자리로 옮긴다: 확인 입력 → 영수증 → 알림.
-  const target = st.pending ? "#ops-confirm" : st.receipt ? "#ops-receipt" : st.notice ? "#ops-notice" : null;
+  const target = st.pending ? (st.pending.kind === "rollback" ? "#ops-reason" : "#ops-cancel") : st.receipt ? "#ops-receipt" : st.notice ? "#ops-notice" : null;
   const el = target ? (root.querySelector(target) as HTMLElement | null) : null;
   if (el && st.phase !== "submitting") { if (!el.matches("input,textarea,button,select")) el.setAttribute("tabindex", "-1"); el.focus(); }
 }
