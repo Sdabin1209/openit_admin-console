@@ -1,5 +1,6 @@
 // 실패 사례(I7 FailureStore) HTTP 클라이언트. 검토 게시는 쓰기 역할 reviewer(게이트웨이가 토큰을 붙인다).
 import { ApiError, Http, need, type HttpOptions } from "./http.ts";
+import { assertRequest, assertResponse, readEnvelope } from "./contract.ts";
 import type { DeidentifiedTrace, FailureCase, ReviewRequest } from "./types.ts";
 
 export function checkCase(x: unknown): FailureCase {
@@ -28,10 +29,9 @@ export class CasesClient {
       q.set("limit", "500");
       if (cursor) q.set("cursor", cursor);
       const { data } = await this.http.json("GET", `/v1/cases?${q}`);
-      const d = data as { items?: unknown[]; next_cursor?: string | null };
-      need(!!d && Array.isArray(d.items), "목록");
-      out.push(...d.items!.map(checkCase));
-      cursor = d.next_cursor ?? null;
+      const { items, next } = readEnvelope(data, "실패 사례");
+      out.push(...items.map(checkCase));
+      cursor = next;
       if (!cursor) return out;
     }
     throw new ApiError("UNKNOWN", 0, `사례가 ${out.length}건을 넘어 모두 읽지 못했다(20쪽 상한). 필터를 좁혀 달라`);
@@ -45,12 +45,12 @@ export class CasesClient {
 
   async getTrace(ref: string): Promise<DeidentifiedTrace> {
     const { data } = await this.http.json("GET", `/v1/deidentified-traces/${encodeURIComponent(ref)}`);
-    need(!!data && typeof data === "object" && !Array.isArray(data), "비식별 trace");
-    return data as DeidentifiedTrace;
+    return assertResponse<DeidentifiedTrace>("OpsFeedbackDeidentifiedTrace", data);
   }
 
   /** 201이면 새 version, 200이면 이미 같은 검토가 있던 것. */
   async review(id: string, req: ReviewRequest): Promise<{ case: FailureCase; replay: boolean }> {
+    assertRequest("CaseReviewRequest", req);
     const { status, data } = await this.http.json("POST", `/v1/cases/${encodeURIComponent(id)}/review`, req);
     return { case: checkCase(data), replay: status === 200 };
   }

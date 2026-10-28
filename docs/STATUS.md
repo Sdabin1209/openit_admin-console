@@ -47,3 +47,8 @@
 - 한 일: AC-01 실패 사례 목록이 `next_cursor`를 끝까지 따라감(쪽 크기 500, 최대 20쪽, ADR 0010 방식). AC-02 개발 모드 승인자 경로 제거(`ADMIN_DEV_APPROVER_ID`, `/config.json`, 본문 `approver_id`), 모의 서버는 계약대로 헤더 없으면 401(ADR 0012). AC-03 이웃 사실 복사 삭제. CR-006에 경계 형식 스키마 초안 5종(`docs/change-requests/schemas/`, `validate.py`로 검증).
 - 시험: `npm test` 85개 통과, 실패 0, 건너뜀 0(이 PC 한 환경). 이 시험은 고친 쪽이 쓴 것이므로 독립 근거는 계약 HTTP.md I5·공통 목록 규칙의 문장이다.
 - 하지 않은 것: AC-04·05·07(지시 범위 밖), 코드가 CR-006 스키마를 쓰도록 바꾸기(헤드가 계약에 올린 뒤).
+
+## 작업 단위 U3 (계약 v2.2.1 핀, 손 검증을 계약 스키마로)
+- 한 일: Dockerfile 계약 v2.2.1, ARG `REVISION` 기본값 `n/a`. `gen-schemas`가 `ApprovalRequest`, `ActivateRequest`, `CaseReviewRequest`, `ListEnvelope`, `OpsFeedbackDeidentifiedTrace`, `ImageLabels`와 `PIPELINE_SCHEMA_VERSION`(계약 `schemas_api.py`에서)을 생성. `api/contract.ts`가 요청은 보내기 전에, 목록 봉투와 trace는 받은 뒤 검사(손 검사 `need(Array.isArray...)`, `decision` 검사 제거). 코드의 `"2.0"` 리터럴 제거(모의 서버, 롤백 본문). 모의 `trace()`를 계약 예시 모양으로(전에는 스키마 위반 20건). ADR 0017. turn-engine·model-runtime 의존 없음.
+- 시험: `tests/contract-schemas.test.ts` 9개 추가(계약 `examples`/`examples_invalid`가 기대값). `npm test` 109개 통과.
+- 남은 일: 실제 ops-feedback 서버 trace가 계약을 지키는지, 실제 release-gate가 `ListEnvelope`를 지키는지(모의 기준으로만 확인). 문진 스키마 패키지는 쓰지 않는다.

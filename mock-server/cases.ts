@@ -1,10 +1,11 @@
 // 모의 FailureStore(I7). HTTP.md의 경로와 상태 코드를 따른다. 운영 서버가 아니다.
 // failure_type은 계약 FailureCase 스키마에서 열거가 아닌 자유 문자열이다. 값은 계약 예시(examples/FailureCase.json)의 UNCLASSIFIED를 쓴다.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FailureCase } from "../api/types.ts";
 
 const H0 = "sha256:" + "0".repeat(64);
-const V = "2.0";
+const V = PIPELINE_SCHEMA_VERSION;
 
 // 계약 v2(ActionExtractionInput / ResponseRequest). 자유 문자열은 비식별되어 [MASKED]다.
 export const VALID_LORA_A_INPUT = { question_id: "Q1.D03", current_question: "[MASKED]", user_utterance: "[MASKED]", state: {} };
@@ -31,16 +32,27 @@ export function initialCases(): Map<string, FailureCase[]> {
   return new Map(rows.map((r) => [r[0].case_id, r]));
 }
 
+// 계약 OpsFeedbackDeidentifiedTrace(예시 examples/OpsFeedbackDeidentifiedTrace.json)를 따른다: 29개 키가 모두 있고 session_id·turn_id는 가명(p-<32 hex>)이다.
+// 비식별 뒤 값 자리(key, value 등)는 [MASKED]다. 이 모양은 ops-feedback 서버의 실제 출력이 아니라 계약 예시를 따른 모의다.
 export function trace(ref: string): Record<string, unknown> | null {
   if (!ref.startsWith("tr-fc-")) return null;
+  const sid = "p-" + "18a3512ebb50d67046b64712466b1562";
   return {
-    session_id: "s-masked", turn_id: "t-1", contract_version: 1, turn_index: 3,
+    session_id: sid, turn_id: "p-" + "825eaad83e41f19bb747ace04c02897d", contract_version: 1,
+    frontend_message: { session_id: sid, kind: "UTTERANCE", utterance: "[MASKED]" },
+    intervention_decision: null, orchestrator_input: null,
     extract_input: VALID_LORA_A_INPUT,
-    extract_output: { action: "NEXT", next_item: "Q1.D04", values: [{ key: "Q1.D03.diagnosed", value: true, precision: "exact", status: "ANSWERED", save: true }] },
-    extract_attempts: 1, extract_status: "OK", validation_ok: true, validation_violations: [],
+    extract_output: { action: "NEXT", next_item: "Q1.D04", reason: "[MASKED]", targets: [], note: "[MASKED]",
+      values: [{ key: "[MASKED]", value: "[MASKED]", precision: "[MASKED]", status: "[MASKED]", save: true }] },
+    extract_attempts: 1, extract_status: "OK", extract_protections: {}, validation_ok: true, validation_violations: [],
     response_input: VALID_LORA_B_INPUT,
     response_output: "[MASKED]",
     response_outcome: ref.endsWith("fc-5") ? "fallback" : "ok",
+    response_protections: {},
+    frontend_input: null, staff_console_input: null, dispatch_input: null, dispatch_output: null, orchestrator_output: null,
+    session_before: null, session_after: null, log_entry: null,
+    persistence_load_request: null, persistence_load_result: null, persistence_commit_request: null, persistence_commit_result: null,
+    turn_index: 3,
   };
 }
 

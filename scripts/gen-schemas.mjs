@@ -8,20 +8,27 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const SRC = new URL("../../boundary-contracts/", import.meta.url);
 const OUT = new URL("../generated/contract-validators.cjs", import.meta.url);
-const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "ResponseText"];
+// 모델 입출력(검토자 입력 검사) + 이 영역이 주고받는 경계 형식(D107로 승격된 것, conformance/promoted/admin-console.MANIFEST.json).
+const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "ResponseText",
+  "ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels"];
+// 왜: ApprovalRequest·ActivateRequest가 $ref로 가리키는 공통 정의. 검증기로 내보내지 않고 참조 해소용으로만 넣는다.
+const SUPPORT = ["_common"];
 
 export function generate() {
   const contract = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(new URL("pyproject.toml", SRC), "utf8"))?.[1] ?? "unknown";
   const ajv = new Ajv({ strict: false, code: { source: true, esm: false }, allErrors: true });
   const sources = {};
-  for (const n of NAMES) {
+  for (const n of [...NAMES, ...SUPPORT]) {
     const text = readFileSync(new URL(`schemas/${n}.schema.json`, SRC), "utf8");
     sources[n] = createHash("sha256").update(text).digest("hex");
-    ajv.addSchema(JSON.parse(text), n);
+    ajv.addSchema(JSON.parse(text), `${n}.schema.json`); // 왜: $ref가 파일 이름(_common.schema.json)으로 가리키므로 $id와 같은 키로 등록한다
   }
-  const code = standaloneCode(ajv, Object.fromEntries(NAMES.map((n) => [n, n])));
+  // 왜: 계약 버전 상수를 손으로 복사하면 계약이 오를 때 어긋난다. 정본(schemas_api.py)에서 생성 때 읽는다.
+  const pipeline = /^PIPELINE_SCHEMA_VERSION\s*=\s*"([^"]+)"/m.exec(readFileSync(new URL("boundary_contracts/schemas_api.py", SRC), "utf8"))?.[1];
+  if (!pipeline) throw new Error("schemas_api.py에서 PIPELINE_SCHEMA_VERSION을 찾지 못했다");
+  const code = standaloneCode(ajv, Object.fromEntries(NAMES.map((n) => [n, `${n}.schema.json`])));
   const header = `// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts ${contract}\n// source-sha256: ${JSON.stringify(sources)}\n`;
-  return header + code;
+  return header + code + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\n`;
 }
 
 if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").href) {

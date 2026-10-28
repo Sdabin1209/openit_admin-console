@@ -1,10 +1,11 @@
 // 모의 릴리스 읽기(I4 일부)와 활성화·롤백(I5). HTTP.md와 PUBLIC_API.md E절의 규칙을 따른다. 운영 서버가 아니다.
 // 규칙: 운영자(operator) 역할이 아니면 네 경로 모두 403. 행위자는 헤더 X-Openit-User로만 정하고 본문의 역할 값은 무시한다.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ActivePointer, ReleaseSummary, RollbackReceipt } from "../api/types.ts";
 
 const H0 = "sha256:" + "0".repeat(64);
-const V = "2.0";
+const V = PIPELINE_SCHEMA_VERSION;
 type Send = (res: ServerResponse, status: number, body: unknown) => void;
 type Err = (res: ServerResponse, status: number, code: string, message: string, details?: Record<string, unknown>) => void;
 

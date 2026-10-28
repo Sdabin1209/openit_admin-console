@@ -1,4 +1,5 @@
 // 릴리스 운영 화면(활성화·롤백)의 상태 기계. DOM 없음. 역할은 클라이언트가 계약대로 보내고(operator), 행위자는 보내지 않는다(서버가 헤더로 기록).
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { ApiError } from "../api/http.ts";
 import type { ReleasesClient } from "../api/releases.ts";
 import type { ActivePointer, ReleaseSummary, RollbackReceipt } from "../api/types.ts";
@@ -145,7 +146,7 @@ export class OpsController {
         receipt = { kind: "activate", pointer: await this.api.activate(p.target) };
       } else {
         const rb = await this.api.rollback({
-          pipeline_schema_version: this.state.pointer?.pipeline_schema_version ?? "2.0", request_id: p.requestId, requested_at: this.now(),
+          pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: p.requestId, requested_at: this.now(),
           from_release_id: this.state.pointer!.release_id, to_release_id: p.target, reason: p.reason.trim(), evidence_refs: evidence,
         });
         receipt = { kind: "rollback", rollback: rb };

@@ -1,5 +1,6 @@
 // 게이트(I5) HTTP 클라이언트.
 import { ApiError, Http, need, type HttpOptions } from "./http.ts";
+import { assertRequest, readEnvelope } from "./contract.ts";
 import type { DecideRequest, GateApproval, LoadedReport, ReviewReport, SubmissionView } from "./types.ts";
 
 export { ApiError };
@@ -34,9 +35,8 @@ export class GateClient {
     const q = new URLSearchParams({ status: "AWAITING_APPROVAL", limit: String(limit) });
     if (cursor) q.set("cursor", cursor);
     const { data } = await this.json("GET", `/v1/submissions?${q}`);
-    const d = data as { items?: unknown[]; next_cursor?: string | null };
-    need(!!d && Array.isArray(d.items), "목록");
-    return { items: d.items!.map(checkSubmission), nextCursor: d.next_cursor ?? null };
+    const { items, next } = readEnvelope(data, "제출");
+    return { items: items.map(checkSubmission), nextCursor: next };
   }
 
   async getSubmission(id: string): Promise<SubmissionView> {
@@ -54,7 +54,8 @@ export class GateClient {
   }
 
   async decide(req: DecideRequest): Promise<{ approval: GateApproval; replay: boolean }> {
-    need(req.decision === "APPROVE" || req.decision === "REJECT", "decision");
+    // 계약 ApprovalRequest: 모르는 키(approver_id 등)·반려 사유 없음·해시 형식을 한 곳에서 거부한다(decision 값 검사도 포함).
+    assertRequest("ApprovalRequest", req);
     const { status, data } = await this.json("POST", "/v1/approvals", req);
     const a = data as GateApproval;
     need(!!a && typeof a.approval_id === "string", "GateApproval");

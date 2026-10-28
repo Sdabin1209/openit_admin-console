@@ -27,7 +27,7 @@
 | `mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(`releases.ts`: 활성 포인터·목록·activate·rollback, operator 아니면 403)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
 | `serve/static-server.mjs` | 이미지에서 쓰는 정적 서버(`/healthz`, `/readyz`) |
 | `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
-| `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열)(커밋됨. 정책은 CR-003에서 헤드 결정 대기) |
+| `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열, 경계 형식 5종, ImageLabels)와 계약 버전 상수(커밋됨, ADR 0017. 정책은 CR-003에서 헤드 결정 대기) |
 | `tests/` | `node:test` 시험(jsdom 포함) |
 | `Dockerfile` | 다단계 빌드, non-root(`node`), 포트 8080 |
 | `docs/` | 아래 7절 |
@@ -68,7 +68,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- `npm test` 85개 통과(건너뜀 0, 실패 0; 2026-10-28 실행, 이 PC 한 환경, wo2 브랜치), `npm run typecheck` 통과, `npm run smoke` 통과(작업 단위 5). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- `npm test` 109개 통과(건너뜀 0, 실패 0; 2026-10-29 실행, 이 PC 한 환경, wo-u3 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.2.1). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
@@ -112,3 +112,4 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0014 위험도에 맞춘 확인 강도](docs/adr/0014-위험도에-맞춘-확인-강도.md)
 - [0015 재시도 가능 여부는 계약 필드로](docs/adr/0015-재시도-가능-여부는-계약-필드로.md)
 - [0016 값의 출처 분류(측정하지 않은 값)](docs/adr/0016-값의-출처-분류.md)
+- [0017 경계 형식은 계약 스키마로 만든 검증기로](docs/adr/0017-경계-형식은-계약-스키마-검증기로.md)

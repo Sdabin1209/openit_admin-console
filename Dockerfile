@@ -12,8 +12,8 @@ COPY scripts ./scripts
 RUN node scripts/build.mjs
 
 FROM node:24.14.0-alpine3.22
-ARG REVISION=unknown
-ARG BOUNDARY_CONTRACTS=v2.2.0
+ARG REVISION=n/a
+ARG BOUNDARY_CONTRACTS=v2.2.1
 # 문진 스키마는 계약 2.0부터 소비하지 않는다(모델 입출력은 boundary-contracts). ImageLabels(2.2.0): 쓰지 않으면 n/a.
 ARG SURVEY_SCHEMA=n/a
 LABEL io.openit.service="admin-console" \

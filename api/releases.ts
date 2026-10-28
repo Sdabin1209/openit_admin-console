@@ -1,5 +1,6 @@
 // 릴리스 운영(I4 읽기 + I5 activate/rollback) HTTP 클라이언트. 행위자·역할은 본문에 넣지 않는다(게이트웨이가 X-Openit-User를 붙이고 서버가 기록한다).
 import { ApiError, Http, need, type HttpOptions } from "./http.ts";
+import { assertRequest, readEnvelope } from "./contract.ts";
 import type { ActivePointer, ReleaseSummary, RollbackBody, RollbackReceipt } from "./types.ts";
 
 export function checkPointer(x: unknown): ActivePointer {
@@ -47,10 +48,9 @@ export class ReleasesClient {
       const q = new URLSearchParams({ limit: "500" });
       if (cursor) q.set("cursor", cursor);
       const { data } = await this.http.json("GET", `/v1/releases?${q}`);
-      const d = data as { items?: unknown[]; next_cursor?: string | null };
-      need(!!d && Array.isArray(d.items), "릴리스 목록");
-      out.push(...d.items!.map(checkRelease));
-      cursor = d.next_cursor ?? null;
+      const { items, next } = readEnvelope(data, "릴리스");
+      out.push(...items.map(checkRelease));
+      cursor = next;
       if (!cursor) return out;
     }
     // 왜 오류인가: 잘린 목록으로 활성화·롤백 후보를 계산하면 조용히 틀린 후보가 나온다(ops-controller의 findIndex가 -1이면 전체가 후보). 실패 사례 목록(api/cases.ts)과 같게 한다.
@@ -59,7 +59,9 @@ export class ReleasesClient {
 
   async activate(releaseId: string): Promise<ActivePointer> {
     // 계약(HTTP.md I5): 본문은 {release_id, requested_by_role}. 역할 값은 operator(INTERFACES.md). 서버는 역할을 토큰·헤더로 정하고 이 값은 기록용이다.
-    const { data } = await this.http.json("POST", "/v1/activate", { release_id: releaseId, requested_by_role: REQUESTED_BY_ROLE });
+    const body = { release_id: releaseId, requested_by_role: REQUESTED_BY_ROLE };
+    assertRequest("ActivateRequest", body);
+    const { data } = await this.http.json("POST", "/v1/activate", body);
     const p = checkPointer(data);
     need(p.release_id === releaseId, "응답의 활성 릴리스가 요청과 다르다");
     return p;

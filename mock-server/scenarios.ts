@@ -1,5 +1,6 @@
 // 모의 게이트의 고정 데이터. 모양은 ../boundary-contracts/schemas (SubmissionView, ReviewReport)를 따른다.
 // 자동 시험(tests/mock-conformance.test.ts)이 스키마로 검증한다.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import type { Comparison, ReviewReport, SubmissionView } from "../api/types.ts";
 
 // 안전 묶음(SAFETY) 대표 지표 이름의 한 곳. 계약 metrics.json의 현행 지표 이름(value_recall, 옛 risk_signal_recall은 폐기).
@@ -39,7 +40,7 @@ export function baseReport(id: string, version = 1): ReviewReport {
     cmp("LORA_B", "future_metric", "NEW_GROUP", 0.5, 10, 0.5, 10, true, false),
   ];
   const r: ReviewReport = {
-    pipeline_schema_version: "2.0",
+    pipeline_schema_version: PIPELINE_SCHEMA_VERSION,
     submission_id: id,
     generated_at: "2026-10-15T00:00:00Z",
     subject: SUBJECT,

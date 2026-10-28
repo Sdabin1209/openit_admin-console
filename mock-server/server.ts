@@ -1,4 +1,5 @@
 // 모의 게이트(I5) 서버. HTTP.md의 경로와 상태 코드를 따른다. 운영 서버가 아니다.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
@@ -20,7 +21,7 @@ export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?
 export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 export const defaultNow = (): string => new Date().toISOString().replace(/\.\d+Z$/, "Z");
-const V = "2.0";
+const V = PIPELINE_SCHEMA_VERSION;
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
 
 export function createMock(opts: MockOptions = {}): MockHandle {
