@@ -16,7 +16,7 @@ function sha256Hash(v: unknown): string {
   return "sha256:" + createHash("sha256").update(canon(v)).digest("hex");
 }
 
-export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; devApproverId?: string; now?: () => string }
+export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; now?: () => string }
 export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 export const defaultNow = (): string => new Date().toISOString().replace(/\.\d+Z$/, "Z");
@@ -63,8 +63,12 @@ export function createMock(opts: MockOptions = {}): MockHandle {
     const bad = Object.keys(b).filter((k) => !allowed.has(k));
     if (bad.length) return err(res, 400, "INVALID_RECORD", `모르는 필드: ${bad.join(",")}`);
     const hdr = req.headers["x-openit-user"];
-    const user = typeof hdr === "string" && hdr ? hdr : opts.gatewayUser; // 게이트웨이가 붙인 헤더(없으면 모의가 흉내)
-    if (user) b.approver_id = user; // 헤더가 있으면 본문 값은 무시
+    // 계약 HTTP.md I5 승인자 식별: 헤더가 없으면 401. 본문 approver_id는 무시하되 헤더와 다르면 거부한다.
+    // gatewayUser는 게이트웨이가 X-Openit-User를 붙이는 것을 흉내 낸다(요청이 헤더를 이미 갖고 있으면 그것을 쓴다).
+    const user = typeof hdr === "string" && hdr ? hdr : opts.gatewayUser;
+    if (!user) return err(res, 401, "PERMISSION_DENIED", "X-Openit-User 헤더가 없다(게이트웨이를 거치지 않은 요청)");
+    if (b.approver_id !== undefined && b.approver_id !== user) return err(res, 400, "INVALID_RECORD", "본문 approver_id가 X-Openit-User와 다르다");
+    b.approver_id = user;
     for (const k of ["submission_id", "decision", "approver_id", "approver_role"]) {
       if (typeof b[k] !== "string" || !b[k]) return err(res, 400, "INVALID_RECORD", `${k} 필수`);
     }
@@ -124,7 +128,6 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       }
       if (await releases.handle(req, res, url, send, err, () => body(req))) return;
       if (await cases.handle(req, res, url, send, err, () => body(req))) return;
-      if (p === "/config.json") return send(res, 200, { dev_approver_id: opts.devApproverId ?? null });
       if (req.method === "POST" && p === "/v1/approvals") return await decide(req, res);
       if (req.method === "GET" && opts.staticDir && !p.startsWith("/v1")) {
         const rel = normalize(p === "/" ? "/index.html" : p).replace(/^(\.\.[/\\])+/, "");

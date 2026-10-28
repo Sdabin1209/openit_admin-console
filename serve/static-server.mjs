@@ -21,11 +21,6 @@ const server = createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end('{"status":"ok"}');
   }
-  if (path === "/config.json") {
-    // 개발 모드 전용 값. 운영에서는 설정하지 않는다(승인자는 게이트웨이가 X-Openit-User로 붙인다).
-    res.writeHead(200, { ...HEADERS, "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ dev_approver_id: process.env.ADMIN_DEV_APPROVER_ID || null }));
-  }
   if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405); return res.end(); }
   const rel = normalize(path === "/" ? "/index.html" : path);
   const file = join(root, rel);

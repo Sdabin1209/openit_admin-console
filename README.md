@@ -25,7 +25,7 @@
 | `app/` | 화면. 상태(model), 컨트롤러, 뷰, `index.html`, CSS. 승인 화면, `cases-*`(실패 사례 검토), `ops-*`(릴리스 운영, `#/ops`) |
 | `api/` | I5/I7 HTTP 클라이언트와 타입. UI와 무관 |
 | `mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(`releases.ts`: 활성 포인터·목록·activate·rollback, operator 아니면 403)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
-| `serve/static-server.mjs` | 이미지에서 쓰는 정적 서버(`/healthz`, `/readyz`, `/config.json`) |
+| `serve/static-server.mjs` | 이미지에서 쓰는 정적 서버(`/healthz`, `/readyz`) |
 | `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
 | `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열)(커밋됨. 정책은 CR-003에서 헤드 결정 대기) |
 | `tests/` | `node:test` 시험(jsdom 포함) |
@@ -47,7 +47,7 @@ flowchart LR
 
 ## 3. 실행 방법
 
-전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 설정은 환경 변수(`PORT`, `STATIC_DIR`, 개발용 `ADMIN_DEV_APPROVER_ID`)로만 받는다.
+전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 설정은 환경 변수(`PORT`, `STATIC_DIR`)로만 받는다.
 
 ```bash
 bash scripts/setup-env.sh   # 환경 준비의 정본: node 버전 확인 + npm ci(잠금 파일 기준, 멱등, 어느 폴더에서나)
@@ -111,3 +111,4 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)
 - [0010 시간 제한과 한도 상수](docs/adr/0010-시간-제한과-한도-상수.md)
 - [0011 devDependency 취약점을 최소 범위로 올린다](docs/adr/0011-devDependency-취약점-최소-범위-상향.md)
+- [0012 승인자 식별은 게이트웨이 헤더 한 길](docs/adr/0012-승인자-식별은-게이트웨이-헤더-한-길.md)

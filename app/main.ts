@@ -5,14 +5,13 @@ import { CasesController } from "./cases-controller.ts";
 import { renderCases } from "./cases-view.ts";
 import { OpsController } from "./ops-controller.ts";
 import { renderOps } from "./ops-view.ts";
-import { loadDevApprover } from "./config.ts";
 import { Controller } from "./controller.ts";
 import { render, h } from "./views.ts";
 import { safeDecode } from "./route.ts";
 
 const root = document.getElementById("app")!;
 const nav = document.getElementById("nav")!;
-const approvals = new Controller(new GateClient({ baseUrl: "" }), await loadDevApprover());
+const approvals = new Controller(new GateClient({ baseUrl: "" }));
 const cases = new CasesController(new CasesClient({ baseUrl: "" }));
 
 const ops = new OpsController(new ReleasesClient({ baseUrl: "" }));

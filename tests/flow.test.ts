@@ -200,24 +200,3 @@ test("409 사유는 details.reason으로만 구분한다(문자열 검색 없음
   const e2 = await mk({ code: "CONFLICT", message: "m", retryable: false, details: { reason: "STALE_REPORT" } }).decide(req).catch((e) => e);
   assert.equal(e2.kind, "STALE_REPORT");
 });
-
-test("개발 모드: 설정 값이 있을 때만 본문에 approver_id를 보낸다", async () => {
-  const dev = await startMock(10, { dev: "dev-trainer" });
-  try {
-    const c = dev.ctl();
-    await c.openReport("sub-await");
-    c.requestDecision("APPROVE");
-    await c.confirm();
-    assert.equal(c.state.phase, "done");
-    assert.equal(dev.mock.approvals[0].approver_id, "dev-trainer");
-  } finally { await dev.close(); }
-  // 설정도 헤더도 없으면 서버가 거절한다
-  const none = await startMock(10, { dev: undefined as unknown as string });
-  try {
-    const c = none.ctl();
-    await c.openReport("sub-await");
-    c.requestDecision("APPROVE");
-    await c.confirm();
-    assert.equal(c.state.phase, "error");
-  } finally { await none.close(); }
-});

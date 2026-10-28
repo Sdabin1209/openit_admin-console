@@ -48,11 +48,11 @@ test("보고서(v1, v2)와 목록과 제출 조회가 스키마를 통과한다"
 });
 
 test("결정 응답과 오류가 스키마를 통과한다", async () => {
-  const post = (b: unknown) => j("/v1/approvals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
+  const post = (b: unknown) => j("/v1/approvals", { method: "POST", headers: { "Content-Type": "application/json", "X-Openit-User": "t1" }, body: JSON.stringify(b) });
   const rr = await fetch(s.base + "/v1/submissions/sub-await/review-report");
   const hash = rr.headers.get("X-Openit-Report-Hash")!;
   assert.match(hash, /^sha256:[0-9a-f]{64}$/);
-  const base = { submission_id: "sub-await", approver_id: "t1", approver_role: "release-approver" };
+  const base = { submission_id: "sub-await", approver_role: "release-approver" };
   const rej = await post({ ...base, decision: "REJECT", report_hash: hash });
   assert.equal(rej.status, 400); check("BoundaryError", rej.body);
   const ok = await post({ ...base, decision: "APPROVE", report_hash: hash });

@@ -7,14 +7,14 @@ import { createMock, type MockHandle } from "../mock-server/server.ts";
 
 export const FIXED_NOW = "2026-10-20T00:00:00Z";
 
-export async function startMock(slowMs = 150, opts: { gatewayUser?: string; dev?: string; now?: () => string } = {}): Promise<{ mock: MockHandle; base: string; close: () => Promise<void>; client: GateClient; ctl: () => Controller; cases: () => CasesController }> {
+export async function startMock(slowMs = 150, opts: { gatewayUser?: string; now?: () => string } = {}): Promise<{ mock: MockHandle; base: string; close: () => Promise<void>; client: GateClient; ctl: () => Controller; cases: () => CasesController }> {
   // 기본: 게이트웨이가 X-Openit-User를 붙이는 것을 모의 서버가 흉내 낸다.
   // 시각은 고정 시계(시험이 다른 시각을 줄 수 있다). 실제 시각에 기대지 않는다.
-  const mock = createMock({ now: opts.now ?? (() => FIXED_NOW), slowMs, gatewayUser: "dev" in opts ? undefined : (opts.gatewayUser ?? "gw-user-1") });
+  const mock = createMock({ now: opts.now ?? (() => FIXED_NOW), slowMs, gatewayUser: opts.gatewayUser ?? "gw-user-1" });
   await new Promise<void>((r) => mock.server.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${(mock.server.address() as AddressInfo).port}`;
   const client = new GateClient({ baseUrl: base });
-  return { cases: () => new CasesController(new CasesClient({ baseUrl: base })), mock, base, client, ctl: () => new Controller(client, opts.dev ?? null), close: () => new Promise((r) => { mock.server.close(() => r()); mock.server.closeAllConnections(); }) };
+  return { cases: () => new CasesController(new CasesClient({ baseUrl: base })), mock, base, client, ctl: () => new Controller(client), close: () => new Promise((r) => { mock.server.close(() => r()); mock.server.closeAllConnections(); }) };
 }
 
 /** 조건 대기: 시간은 실패 상한일 뿐 통과 조건이 아니다. 조건이 참이 되는 즉시 돌아온다. */

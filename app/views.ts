@@ -87,7 +87,7 @@ function reportView(st: State, c: Controller, rep: ReviewReport): HTMLElement {
 function decisionForm(st: State, c: Controller, busy: boolean): HTMLElement {
   return h("form", { class: "decision", onsubmit: (e) => e.preventDefault() },
     h("h3", {}, "결정"),
-    h("p", { id: "approver-note", class: "muted" }, c.devApproverId ? `개발 모드: 승인자 ${c.devApproverId}로 기록됨` : "게이트웨이가 인증한 사용자로 기록됨"),
+    h("p", { id: "approver-note", class: "muted" }, "게이트웨이가 인증한 사용자로 기록됨"),
     h("p", { class: "muted", id: "reason-pii" }, "사유는 기록으로 남는다. 환자 이름·주민번호·연락처 같은 개인정보를 쓰지 마라."),
     h("p", {}, h("label", { for: "reason" }, "반려 사유 (반려할 때 필수) "), h("br"),
       h("textarea", { id: "reason", "aria-describedby": "reason-pii", rows: "3", cols: "60", oninput: (e) => c.setDraft({ reason: (e.target as HTMLTextAreaElement).value }) }, st.draft.reason)),
@@ -105,7 +105,7 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
     h("p", {}, `제출 ${st.submissionId}`),
     h("p", {}, `보고서 해시 ${p.reportHash.slice(0, 19)}… (화면에 보이는 보고서)`),
     p.reason && h("p", {}, `사유: ${p.reason}`),
-    h("p", {}, c.devApproverId ? `승인자 ${c.devApproverId} (개발 모드)` : "승인자: 게이트웨이가 인증한 사용자"),
+    h("p", {}, "승인자: 게이트웨이가 인증한 사용자"),
     h("p", { class: "muted" }, "확정하면 이 결정이 기록되고 되돌릴 수 없다."),
     h("p", {},
       h("button", { type: "button", id: "confirm-no", autofocus: true, disabled: sending, onclick: () => c.cancelConfirm() }, "취소"), " ",

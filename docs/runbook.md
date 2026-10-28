@@ -23,7 +23,7 @@ npm run mock                   # 모의 게이트·FailureStore(개발용)
 docker build --build-arg REVISION=$(git rev-parse --short HEAD) -t admin-console:local .
 docker run --rm -p 127.0.0.1::8080 admin-console:local
 ```
-설정은 환경 변수(`PORT`, `STATIC_DIR`, 개발용 `ADMIN_DEV_APPROVER_ID`)로만 받는다. 비밀 값은 없다. 토큰은 게이트웨이가 붙인다.
+설정은 환경 변수(`PORT`, `STATIC_DIR`)로만 받는다. 비밀 값은 없다. 토큰은 게이트웨이가 붙인다.
 
 ## 계약 버전을 올릴 때
 1. 이웃 `boundary-contracts`를 새 태그로 맞춘다.

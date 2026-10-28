@@ -22,7 +22,7 @@
 | 목록 | `GET /v1/submissions?status=AWAITING_APPROVAL&limit=&cursor=` | `{items: SubmissionView[], next_cursor}` |
 | 제출 정보 | `GET /v1/submissions/{id}` | `SubmissionView`(404 가능) |
 | 보고서 | `GET /v1/submissions/{id}/review-report` | `ReviewReport`. 자동 검사 전이면 409(CONFLICT) |
-| 결정 | `POST /v1/approvals` 본문 `{submission_id, decision, approver_role, reason?, report_hash, approver_id(개발 모드만)}` | 201 `GateApproval`, 같은 결정 재전송은 200, 다른 결정이면 409 |
+| 결정 | `POST /v1/approvals` 본문 `{submission_id, decision, approver_role, reason?, report_hash}`(승인자는 본문에 싣지 않는다, 8절) | 201 `GateApproval`, 같은 결정 재전송은 200, 다른 결정이면 409 |
 
 오류는 `BoundaryError` 본문이다. 403은 권한 없음(토큰의 역할이 `release-approver`가 아님), 404는 대상 없음, 409는 아래 3절, 503/네트워크 오류는 `UNAVAILABLE`로 재시도 안내를 보인다. 서버 주소는 같은 출처의 `/v1`이고 `Authorization` 헤더는 게이트웨이가 붙인다(이 영역은 토큰을 다루지 않는다).
 
@@ -71,7 +71,7 @@ Dockerfile, package.json, package-lock.json
 
 ## 8. 승인자 식별 (D69 반영)
 
-게이트웨이가 인증 뒤 `X-Openit-User`를 붙이고 서버가 그 값을 `approver_id`로 쓴다. 화면에는 승인자 입력이 없고 "게이트웨이가 인증한 사용자로 기록됨" 안내만 있다. `approver_role`은 `release-approver` 상수(기록용). 본문 `approver_id`는 개발 모드 설정 `ADMIN_DEV_APPROVER_ID`가 있을 때만 보낸다(정적 서버가 `/config.json`으로 화면에 전달, 운영에서는 설정하지 않는다).
+게이트웨이가 인증 뒤 `X-Openit-User`를 붙이고 서버가 그 값을 `approver_id`로 쓴다. 화면에는 승인자 입력이 없고 "게이트웨이가 인증한 사용자로 기록됨" 안내만 있다. `approver_role`은 `release-approver` 상수(기록용). 본문에 `approver_id`를 싣지 않는다. 개발·시험은 계약(HTTP.md I5)대로 게이트웨이를 흉내 내는 모의 서버가 `X-Openit-User`를 붙이게 한다(헤더가 없으면 모의도 401). 근거는 [ADR 0012](adr/0012-승인자-식별은-게이트웨이-헤더-한-길.md).
 
 ## 9. 열린 것
 

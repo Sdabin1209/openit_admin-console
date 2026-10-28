@@ -31,11 +31,8 @@ export class Controller {
   private listeners = new Set<() => void>();
   private inflight = new Set<string>();
   private readonly api: GateClient;
-  /** 개발 모드 설정(ADMIN_DEV_APPROVER_ID). 있을 때만 본문에 approver_id를 보낸다. */
-  readonly devApproverId: string | null;
-  constructor(api: GateClient, devApproverId: string | null = null) {
+  constructor(api: GateClient) {
     this.api = api;
-    this.devApproverId = devApproverId;
   }
 
   subscribe(fn: () => void): () => void {
@@ -132,7 +129,6 @@ export class Controller {
       const result = await this.api.decide({
         submission_id: s.submissionId,
         decision: p.decision,
-        ...(this.devApproverId ? { approver_id: this.devApproverId } : {}),
         approver_role: APPROVER_ROLE,
         ...(p.reason ? { reason: p.reason } : {}),
         report_hash: p.reportHash,

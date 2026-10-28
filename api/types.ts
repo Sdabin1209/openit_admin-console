@@ -63,8 +63,7 @@ export interface GateApproval {
 export interface DecideRequest {
   submission_id: string;
   decision: Decision;
-  /** 게이트웨이가 X-Openit-User를 붙이면 서버가 무시한다. 개발 모드 설정이 있을 때만 보낸다. */
-  approver_id?: string;
+  // approver_id는 보내지 않는다: 승인자는 게이트웨이가 붙이는 X-Openit-User 한 길이다(HTTP.md I5, D88).
   approver_role: string;
   reason?: string;
   report_hash: string;
