@@ -44,7 +44,18 @@ export function createReleasesMock(gatewayUser?: string, now: () => string = () 
     if (!operator) { err(res, 403, "PERMISSION_DENIED", "operator 역할이 아니다"); return true; }
     if (isGet) {
       if (p === "/v1/active-pointer") send(res, 200, { item: pointer });
-      else send(res, 200, { items: releases, next_cursor: null });
+      else {
+        // 쪽 넘김: 계약 HTTP.md 공통 목록 규칙(limit 기본 100·최대 500, cursor는 불투명 문자열, 응답 {items, next_cursor}).
+        // 모의의 cursor는 정렬된 목록의 시작 위치를 문자열로 쓴다(cases 모의와 같은 방식).
+        const rawLimit = url.searchParams.get("limit");
+        const limit = rawLimit === null ? 100 : Number(rawLimit);
+        if (!Number.isInteger(limit) || limit < 1) { err(res, 400, "INVALID_RECORD", "limit은 1 이상의 정수여야 한다"); return true; }
+        const rawCursor = url.searchParams.get("cursor");
+        const start = rawCursor === null ? 0 : Number(rawCursor);
+        if (!Number.isInteger(start) || start < 0) { err(res, 400, "INVALID_RECORD", "cursor가 맞지 않다"); return true; }
+        const size = Math.min(500, limit);
+        send(res, 200, { items: releases.slice(start, start + size), next_cursor: start + size < releases.length ? String(start + size) : null });
+      }
       return true;
     }
     posts++;
@@ -96,6 +107,8 @@ export function createReleasesMock(gatewayUser?: string, now: () => string = () 
     handle, reset,
     setOperator: (v: boolean) => { operator = v; },
     forceConflictNext: () => { conflictNext = true; },
+    /** 시험용: 가장 오래된 쪽에 릴리스 n개를 더한다(최신부터 정렬 유지). 쪽 넘김 시험에 쓴다. */
+    seedOlder: (n: number) => { for (let i = 0; i < n; i++) releases.push({ ...manifest(1), release_id: `rel-old-${String(i).padStart(5, "0")}`, created_at: "2026-09-01T00:00:00Z" }); },
     /** 시험용: 다른 사람이 활성 릴리스를 먼저 바꾼 것을 흉내 낸다. */
     externalActivate: (id: string) => bump2(id),
     log: () => log,

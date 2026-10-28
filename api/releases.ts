@@ -38,12 +38,12 @@ export class ReleasesClient {
     return d.item === null ? null : checkPointer(d.item);
   }
 
-  /** 최신부터. 쪽이 여럿이면 모두 읽는다(상한 20쪽). */
+  /** 최신부터. 쪽이 여럿이면 모두 읽는다. 20쪽(1만 건)을 넘으면 잘린 목록을 돌려주지 않고 오류를 낸다(docs/adr/0013). */
   async listReleases(): Promise<ReleaseSummary[]> {
     const out: ReleaseSummary[] = [];
     let cursor: string | null = null;
     for (let i = 0; i < 20; i++) {
-      // 쪽 크기 500, 최대 20쪽: 근거 기록 없음(릴리스 수 측정 안 함), docs/adr/0010. 20쪽을 넘으면 오래된 릴리스가 빠진다.
+      // 쪽 크기 500, 최대 20쪽: 500은 계약 최대값, 20쪽은 출처 없는 방어 상한(측정 안 함, docs/adr/0010). 넘으면 오류(docs/adr/0013).
       const q = new URLSearchParams({ limit: "500" });
       if (cursor) q.set("cursor", cursor);
       const { data } = await this.http.json("GET", `/v1/releases?${q}`);
@@ -51,9 +51,10 @@ export class ReleasesClient {
       need(!!d && Array.isArray(d.items), "릴리스 목록");
       out.push(...d.items!.map(checkRelease));
       cursor = d.next_cursor ?? null;
-      if (!cursor) break;
+      if (!cursor) return out;
     }
-    return out;
+    // 왜 오류인가: 잘린 목록으로 활성화·롤백 후보를 계산하면 조용히 틀린 후보가 나온다(ops-controller의 findIndex가 -1이면 전체가 후보). 실패 사례 목록(api/cases.ts)과 같게 한다.
+    throw new ApiError("UNKNOWN", 0, `릴리스가 ${out.length}건을 넘어 모두 읽지 못했다(20쪽 상한). 게이트 운영자에게 알려라`);
   }
 
   async activate(releaseId: string): Promise<ActivePointer> {

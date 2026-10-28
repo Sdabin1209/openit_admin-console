@@ -165,3 +165,53 @@ test("클라이언트 오류 종류: 403/409/412", async () => {
     await assert.rejects(api.activePointer(), (e) => e instanceof ApiError && e.kind === "PERMISSION_DENIED");
   } finally { await s.close(); }
 });
+
+// C5(2026-10-29 점검): 릴리스 목록이 20쪽에서 조용히 잘리면 안 된다. 기대값은 계약 HTTP.md 공통 목록 규칙
+// ("목록은 {items, next_cursor}, 쿼리 cursor·limit(기본 100, 최대 500)")과 "조용한 데이터 손실 금지"에서 나왔다.
+// 쪽 크기 500 x 20쪽 = 10000건. 10001건이면 21쪽이 필요하다.
+test("C5 모의 서버는 계약대로 쪽을 나눈다(limit 기본 100, 최대 500, next_cursor)", async () => {
+  const s = await startMock();
+  try {
+    s.mock.releases.seedOlder(1196); // 4 + 1196 = 1200
+    const first = await (await fetch(`${s.base}/v1/releases`)).json() as { items: unknown[]; next_cursor: string | null };
+    assert.equal(first.items.length, 100, "limit 기본 100");
+    assert.ok(first.next_cursor);
+    const big = await (await fetch(`${s.base}/v1/releases?limit=9999`)).json() as { items: unknown[] };
+    assert.ok(big.items.length <= 500, "limit 최대 500");
+    const bad = await fetch(`${s.base}/v1/releases?cursor=zzz`);
+    assert.equal(bad.status, 400, "알 수 없는 cursor는 400 INVALID_RECORD");
+  } finally { await s.close(); }
+});
+
+test("C5 릴리스가 3쪽(1200건)이면 끝까지 읽는다", async () => {
+  const s = await startMock();
+  try {
+    s.mock.releases.seedOlder(1196);
+    const all = await new ReleasesClient({ baseUrl: s.base }).listReleases();
+    assert.equal(all.length, 1200);
+    assert.equal(new Set(all.map((r) => r.release_id)).size, 1200, "중복 없이");
+    assert.equal(all[0].release_id, "rel-0004", "최신부터");
+  } finally { await s.close(); }
+});
+
+test("C5 릴리스가 21쪽 이상(10001건)이면 조용히 자르지 않고 오류를 낸다", async () => {
+  const s = await startMock();
+  try {
+    s.mock.releases.seedOlder(9997); // 4 + 9997 = 10001
+    const r = await new ReleasesClient({ baseUrl: s.base }).listReleases().then((x) => ({ ok: x.length }), (e) => ({ err: e }));
+    assert.ok("err" in r, `조용히 ${(r as { ok: number }).ok}건만 돌려줬다`);
+    assert.ok((r as { err: unknown }).err instanceof ApiError);
+  } finally { await s.close(); }
+});
+
+test("C5 릴리스 목록 오류면 화면은 후보를 계산하지 않고 오류 상태가 된다", async () => {
+  const s = await startMock();
+  try {
+    s.mock.releases.seedOlder(9997);
+    const c = new OpsController(new ReleasesClient({ baseUrl: s.base }));
+    await c.load();
+    assert.equal(c.state.phase, "error");
+    assert.deepEqual(c.state.releases, []);
+    assert.ok(c.state.error!.includes("20쪽") || c.state.error!.includes("모두 읽지"), c.state.error!);
+  } finally { await s.close(); }
+});
