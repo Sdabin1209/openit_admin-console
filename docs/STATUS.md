@@ -26,7 +26,7 @@
 - 막힌 것: CR-003(생성물 커밋 정책) 헤드 결정 대기.
 
 ## 작업 단위 4 (v2 ReviewReport 화면 확인)
-- 확인한 것: 화면(`app/model.ts`, `app/views.ts`)은 지표 이름·분리 기준(slice kind)을 해석하지 않고 `comparisons[]`의 값을 그대로 그린다. 그래서 v2 지표 이름(`action_accuracy` 등)과 `ACTION`·`REASON` 같은 새 분리 기준은 코드 변경 없이 보인다. 계약 `METRICS.md`는 아직 v1 이름이고 v2 이름은 `head/docs/metrics-v2-proposal.md`의 제안이다(미확정).
+- 확인한 것: 화면(`app/model.ts`, `app/views.ts`)은 지표 이름·분리 기준(slice kind)을 해석하지 않고 `comparisons[]`의 값을 그대로 그린다. 그래서 v2 지표 이름(`action_accuracy` 등)과 `ACTION`·`REASON` 같은 새 분리 기준은 코드 변경 없이 보인다. 지표 이름의 정의는 계약 `METRICS.md`가 정본이다.
 - 고친 곳: (1) 모르는 `group`이 모두 '기타'로 합쳐져 이름이 사라지던 것을 이름을 지킨 채 맨 뒤에 '(새 그룹)'으로 보이게 했다. (2) 같은 그룹 안에서 LORA_A 행이 LORA_B보다 먼저 오게 하고 역할 칸을 'LORA_A (추출)'/'LORA_B (응답)'로 표시, 행에 `data-role`을 붙였다. (3) 모의 서버 보고서에 v2 지표 행(ACTION 분리 기준, 기준 없음 포함)을 더하고 시험용 `setReport`를 추가했다.
 - 시험: `tests/v2-report-ui.test.ts`(jsdom DOM 단언: 이름·값·기준값·차이·A/B·모르는 이름/그룹/분리 기준·SAFETY 없는 보고서·활성 릴리스 없음·공식 예시). 브라우저 시험은 아니다.
 - 남은 일: 실제 release-gate가 내는 v2 보고서로 확인, 실제 브라우저 확인. SAFETY 구성이 바뀌면(제안서 2절) 화면의 '안전 그룹 맨 위' 규칙은 SAFETY 지표가 없을 때 그냥 빠진다.
@@ -34,7 +34,7 @@
 ## 작업 단위 5 (릴리스 운영 화면, D85)
 - 한 일: `#/ops` 화면(`app/ops-controller.ts`, `app/ops-view.ts`, 메뉴 '릴리스 운영'), 클라이언트 `api/releases.ts`(활성 포인터·릴리스 목록·activate·rollback), 모의 서버 `mock-server/releases.ts`(operator 아니면 403, 이미 활성이거나 포인터가 바뀌면 409, PASS 아님 412, rollback 멱등). 화면은 본문에 행위자·역할을 보내지 않는다.
 - 시험: `npm test` 66개 통과, 건너뜀 0, 실패 0(새 20개: 흐름 10, DOM 6, 계약 스키마 4). 흐름은 활성화→이력 갱신, 롤백, 멱등, 403, 409, 412, 네트워크. 스키마는 `../boundary-contracts/schemas`로 `ActivePointer`, `ReleaseManifest`, `RollbackReceipt`, `BoundaryError`를 검증. `npm run typecheck` 통과. `npm run smoke` 통과.
-- 확인 못 한 것: 실제 release-gate와 연동(`requested_by_role` 없는 본문을 받는지, 409/412의 실제 조건, 릴리스 목록에 PASS 아닌 것이 있는지), 실제 브라우저, 게이트웨이 경로(현재 Caddyfile에 없음).
+- 확인 못 한 것: 실제 release-gate와 연동(`requested_by_role` 없는 본문을 받는지, 409/412의 실제 조건, 릴리스 목록에 PASS 아닌 것이 있는지), 실제 브라우저, 게이트웨이 경로(열려 있는지는 deploy 문서가 정본, 요구는 CR-004).
 - 막힌 것: CR-004(게이트웨이 경로 네 개와 operator 역할, `ActivePointer`의 행위자·이력, `requested_by_role` 필수 여부).
 
 ## 작업 단위 6 (전수 점검 지적 수정, 간헐 실패 제거)

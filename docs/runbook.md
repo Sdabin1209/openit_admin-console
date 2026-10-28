@@ -40,7 +40,7 @@ docker run --rm -p 127.0.0.1::8080 admin-console:local
 
 ## 릴리스 운영 화면 (`#/ops`, D85)
 - 하는 일: 현재 활성 릴리스와 릴리스 이력을 보고, 릴리스를 활성화하고, 이전 릴리스로 롤백한다. 두 동작 모두 대상 릴리스 ID를 입력해야 실행되고, 끝나면 영수증(포인터 버전, 시각)을 보인다.
-- 게이트웨이가 열어 줘야 하는 경로(operator 역할 계정만): `GET /v1/active-pointer`, `GET /v1/releases`, `POST /v1/activate`, `POST /v1/rollback`. 2026-10-27 기준 `deploy/config/Caddyfile`에는 없다(CR-004). 없으면 화면은 404로 "요청에 실패했다"를 보인다.
+- 게이트웨이가 열어 줘야 하는 경로(operator 역할 계정만): `GET /v1/active-pointer`, `GET /v1/releases`, `POST /v1/activate`, `POST /v1/rollback`. 열려 있는지는 deploy의 문서를 본다(요구는 CR-004). 열려 있지 않으면 화면은 404로 "요청에 실패했다"를 보인다.
 - 오류 문구: 403 = operator 역할이 아님. 409 = 다른 운영자가 먼저 바꿈(화면이 현재 상태를 다시 읽는다). 412 = 게이트 결정이 PASS가 아님. 연결 실패 = 적용 여부를 모르니 새로고침으로 확인.
 - 누가 했는지는 서버가 게이트웨이 헤더 `X-Openit-User`로 기록한다. 화면은 이름을 보내지 않고 역할만 계약대로 `operator`로 보낸다(서버는 이 값을 믿지 않는다). 화면에서 '활성화한 사람'과 포인터 변경 이력은 볼 수 없다: 서버가 돌려주는 `ActivePointer`·`RollbackReceipt`에 행위자 필드가 없어서이고(CR-004), 화면에 그 이유를 적어 둔다. 승인 완료 화면은 서버가 기록한 `approver_id`를 보인다.
 - 롤백이 이상하게 보이면 게이트에서 `GET /v1/active-pointer`로 실제 포인터를 확인한다. 롤백 요청 본문에 `requested_by_role`을 보내지 않는데, release-gate가 이를 거절하면 400이 나온다(CR-004 2항).

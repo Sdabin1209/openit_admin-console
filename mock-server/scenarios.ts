@@ -30,7 +30,7 @@ export function baseReport(id: string, version = 1): ReviewReport {
     cmp("LORA_B", "slot_coverage", "ACCURACY", 0.96, 500, 0.95, 500, true, false, ["QUESTION_SET", "qs-main"]),
     cmp("LORA_B", "fallback_rate", "PROTECTION", 0.01, 500, 0.01, 500, false, false),
     cmp("LORA_B", "length_p95_ms", "ROBUSTNESS", 840, 500, 790, 500, false, true, ["ALL", "ALL"]),
-    // v2 지표(../head/docs/metrics-v2-proposal.md 제안 이름). 계약 METRICS.md는 아직 v1 이름이라 이름은 자유 문자열로만 다룬다.
+    // v2 지표 이름은 계약 METRICS.md / boundary_contracts/metrics.json의 이름이다. 화면은 이름을 해석하지 않고 자유 문자열로만 다룬다(EvaluationReport.metrics[].name).
     cmp("LORA_A", "action_accuracy", "ACCURACY", 0.94, 900, 0.95, 900, true, true, ["ALL", "ALL"]),
     cmp("LORA_A", "action_accuracy", "ACCURACY", 0.7, 40, 0.8, 40, true, true, ["ACTION", "CONFIRM"]),
     cmp("LORA_A", "semantic_violation_rate", "ACCURACY", 0.01, 900, 0.02, 900, false, false, ["ALL", "ALL"]),

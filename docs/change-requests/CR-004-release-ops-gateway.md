@@ -1,9 +1,9 @@
 # CR-004: 릴리스 활성화·롤백 화면(D85)에 필요한 게이트웨이 경로와 계약 확인
 
-- 요청 영역: admin-console, 대상: 헤드와 deploy(경로), 헤드(계약). 상태: 제안. release-gate 리포지토리는 읽지 않았다(계약 문서와 `../deploy/config/Caddyfile`만 읽음).
+- 요청 영역: admin-console, 대상: 헤드와 deploy(경로), 헤드(계약). 상태: 제안. release-gate와 deploy의 리포지토리는 읽지 않았다(계약 문서만 읽음). 게이트웨이의 현재 구성은 이 영역이 쓰지 않는다. deploy의 문서를 본다.
 
-## 1. 게이트웨이 경로 (현재 Caddyfile은 아무것도 열지 않는다)
-`../deploy/config/Caddyfile`은 `/v1/activate`, `/v1/rollback`, `/v1/releases*`를 "열지 않는 것"으로 두고 `handle /v1/*`이 404로 막는다. `/v1/active-pointer`도 없다. 이 화면이 같은 출처에서 부르는 경로는 다음 넷이다. 사람 인증 뒤에서 **operator 역할 계정만** 통과시키고, 아니면 403, `X-Openit-User`는 인증된 계정으로 덮어쓰고, 응답은 `Cache-Control: no-store`를 유지해 달라.
+## 1. 게이트웨이 경로 (요구)
+이 화면이 같은 출처에서 부르는 경로는 다음 넷이다. 사람 인증 뒤에서 **operator 역할 계정만** 통과시키고, 아니면 403, `X-Openit-User`는 인증된 계정으로 덮어쓰고, 응답은 `Cache-Control: no-store`를 유지해 달라.
 
 | 경로 | release-gate 토큰 |
 | --- | --- |
@@ -12,7 +12,7 @@
 | `POST /v1/activate` | operator 쓰기 |
 | `POST /v1/rollback` | operator 쓰기 |
 
-- `role_matchers`에 operator 역할(`@role_operator`)이 있어야 한다. 현재 확인되는 것은 `release-approver`와 `reviewer`뿐이다(조각 파일은 비밀 저장소라 읽지 않았다).
+- 게이트웨이에 operator 역할로 위 경로를 통과시키는 규칙이 있어야 한다(구성의 현재 상태는 deploy의 문서가 정본이다).
 - 선택: 화면에 "PASS" 결과를 직접 보이려면 `GET /v1/decisions/{id}`(읽기)도 필요하다. 지금 화면은 PASS 여부를 판단하지 않고 서버의 412에 맡긴다.
 - 열지 않을 것: `GET /v1/releases/{id}/bundle`, `PUT /v1/releases/*`(I9), 그 밖의 `/v1/*`.
 

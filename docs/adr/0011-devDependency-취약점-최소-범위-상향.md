@@ -1,7 +1,7 @@
 # ADR 0011: devDependency 취약점(ajv, fast-uri)을 최소 범위로 올린다
 
 ## 상태
-채택됨 (2026-10-28). OPEN_GAPS L16 대응(이 영역은 온라인 감사를 처음 실시).
+채택됨 (2026-10-28). 이 영역은 온라인 감사를 처음 실시했다.
 
 ## 맥락
 `npm audit`(2026-10-28, 레지스트리 조회만)가 2건(moderate)을 보고했다: ajv `<=8.17.1`(`$data` 옵션 ReDoS, GHSA-2g4f-4pwh-qvx6), fast-uri `<=3.1.8`(URI 해석 취약점 4건). `npm audit --omit=dev`는 0건이다.
