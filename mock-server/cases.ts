@@ -1,4 +1,5 @@
 // 모의 FailureStore(I7). HTTP.md의 경로와 상태 코드를 따른다. 운영 서버가 아니다.
+// failure_type은 계약 FailureCase 스키마에서 열거가 아닌 자유 문자열이다. 값은 계약 예시(examples/FailureCase.json)의 UNCLASSIFIED를 쓴다.
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FailureCase } from "../api/types.ts";
 
@@ -19,12 +20,12 @@ function mk(id: string, version: number, status: string, o: Partial<FailureCase>
 
 export function initialCases(): Map<string, FailureCase[]> {
   const rows: FailureCase[][] = [
-    [mk("fc-1", 1, "PENDING", { failure_type: "PARSER_MISS", expected_kind: "LORA_A" })],
+    [mk("fc-1", 1, "PENDING", { failure_type: "UNCLASSIFIED", expected_kind: "LORA_A" })],
     [mk("fc-2", 1, "PENDING", { failure_type: "FORBIDDEN_EXPRESSION", detection_method: "MODEL", expected_kind: "LORA_B", source_release_id: "rel-0002" })],
     [mk("fc-3", 1, "PENDING", { detection_method: "FEEDBACK" })],
     [mk("fc-403", 1, "PENDING", { failure_type: "READ_ONLY_TOKEN_CASE" })],
-    [mk("fc-4", 1, "PENDING", { failure_type: "PARSER_MISS" }),
-     mk("fc-4", 2, "CONFIRMED", { failure_type: "PARSER_MISS", expected_kind: "LORA_A", expected: { action: "NEXT", next_item: "END", values: [] }, reviewed_input: { ...VALID_LORA_A_INPUT, current_question: "두통이 있으신가요?", user_utterance: "가상 환자가 두통이 사흘 되었다고 말한다" } })],
+    [mk("fc-4", 1, "PENDING", { failure_type: "UNCLASSIFIED" }),
+     mk("fc-4", 2, "CONFIRMED", { failure_type: "UNCLASSIFIED", expected_kind: "LORA_A", expected: { action: "NEXT", next_item: "END", values: [] }, reviewed_input: { ...VALID_LORA_A_INPUT, current_question: "두통이 있으신가요?", user_utterance: "가상 환자가 두통이 사흘 되었다고 말한다" } })],
     [mk("fc-5", 1, "PENDING", { failure_type: "FALLBACK" }), mk("fc-5", 2, "DISMISSED", { failure_type: "FALLBACK" })],
   ];
   return new Map(rows.map((r) => [r[0].case_id, r]));

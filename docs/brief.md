@@ -18,6 +18,7 @@
 
 - **I5 GateService**(`HTTP.md`): `GET /v1/submissions?status=AWAITING_APPROVAL`(`SubmissionView` 목록), `GET /v1/submissions/{id}`, `GET /v1/submissions/{id}/review-report`(`ReviewReport`), `POST /v1/approvals`(본문 `submission_id`, `decision` APPROVE|REJECT, `approver_id`, `approver_role`, 반려 사유 `reason`, `report_hash`).
 - 스키마: `../boundary-contracts/schemas`의 `SubmissionView`, `ReviewReport`, `EvaluationReport`, `GateApproval`, `GateDecision`, `BoundaryError`. 복사본을 리포에 두지 않고 생성·검증 스크립트가 읽어 온다.
+- 소비하는 계약: I5 GateService 일부(`SubmissionView`, `ReviewReport`, `GateApproval`, `BoundaryError`)와 I7 FailureStore(`FailureCase` 목록·검토). 생산하는 계약: 없다(출고 결정은 `GateApproval`을 게이트 API에 보낼 뿐 이 영역이 낳는 계약이 아니다). 기준 계약 버전의 정본은 Dockerfile의 ARG이고, 상세는 `docs/boundary.md`.
 - 서버 주소는 같은 출처의 `/v1`이다(배포의 게이트웨이가 프록시하고 인증을 붙인다).
 
 ## 4. 상위 수용 기준

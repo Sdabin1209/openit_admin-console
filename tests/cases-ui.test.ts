@@ -23,7 +23,7 @@ test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async 
     await waitFor(() => q("#pii-warning"), "PII 경고");
     assert.ok(q("#pii-warning")!.textContent!.includes("개인정보를 쓰지 마라"));
     assert.ok(root.textContent!.includes("[MASKED]"), "마스킹된 trace가 보인다");
-    assert.ok(root.textContent!.includes("PARSER_MISS"));
+    assert.ok(root.textContent!.includes("UNCLASSIFIED"));
     // 검증 실패는 화면에 오류가 보이고 전송되지 않는다
     const ta = q<HTMLTextAreaElement>("#input-text")!;
     ta.value = "{ 깨짐";

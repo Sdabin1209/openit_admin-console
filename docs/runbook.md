@@ -1,6 +1,6 @@
 # 런북: admin-console
 
-정적 웹 화면(승인, 실패 사례 검토). 서버는 정적 파일만 낸다. 계약 기준은 boundary-contracts v2.0.2.
+정적 웹 화면(승인, 실패 사례 검토). 서버는 정적 파일만 낸다. 계약 기준 버전의 정본은 Dockerfile의 ARG다.
 
 ## 설치
 전제: Node 24 이상. 이미지 스모크에는 Docker와 curl.
