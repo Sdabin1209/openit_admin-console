@@ -1,0 +1,40 @@
+{
+  "session_id": "s-masked",
+  "turn_id": "t-1",
+  "contract_version": 1,
+  "turn_index": 3,
+  "extract_input": {
+    "question_id": "Q1.D03",
+    "current_question": "[MASKED]",
+    "user_utterance": "[MASKED]",
+    "state": {}
+  },
+  "extract_output": {
+    "action": "NEXT",
+    "next_item": "Q1.D04",
+    "values": [
+      {
+        "key": "Q1.D03.diagnosed",
+        "value": true,
+        "precision": "exact",
+        "status": "ANSWERED",
+        "save": true
+      }
+    ]
+  },
+  "extract_attempts": 1,
+  "extract_status": "OK",
+  "validation_ok": true,
+  "validation_violations": [],
+  "response_input": {
+    "action": "START",
+    "topic": "[MASKED]",
+    "next": {
+      "question_id": "Q1.D01",
+      "text": "[MASKED]",
+      "type": "NEXT"
+    }
+  },
+  "response_output": "[MASKED]",
+  "response_outcome": "ok"
+}

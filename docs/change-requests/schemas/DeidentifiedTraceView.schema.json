@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-console/DeidentifiedTraceView.schema.json",
+  "title": "DeidentifiedTraceView",
+  "description": "GET /v1/deidentified-traces/{ref} 응답 중 admin-console 화면이 읽는 필드의 부분집합. 만드는 쪽: ops-feedback(비식별기). 읽는 쪽: admin-console. 필드 이름과 뜻은 문진 스키마 TurnTrace와 같지만 이 스키마는 그것의 사본이 아니라 소비자가 기대하는 부분이다. 모든 필드는 선택이고 null을 허용한다(화면은 없으면 '—'를 보인다). 모르는 키는 허용한다(읽기 쪽 관용).",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "contract_version": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "extract_status": {
+      "enum": [
+        "OK",
+        "OUTPUT_INVALID",
+        "VIOLATION",
+        "ERROR",
+        null
+      ]
+    },
+    "extract_attempts": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "validation_ok": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "response_outcome": {
+      "enum": [
+        "ok",
+        "fallback",
+        "fixed",
+        null
+      ]
+    },
+    "extract_input": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "편집창을 채우는 데 쓴다(ActionExtractionInput 모양, 마스킹됨)"
+    },
+    "extract_output": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array"
+        }
+      }
+    },
+    "response_input": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "편집창을 채우는 데 쓴다(ResponseRequest 모양, 마스킹됨)",
+      "properties": {
+        "action": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
