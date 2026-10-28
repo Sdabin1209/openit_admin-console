@@ -53,7 +53,7 @@
 api/          게이트 HTTP 클라이언트(types, client). UI와 무관
 app/          화면(view-model, controller, views, main, index.html, style.css)
 mock-server/  모의 게이트 + 개발용 정적 서빙
-serve/        이미지에서 쓰는 정적 서버(/healthz, /readyz)
+serve/        이미지의 Caddy 설정(Caddyfile: /healthz, /readyz, 보안 헤더)
 scripts/      build.mjs, smoke.sh
 tests/        node:test 시험, fixtures/
 Dockerfile, package.json, package-lock.json
@@ -63,7 +63,7 @@ Dockerfile, package.json, package-lock.json
 
 - TypeScript, 프레임워크 없음, 직접 DOM. 화면 둘이고 의존을 최소로 하라는 브리프에 맞다. 자바스크립트 상태는 view-model/controller에 두고 DOM은 얇게 둬서 로직을 DOM 없이 시험한다.
 - 빌드는 esbuild(번들 하나, 외부 CDN 없음), 타입 검사는 tsc. 시험은 Node 내장 `node:test`(Node 24가 타입을 직접 벗긴다). 스키마 검증은 개발 의존 ajv(시험 전용, 이미지에 들어가지 않는다). 잠금 파일 `package-lock.json`, `npm ci`로 설치.
-- 이미지는 다단계: Node로 빌드 → `node:alpine` 위에서 작은 정적 서버(의존 없음)를 non-root로 실행. 설정은 환경 변수(`PORT`). 브라우저 저장소를 쓰지 않고 `console`에 보고서 내용을 찍지 않는다.
+- 이미지는 다단계: Node로 빌드 → `caddy:alpine` 위에서 Caddy file_server를 non-root로 실행(ADR 0018). 설정은 `serve/Caddyfile`. 브라우저 저장소를 쓰지 않고 `console`에 보고서 내용을 찍지 않는다.
 
 ## 7. 비밀과 개인정보
 

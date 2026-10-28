@@ -12,7 +12,6 @@
     "gen:schemas": "node scripts/gen-schemas.mjs",
     "test": "node --test \"tests/*.test.ts\"",
     "mock": "node mock-server/main.ts",
-    "start": "node serve/static-server.mjs",
     "smoke": "bash scripts/smoke.sh"
   },
   "devDependencies": {

@@ -48,6 +48,10 @@ get / | grep -q 'app.js' || fail "index.html"
 CODE="$(curl -s --path-as-is --max-time 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/../../etc/passwd")"
 [ "$CODE" = "404" ] || fail "경로 이탈 응답 $CODE"
 
+echo "== 동작 시험(tests/static-behavior.test.ts, 이미지에 대해)"
+STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >/tmp/admin-console-static-$$.log 2>&1 || { cat /tmp/admin-console-static-$$.log >&2; rm -f /tmp/admin-console-static-$$.log; fail "정적 서버 동작 시험"; }
+grep -E "^ℹ (pass|fail)" /tmp/admin-console-static-$$.log; rm -f /tmp/admin-console-static-$$.log
+
 echo "== labels"
 LABELS="$("$DOCKER" inspect -f '{{json .Config.Labels}}' "$IMAGE")"
 for k in io.openit.service io.openit.revision io.openit.contracts.boundary io.openit.contracts.survey-schema io.openit.turn-engine io.openit.model-runtime; do
@@ -58,4 +62,7 @@ echo "== non-root"
 UID_IN="$("$DOCKER" exec "$NAME" id -u)"
 [ "$UID_IN" != "0" ] || fail "root로 실행 중"
 echo "uid=$UID_IN"
+echo "== 종료 신호"
+"$DOCKER" stop -t 10 "$NAME" >/dev/null
+[ "$("$DOCKER" inspect -f '{{.State.ExitCode}}' "$NAME")" = "0" ] || fail "SIGTERM 뒤 종료 코드가 0이 아니다"
 echo "SMOKE OK ($IMAGE)"

@@ -57,7 +57,7 @@ test("화면은 승인 본문에 approver_id를 싣지 않는다", async () => {
 });
 
 test("개발 모드 설정 경로(ADMIN_DEV_APPROVER_ID, /config.json, dev_approver_id)가 소스에 없다", () => {
-  for (const f of ["app/main.ts", "app/controller.ts", "app/views.ts", "serve/static-server.mjs", "mock-server/main.ts", "mock-server/server.ts", "scripts/smoke.sh", "api/types.ts"]) {
+  for (const f of ["app/main.ts", "app/controller.ts", "app/views.ts", "mock-server/main.ts", "mock-server/server.ts", "scripts/smoke.sh", "api/types.ts", "serve/Caddyfile"]) {
     const t = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.ok(!/ADMIN_DEV_APPROVER_ID|dev_approver_id|config\.json|devApprover/.test(t), f);
   }

@@ -25,7 +25,7 @@
 | `app/` | 화면. 상태(model), 컨트롤러, 뷰, `index.html`, CSS. 승인 화면, `cases-*`(실패 사례 검토), `ops-*`(릴리스 운영, `#/ops`) |
 | `api/` | I5/I7 HTTP 클라이언트와 타입. UI와 무관 |
 | `mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(`releases.ts`: 활성 포인터·목록·activate·rollback, operator 아니면 403)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
-| `serve/static-server.mjs` | 이미지에서 쓰는 정적 서버(`/healthz`, `/readyz`) |
+| `serve/Caddyfile` | 이미지의 Caddy file_server 설정(`/healthz`, `/readyz`, 보안 헤더, ADR 0018) |
 | `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
 | `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열, 경계 형식 5종, ImageLabels)와 계약 버전 상수(커밋됨, ADR 0017. 정책은 CR-003에서 헤드 결정 대기) |
 | `tests/` | `node:test` 시험(jsdom 포함) |
@@ -37,7 +37,7 @@ flowchart LR
   B[브라우저: app/] -->|같은 출처 /v1| G[게이트웨이: 인증, 토큰]
   G --> RG[release-gate I5]
   G --> OF[ops-feedback I7]
-  S[이미지: serve/static-server] -->|정적 파일| B
+  S[이미지: Caddy file_server] -->|정적 파일| B
   M[mock-server] -.개발·시험 때 대신.-> B
 ```
 
@@ -47,7 +47,7 @@ flowchart LR
 
 ## 3. 실행 방법
 
-전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 설정은 환경 변수(`PORT`, `STATIC_DIR`)로만 받는다.
+전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 
 
 ```bash
 bash scripts/setup-env.sh   # 환경 준비의 정본: node 버전 확인 + npm ci(잠금 파일 기준, 멱등, 어느 폴더에서나)
@@ -55,7 +55,6 @@ npm run typecheck     # 타입 검사
 npm test              # 시험
 npm run build         # dist/ 생성
 npm run mock          # 모의 서버(개발용)
-npm start             # 정적 서버(PORT 기본 8080)
 npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker 필요, 포트는 Docker가 배정)
 ```
 
@@ -101,7 +100,8 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0003 해시 라우팅](docs/adr/0003-해시-라우팅.md)
 - [0004 승인 확인창 흐름](docs/adr/0004-승인-확인창-흐름.md)
 - [0005 모의 서버와 한계](docs/adr/0005-모의-서버.md)
-- [0006 의존 없는 정적 서버](docs/adr/0006-정적-서버.md)
+- [0006 의존 없는 정적 서버](docs/adr/0006-정적-서버.md) (0018이 대체)
+- [0018 정적 서버는 Caddy file_server](docs/adr/0018-정적-서버는-Caddy-file_server.md)
 - [0007 활성화·롤백 확인 문구](docs/adr/0007-활성화-롤백-확인-문구.md)
 - [0008 시간 표시 규칙](docs/adr/0008-시간-표시-규칙.md)
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)

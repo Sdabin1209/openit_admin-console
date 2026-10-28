@@ -18,12 +18,12 @@ npm run smoke                  # 이미지 빌드, /healthz, 라벨 확인(포�
 
 ## 실행
 ```bash
-npm run build && npm start     # dist/ 정적 서버, PORT 기본 8080
+npm run build && npm run mock # 개발: 모의 서버가 dist/를 서빙(이미지는 Caddy, npm run smoke)
 npm run mock                   # 모의 게이트·FailureStore(개발용)
 docker build --build-arg REVISION=$(git rev-parse --short HEAD) -t admin-console:local .
 docker run --rm -p 127.0.0.1::8080 admin-console:local
 ```
-설정은 환경 변수(`PORT`, `STATIC_DIR`)로만 받는다. 비밀 값은 없다. 토큰은 게이트웨이가 붙인다.
+설정 파일은 `serve/Caddyfile`(이미지에 포함, 포트 8080)이다. 비밀 값은 없다. 토큰은 게이트웨이가 붙인다.
 
 ## 계약 버전을 올릴 때
 1. 이웃 `boundary-contracts`를 새 태그로 맞춘다.
