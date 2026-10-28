@@ -15,6 +15,8 @@ test("스키마 JSON 복사본을 리포에 두지 않았다", () => {
   const walk = (d: URL, out: string[] = []): string[] => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
       if (["node_modules", ".git", "dist"].includes(e.name)) continue;
+      // 왜: docs/change-requests/schemas는 계약 스키마의 복사본이 아니라 이 영역이 헤드에게 제안하는 새 스키마 초안이다(CR-006).
+      if (e.isDirectory() && e.name === "schemas" && d.pathname.endsWith("/docs/change-requests/")) continue;
       if (e.isDirectory()) walk(new URL(e.name + "/", d), out);
       else if (/\.schema\.json$/.test(e.name) || /^(ActionExtractionInput|ActionExtraction|ResponseRequest|ResponseText|TurnTrace)\.json$/.test(e.name)) out.push(e.name);
     }
