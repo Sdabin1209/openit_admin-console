@@ -1,6 +1,7 @@
 // 영역 빌드 진입점(scripts/build-image.sh): 계약 BuildImageRequest를 받아 BuildImageResult 한 줄을 표준 출력 마지막 줄에 낸다(계약 2.5.0, U42).
 // 여기서는 가짜 DOCKER로 진입점의 논리(요청 검증, 인자, 라벨 대조, 결과 형식)를 시험한다. 실제 docker 빌드는 npm run smoke가 이 진입점으로 한다.
 // 기대값의 출처: 계약 BuildImageRequest/BuildImageResult 스키마와 그 예시(boundary-contracts/examples).
+import { contract } from "../scripts/contract-src.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -75,7 +76,7 @@ test("요청 값이 build 인자로 간다(리비전, 계약 태그)", () => {
 });
 
 test("계약 예시 요청의 이웃 소스(dependency_sources)와 turn_engine은 받되 쓰지 않는다", () => {
-  const ex = JSON.parse(readFileSync(new URL("../../boundary-contracts/examples/BuildImageRequest.json", import.meta.url), "utf8"));
+  const ex = contract.json("examples/BuildImageRequest.json");
   delete ex.variant;
   const r = run({ ...ex, source_dir: REPO, image_tag: "deploy-build/admin-console:bad876c" });
   assert.equal(r.status, 0, r.stderr);

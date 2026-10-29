@@ -59,7 +59,7 @@ npm run mock          # 모의 서버(개발용)
 npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker 필요, 포트는 Docker가 배정)
 ```
 
-`node scripts/gen-schemas.mjs [--check]`는 이웃 `boundary-contracts/schemas`(읽기 전용)가 있어야 돈다. 없으면 `boundary-contracts/schemas를 찾을 수 없다`를 내고 종료 코드 2로 끝난다. `setup-env.sh`, typecheck, build에는 이웃 폴더가 필요 없다. 그러나 `npm test`의 일부(`mock-conformance`, `ops-conformance`, `v2-report-ui`의 공식 예시 1건)는 이웃 `boundary-contracts`의 스키마·예시를 직접 읽어, 이웃 폴더가 없는 새 clone에서는 실패한다(2026-10-28 확인: 74개 중 통과 70, 실패 3, 건너뜀 1; 실패 2건은 파일 단위로 불러오지 못함). 시험을 돌리려면 이 리포 옆에 `boundary-contracts`(Dockerfile ARG의 태그)를 두어야 한다. 이웃이 없을 때 건너뛰게 바꾸는 것은 아직 하지 않았다.
+`node scripts/gen-schemas.mjs [--check]`는 이웃 `boundary-contracts/schemas`(읽기 전용)가 있어야 돈다. 없으면 `boundary-contracts/schemas를 찾을 수 없다`를 내고 종료 코드 2로 끝난다. `setup-env.sh`, typecheck, build에는 이웃 폴더가 필요 없다. 그러나 `npm test`의 일부(`mock-conformance`, `ops-conformance`, `v2-report-ui`의 공식 예시 1건)는 이웃 `boundary-contracts`의 스키마·예시를 직접 읽어, 이웃 폴더가 없는 새 clone에서는 실패한다(2026-10-28 확인: 74개 중 통과 70, 실패 3, 건너뜀 1; 실패 2건은 파일 단위로 불러오지 못함). 시험과 생성기는 이웃의 작업 트리가 아니라 **Dockerfile ARG가 고정한 태그의 내용**(`git show <태그>:<경로>`, `scripts/contract-src.mjs`)을 읽으므로, 이웃이 고정 태그보다 앞서 있어도 결과가 같다. 시험을 돌리려면 이 리포 옆에 그 태그를 가진 `boundary-contracts` 리포가 있어야 한다(없으면 일부 시험은 건너뛰고 일부는 실패한다). 이웃이 없을 때 건너뛰게 바꾸는 것은 아직 하지 않았다.
 
 이 세션에서 돌려 본 것: `npm run typecheck`(오류 없음), `npm test`(아래 4절).
 돌리지 않은 것: `npm run build`, `npm run mock`, `npm start`, `npm run smoke`(이미지 빌드).

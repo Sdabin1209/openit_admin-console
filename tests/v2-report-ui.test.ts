@@ -1,4 +1,5 @@
 // v2 ReviewReport(LORA_A/LORA_B 지표)를 모의 서버로 흘려 jsdom이 그린 DOM을 단언한다. 브라우저 시험이 아니다(레이아웃은 못 본다).
+import { contract } from "../scripts/contract-src.mjs";
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -92,7 +93,7 @@ test("SAFETY 지표가 하나도 없는 v2 보고서와 활성 릴리스 없음"
 });
 
 test("공식 예시 ReviewReport(계약 패키지)가 그대로 그려진다", async () => {
-  const ex = JSON.parse(readFileSync(new URL("../../boundary-contracts/examples/ReviewReport.json", import.meta.url), "utf8"));
+  const ex = contract.json("examples/ReviewReport.json");
   const { s } = await show({ ...ex, submission_id: "sub-await" });
   try {
     const x = find(rows(), "LORA_A", ex.comparisons[0].name, "전체");

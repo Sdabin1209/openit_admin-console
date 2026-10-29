@@ -1,16 +1,15 @@
 // 릴리스 운영 모의 서버의 출력과 클라이언트 요청이 계약 스키마(../boundary-contracts/schemas, 복사 없음)를 지키는지 검증한다.
+import { contract } from "../scripts/contract-src.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { ReleasesClient } from "../api/releases.ts";
 import { startMock } from "./helpers.ts";
 
-const dir = new URL("../../boundary-contracts/schemas/", import.meta.url);
 const ajv = new Ajv2020({ strict: false, allErrors: true });
 (addFormats as unknown as (a: unknown) => void)(ajv);
-for (const f of readdirSync(dir)) if (f.endsWith(".json")) { const sc = JSON.parse(readFileSync(new URL(f, dir), "utf8")); ajv.addSchema({ ...sc, $id: sc.$id ?? f }); }
+for (const f of contract.list("schemas")) if (f.endsWith(".json")) { const sc = contract.json(`schemas/${f}`); ajv.addSchema({ ...sc, $id: sc.$id ?? f }); }
 const errors = (name: string, v: unknown) => { const fn = ajv.getSchema(`${name}.schema.json`); assert.ok(fn, name); return fn!(v) ? [] : fn!.errors!; };
 const check = (name: string, v: unknown) => assert.deepEqual(errors(name, v), [], name);
 
@@ -20,7 +19,7 @@ const j = async (path: string, init?: RequestInit) => { const r = await fetch(s.
 const post = (path: string, body: unknown) => j(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 test("공식 예제가 스키마를 통과한다(검증기 점검)", () => {
-  const ex = (n: string) => JSON.parse(readFileSync(new URL(`../../boundary-contracts/examples/${n}.json`, import.meta.url), "utf8"));
+  const ex = (n: string) => contract.json(`examples/${n}.json`);
   check("ActivePointer", ex("ActivePointer"));
   check("ReleaseManifest", ex("ReleaseManifest"));
   assert.notDeepEqual(errors("ActivePointer", { release_id: "x" }), []);

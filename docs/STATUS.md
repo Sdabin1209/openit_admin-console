@@ -66,3 +66,7 @@
 - 한 일: `scripts/build-image.sh`(+ `build-image.mjs`)가 계약 `BuildImageRequest`를 검증하고 이미지를 만든 뒤 `BuildImageResult` 한 줄을 낸다(ADR 0019). 스모크가 이 진입점으로 빌드한다. 계약 고정을 v2.5.0으로(Dockerfile ARG, 생성 검증기에 BuildImage 2종 추가, `PIPELINE_SCHEMA_VERSION` "2.5"로 바뀌는지는 아래). 생성 검증기는 ajv 런타임 의존 없이 돈다.
 - 시험: `tests/build-image.test.ts` 12개(가짜 DOCKER). 실제 docker 빌드는 `npm run smoke`.
 - 남은 일: deploy `build-images.sh`가 이 진입점을 부르도록 바뀌는 것(deploy 몫).
+
+## 작업 단위 U42 후속 (이웃 작업 트리에 기대지 않는 시험)
+- 문제: 시험과 `gen-schemas`가 `../boundary-contracts`의 작업 트리를 읽어, 계약이 앞서 나가면 아무것도 안 바꾼 영역 시험이 깨졌다(main에서 `계약 버전 상수`, `generated ... 원본 스키마와 같다` 2건 실패를 a80df4a에서 재현).
+- 고침: `scripts/contract-src.mjs`가 Dockerfile ARG의 고정 태그 내용을 `git show`로 읽는다. 생성기와 모든 계약 읽는 시험이 이것을 쓴다. 시험 `tests/contract-source.test.ts`(이웃이 태그보다 앞서고 수정 중이어도 같은 결과). 핀 v2.5.0 + 이웃 v2.5.1 상태에서 전체 시험 통과를 확인했다.

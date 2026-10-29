@@ -1,11 +1,11 @@
-// 생성된 검증기가 원본(../boundary-contracts/schemas)과 어긋나지 않았는지 확인하고, 복사본을 두지 않았음을 확인한다.
+// 생성된 검증기가 원본(../boundary-contracts의 고정 태그 내용)과 어긋나지 않았는지 확인하고, 복사본을 두지 않았음을 확인한다.
+import { contract } from "../scripts/contract-src.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 
-const src = new URL("../../boundary-contracts/schemas/", import.meta.url);
 
-test("generated/contract-validators.cjs가 원본 스키마와 같다", { skip: !existsSync(src) && "boundary-contracts가 없는 환경" }, async () => {
+test("generated/contract-validators.cjs가 원본 스키마와 같다", { skip: !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경" }, async () => {
   const { generate } = await import("../scripts/gen-schemas.mjs");
   const cur = readFileSync(new URL("../generated/contract-validators.cjs", import.meta.url), "utf8");
   assert.equal(cur, generate(), "node scripts/gen-schemas.mjs 로 다시 생성하라");

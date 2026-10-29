@@ -1,16 +1,15 @@
 // 모의 서버의 출력이 계약 스키마(../boundary-contracts/schemas, 복사 없음)를 지키는지 검증한다.
+import { contract } from "../scripts/contract-src.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { baseReport } from "../mock-server/scenarios.ts";
 import { startMock } from "./helpers.ts";
 
-const dir = new URL("../../boundary-contracts/schemas/", import.meta.url);
 const ajv = new Ajv2020({ strict: false, allErrors: true });
 (addFormats as unknown as (a: unknown) => void)(ajv);
-for (const f of readdirSync(dir)) if (f.endsWith(".json")) { const sc = JSON.parse(readFileSync(new URL(f, dir), "utf8")); ajv.addSchema({ ...sc, $id: sc.$id ?? f }); } // $id가 없는 스키마는 파일 이름으로 읽는다(복사본 없음)
+for (const f of contract.list("schemas")) if (f.endsWith(".json")) { const sc = contract.json(`schemas/${f}`); ajv.addSchema({ ...sc, $id: sc.$id ?? f }); } // $id가 없는 스키마는 파일 이름으로 읽는다(복사본 없음)
 const check = (name: string, v: unknown) => {
   const fn = ajv.getSchema(`${name}.schema.json`);
   assert.ok(fn, `schema ${name}`);
@@ -22,7 +21,7 @@ after(() => s.close());
 const j = async (path: string, init?: RequestInit) => { const r = await fetch(s.base + path, init); return { status: r.status, body: await r.json() }; };
 
 test("공식 예제가 스키마를 통과한다(검증기 점검)", () => {
-  const ex = (n: string) => JSON.parse(readFileSync(new URL(`../../boundary-contracts/examples/${n}.json`, import.meta.url), "utf8"));
+  const ex = (n: string) => contract.json(`examples/${n}.json`);
   check("ReviewReport", ex("ReviewReport"));
   check("SubmissionView", ex("SubmissionView"));
   check("GateApproval", ex("GateApproval"));

@@ -1,5 +1,6 @@
 // 계약 스키마(boundary-contracts, 읽기 전용)로 만든 검증기를 코드가 실제로 쓰는지 확인한다(D107 승격 스키마).
 // 기대값은 계약의 examples / conformance/examples_invalid 에서 온다. 이 파일이 값을 정하지 않는다.
+import { contract } from "../scripts/contract-src.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
@@ -10,11 +11,10 @@ import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { trace } from "../mock-server/cases.ts";
 import * as v from "../generated/contract-validators.cjs";
 
-const BC = new URL("../../boundary-contracts/", import.meta.url);
-const skip = !existsSync(BC) && "boundary-contracts가 없는 환경";
-const ex = (n: string) => JSON.parse(readFileSync(new URL(`examples/${n}.json`, BC), "utf8"));
+const skip = !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경";
+const ex = (n: string) => contract.json(`examples/${n}.json`);
 const bad = (prefix: string): [string, unknown][] =>
-  readdirSync(new URL("conformance/examples_invalid/", BC)).filter((f) => f.startsWith(prefix + ".")).map((f) => [f, JSON.parse(readFileSync(new URL(`conformance/examples_invalid/${f}`, BC), "utf8"))]);
+  contract.list("conformance/examples_invalid").filter((f) => f.startsWith(prefix + ".")).map((f) => [f, contract.json(`conformance/examples_invalid/${f}`)]);
 
 /** 요청 본문을 보냈는지 세는 가짜 fetch. 응답은 주어진 것을 그대로 낸다. */
 function fakeFetch(respond: () => { status?: number; body: unknown; headers?: Record<string, string> }) {
@@ -28,7 +28,7 @@ function fakeFetch(respond: () => { status?: number; body: unknown; headers?: Re
 }
 
 test("계약 버전 상수는 계약 schemas_api.py의 PIPELINE_SCHEMA_VERSION에서 생성된다", { skip }, () => {
-  const py = readFileSync(new URL("boundary_contracts/schemas_api.py", BC), "utf8");
+  const py = contract.read("boundary_contracts/schemas_api.py");
   assert.equal(PIPELINE_SCHEMA_VERSION, /PIPELINE_SCHEMA_VERSION\s*=\s*"([^"]+)"/.exec(py)![1]);
 });
 
@@ -37,9 +37,9 @@ test("승격 스키마 검증기: 계약 예시는 통과하고 examples_invalid
   for (const n of names) {
     const fn = (v as unknown as Record<string, (x: unknown) => boolean>)[n];
     assert.equal(typeof fn, "function", `${n} 검증기가 생성되지 않았다`);
-    const valids = readdirSync(new URL("examples/", BC)).filter((f) => f.startsWith(n + ".") && f.endsWith(".json"));
+    const valids = contract.list("examples").filter((f) => f.startsWith(n + ".") && f.endsWith(".json"));
     assert.ok(valids.length > 0);
-    for (const f of valids) assert.ok(fn(JSON.parse(readFileSync(new URL(`examples/${f}`, BC), "utf8"))), `${f}는 통과해야 한다`);
+    for (const f of valids) assert.ok(fn(contract.json(`examples/${f}`)), `${f}는 통과해야 한다`);
     // 왜 제외: ImageLabels.bad-jobs-content는 JSON 문자열 라벨의 내용(contentSchema)이 틀린 경우라 계약 쪽도 따로 풀어 검증한다. 이 영역은 jobs·exposure 라벨을 달지 않는다.
     for (const [f, body] of bad(n).filter(([f]) => f !== "ImageLabels.bad-jobs-content.json")) assert.equal(fn(body), false, `${f}는 거부해야 한다`);
   }
