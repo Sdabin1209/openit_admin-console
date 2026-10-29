@@ -30,10 +30,18 @@ if (req.variant !== undefined) fail(`이 영역은 variant가 없다: ${req.vari
 let src; try { src = realpathSync(req.source_dir); } catch { fail(`source_dir가 없다: ${req.source_dir}`, 2); }
 if (src !== ROOT) fail(`source_dir(${req.source_dir})가 이 진입점이 속한 리포 루트(${ROOT})와 다르다`, 2);
 
+// 노출 선언(라벨 io.openit.exposure): 리포 안 deploy-exposure.json이 정본이다(ADR 0021). 계약 Exposure로 검사하고 한 줄 JSON으로 라벨에 단다.
+let exposure;
+try { exposure = JSON.parse(readFileSync(`${src}/deploy-exposure.json`, "utf8")); } catch (e) { fail(`deploy-exposure.json을 읽지 못했다: ${e.message}`, 2); }
+if (!v.Exposure(exposure)) fail(`deploy-exposure.json이 계약 Exposure에 맞지 않는다: ${errs(v.Exposure)}`, 2);
+const exposureLabel = JSON.stringify(exposure);
+
 console.error(`build-image: ${req.image_tag} 빌드 (revision ${req.revision}, 계약 ${req.versions.boundary})`);
 // 왜 --provenance=false: BuildKit이 빌드마다 붙이는 출처 증명(attestation)이 이미지 ID를 매번 바꾼다. 끄면 같은 입력이 같은 image_id를 낸다(계약: 멱등, 2회 빌드로 확인).
 const b = docker(["build", "--provenance=false", "-t", req.image_tag,
   "--build-arg", `REVISION=${req.revision}`, "--build-arg", `BOUNDARY_CONTRACTS=${req.versions.boundary}`, "--build-arg", "SURVEY_SCHEMA=n/a",
+  // 왜 --label: 노출 표는 JSON이고 Dockerfile ARG로 받으면 따옴표 이스케이프가 어긋나기 쉽다. 값은 한 곳(deploy-exposure.json)에서만 온다.
+  "--label", `io.openit.exposure=${exposureLabel}`,
   src], { stdoutToStderr: true });
 if (b.status !== 0) fail(`docker build가 실패했다(종료 ${b.status})`);
 
@@ -47,6 +55,11 @@ if (!v.ImageLabels(labels)) fail(`이미지 라벨이 계약 ImageLabels에 맞�
 // 요청 값이 라벨에 실제로 붙었는지: Dockerfile이 build 인자를 라벨로 옮기지 않으면 여기서 잡힌다.
 if (labels["io.openit.revision"] !== req.revision) fail(`라벨 io.openit.revision(${labels["io.openit.revision"]})이 요청(${req.revision})과 다르다`);
 if (labels["io.openit.contracts.boundary"] !== req.versions.boundary) fail(`라벨 io.openit.contracts.boundary(${labels["io.openit.contracts.boundary"]})가 요청(${req.versions.boundary})과 다르다`);
+
+// 노출 라벨이 이미지에 실제로 붙었고 선언 파일과 같은지: 안 붙으면 deploy가 노출 표를 못 읽는다.
+let attached; try { attached = JSON.parse(labels["io.openit.exposure"]); } catch { fail("라벨 io.openit.exposure가 없거나 JSON이 아니다"); }
+if (!v.Exposure(attached)) fail(`라벨 io.openit.exposure가 계약 Exposure에 맞지 않는다: ${errs(v.Exposure)}`);
+if (labels["io.openit.exposure"] !== exposureLabel) fail("라벨 io.openit.exposure가 deploy-exposure.json과 다르다");
 
 const result = { image: req.image_tag, image_id: ii.stdout.trim(), labels };
 if (!v.BuildImageResult(result)) fail(`결과가 계약 BuildImageResult에 맞지 않는다: ${errs(v.BuildImageResult)}`);

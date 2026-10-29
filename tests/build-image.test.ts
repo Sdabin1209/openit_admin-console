@@ -13,23 +13,27 @@ import * as v from "../generated/contract-validators.cjs";
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const ID = "sha256:" + "ab".repeat(32);
 
-/** 가짜 docker: build 인자를 기록하고, inspect에는 Dockerfile이 붙였을 라벨을 돌려준다(BAD_REVISION=1이면 revision을 틀리게). */
+/** 가짜 docker(node): build 인자를 기록하고, inspect에는 Dockerfile과 --label이 붙였을 라벨을 돌려준다(BAD_REVISION=1이면 revision을 틀리게). */
 function fakeDocker(dir: string): string {
   const p = join(dir, "docker");
-  writeFileSync(p, `#!/usr/bin/env bash
-echo "$@" >> "${dir}/calls"
-case "$1" in
-  build)
-    [ -n "\${FAKE_BUILD_FAIL:-}" ] && { echo "build failed" >&2; exit 1; }
-    echo "stdout noise from build"   # 진행 출력이 표준 출력으로 나와도 진입점이 막는다
-    for a in "$@"; do case "$a" in REVISION=*) echo "\${a#REVISION=}" > "${dir}/rev";; BOUNDARY_CONTRACTS=*) echo "\${a#BOUNDARY_CONTRACTS=}" > "${dir}/bc";; esac; done ;;
-  image)
-    case "$*" in
-      *Labels*) rev=$(cat "${dir}/rev"); [ -n "\${BAD_REVISION:-}" ] && rev=0000000
-        printf '{"io.openit.service":"admin-console","io.openit.revision":"%s","io.openit.contracts.boundary":"%s","io.openit.contracts.survey-schema":"n/a","io.openit.turn-engine":"n/a","io.openit.model-runtime":"n/a","org.opencontainers.image.x":"y"}\\n' "$rev" "$(cat "${dir}/bc")" ;;
-      *) echo "${ID}" ;;
-    esac ;;
-esac
+  writeFileSync(p, `#!/usr/bin/env node
+const fs = require("node:fs"); const a = process.argv.slice(2); const d = ${JSON.stringify(dir)};
+fs.appendFileSync(d + "/calls", a.join(" ") + "\\n");
+const arg = (k) => { for (let i = 0; i < a.length; i++) { if (a[i] === "--build-arg" && a[i + 1].startsWith(k + "=")) return a[i + 1].slice(k.length + 1); } };
+const labelArgs = () => a.flatMap((x, i) => (a[i - 1] === "--label" ? [x] : []));
+if (a[0] === "build") {
+  if (process.env.FAKE_BUILD_FAIL) { console.error("build failed"); process.exit(1); }
+  console.log("stdout noise from build"); // 진행 출력이 표준 출력으로 나와도 진입점이 막는다
+  fs.writeFileSync(d + "/state", JSON.stringify({ rev: arg("REVISION"), bc: arg("BOUNDARY_CONTRACTS"), labels: labelArgs() }));
+} else if (a[0] === "image") {
+  const st = JSON.parse(fs.readFileSync(d + "/state", "utf8"));
+  if (a.join(" ").includes("Labels")) {
+    const l = { "io.openit.service": "admin-console", "io.openit.revision": process.env.BAD_REVISION ? "0000000" : st.rev, "io.openit.contracts.boundary": st.bc,
+      "io.openit.contracts.survey-schema": "n/a", "io.openit.turn-engine": "n/a", "io.openit.model-runtime": "n/a", "org.opencontainers.image.x": "y" };
+    for (const kv of st.labels) { const i = kv.indexOf("="); if (!(process.env.FAKE_DROP_EXPOSURE && kv.startsWith("io.openit.exposure="))) l[kv.slice(0, i)] = kv.slice(i + 1); }
+    console.log(JSON.stringify(l));
+  } else console.log(${JSON.stringify(ID)});
+}
 `);
   chmodSync(p, 0o755);
   return p;
@@ -127,4 +131,20 @@ test("docker build가 실패하면 실패하고 결과 줄을 내지 않는다",
 test("요청 파일이 없거나 JSON이 아니면 실패한다", () => {
   const r = spawnSync("bash", ["scripts/build-image.sh", "/nonexistent.json"], { cwd: REPO, encoding: "utf8" });
   assert.notEqual(r.status, 0);
+});
+
+test("노출 선언: deploy-exposure.json이 --label io.openit.exposure로 붙고 결과 라벨에 나오며 계약 Exposure를 통과한다", () => {
+  const r = run(good());
+  assert.equal(r.status, 0, r.stderr);
+  const res = JSON.parse(r.stdout.trimEnd().split("\n").pop()!);
+  const label = res.labels["io.openit.exposure"];
+  assert.equal(typeof label, "string");
+  assert.ok(v.Exposure(JSON.parse(label)), JSON.stringify(v.Exposure.errors));
+  assert.deepEqual(JSON.parse(label), JSON.parse(readFileSync(join(REPO, "deploy-exposure.json"), "utf8")));
+});
+
+test("이미지에 노출 라벨이 붙지 않았으면 실패한다", () => {
+  const r = run(good(), { FAKE_DROP_EXPOSURE: "1" });
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /exposure/);
 });

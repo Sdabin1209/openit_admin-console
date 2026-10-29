@@ -73,3 +73,7 @@
 
 ## 작업 단위 U43 (환경 준비 보고 + 계약 v2.6.0)
 - 한 일: `scripts/setup-env.sh`가 표준 출력 마지막 줄에 계약 `SetupEnvReport`(environment: node-modules, test_command `npm test`)를 낸다. 이미 준비돼 있으면 `npm ci`를 생략한다(ADR 0020). 계약 고정 v2.6.0, 생성 검증기에 `SetupEnvReport` 추가. 시험 `tests/setup-env.test.ts` 4개.
+
+## 작업 단위 U47 (노출 선언 라벨)
+- 한 일: `deploy-exposure.json`(GET /admin/*, 계정 역할 operator·release-approver·reviewer)과 `build-image.sh`가 이를 `io.openit.exposure` 라벨로 단다(ADR 0021). 시험 `tests/exposure.test.ts` 5개, `tests/build-image.test.ts` 2개 추가.
+- 어긋남(deploy와 확인 필요): 게이트웨이는 화면을 어느 계정에게나 연다. `Exposure`는 역할 1개 이상이 필수라 세 역할만 적었다.

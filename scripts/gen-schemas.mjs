@@ -14,7 +14,9 @@ const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "
   // 빌드 진입점(scripts/build-image.mjs)이 요청과 결과를 검사한다(계약 2.5.0, U42).
   "BuildImageRequest", "BuildImageResult",
   // 환경 준비 진입점(scripts/setup-env.sh)이 마지막 줄 보고를 낸다(계약 2.6.0, U43). 시험이 이 검증기로 그 줄을 검사한다.
-  "SetupEnvReport"];
+  "SetupEnvReport",
+  // 노출 선언(deploy-exposure.json, 라벨 io.openit.exposure)을 빌드 진입점과 시험이 검사한다(계약 Exposure, U47).
+  "Exposure"];
 // 왜: ApprovalRequest·ActivateRequest가 $ref로 가리키는 공통 정의. 검증기로 내보내지 않고 참조 해소용으로만 넣는다.
 const SUPPORT = ["_common"];
 

@@ -1,0 +1,12 @@
+{
+  "service": "admin-console",
+  "routes": [
+    {
+      "paths": ["/admin/*"],
+      "methods": ["GET"],
+      "auth": { "kind": "account", "roles": ["operator", "release-approver", "reviewer"] },
+      "user_header": "strip",
+      "timeouts_ms": { "dial": 2000, "response_header": 10000 }
+    }
+  ]
+}
