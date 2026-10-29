@@ -51,7 +51,7 @@ flowchart LR
 전제: Node 24 이상(`package.json` engines). 이미지 스모크에는 Docker와 curl이 필요하다. Python은 쓰지 않는다. 이 영역에는 비밀 값이 없다. 토큰은 코드·빌드·브라우저에 없고 게이트웨이가 붙이므로 `NAME_FILE`(D84) 방식으로 받을 비밀이 없다. 
 
 ```bash
-bash scripts/setup-env.sh   # 환경 준비의 정본: node 버전 확인 + npm ci(잠금 파일 기준, 멱등, 어느 폴더에서나)
+bash scripts/setup-env.sh   # 환경 준비의 정본: node 버전 확인 + npm ci(잠금 파일 기준, 이미 준비됐으면 생략). 표준 출력 마지막 줄에 SetupEnvReport JSON(ADR 0020)
 npm run typecheck     # 타입 검사
 npm test              # 시험
 npm run build         # dist/ 생성
@@ -68,7 +68,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- `npm test` 137개 중 130개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-42 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.5.1). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- `npm test` 144개 중 137개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-43 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.6.0). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
@@ -104,6 +104,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0006 의존 없는 정적 서버](docs/adr/0006-정적-서버.md) (0018이 대체)
 - [0018 정적 서버는 Caddy file_server](docs/adr/0018-정적-서버는-Caddy-file_server.md)
 - [0019 영역 빌드 진입점 scripts/build-image.sh](docs/adr/0019-영역-빌드-진입점.md)
+- [0020 setup-env.sh의 보고 한 줄과 멱등](docs/adr/0020-환경-준비-보고와-멱등.md)
 - [0007 활성화·롤백 확인 문구](docs/adr/0007-활성화-롤백-확인-문구.md)
 - [0008 시간 표시 규칙](docs/adr/0008-시간-표시-규칙.md)
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)

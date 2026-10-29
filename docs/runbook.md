@@ -5,7 +5,7 @@
 ## 설치
 전제: Node 24 이상. 이미지 스모크에는 Docker와 curl.
 ```bash
-bash scripts/setup-env.sh   # node 버전 확인 + npm ci. 어느 폴더에서나 실행 가능
+bash scripts/setup-env.sh   # node 버전 확인 + npm ci(이미 준비됐으면 생략), 마지막 줄에 SetupEnvReport. 어느 폴더에서나 실행 가능
 ```
 
 ## 시험

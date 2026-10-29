@@ -70,3 +70,6 @@
 ## 작업 단위 U42 후속 (이웃 작업 트리에 기대지 않는 시험)
 - 문제: 시험과 `gen-schemas`가 `../boundary-contracts`의 작업 트리를 읽어, 계약이 앞서 나가면 아무것도 안 바꾼 영역 시험이 깨졌다(main에서 `계약 버전 상수`, `generated ... 원본 스키마와 같다` 2건 실패를 a80df4a에서 재현).
 - 고침: `scripts/contract-src.mjs`가 Dockerfile ARG의 고정 태그 내용을 `git show`로 읽는다. 생성기와 모든 계약 읽는 시험이 이것을 쓴다. 시험 `tests/contract-source.test.ts`(이웃이 태그보다 앞서고 수정 중이어도 같은 결과). 핀 v2.5.0 + 이웃 v2.5.1 상태에서 전체 시험 통과를 확인했다.
+
+## 작업 단위 U43 (환경 준비 보고 + 계약 v2.6.0)
+- 한 일: `scripts/setup-env.sh`가 표준 출력 마지막 줄에 계약 `SetupEnvReport`(environment: node-modules, test_command `npm test`)를 낸다. 이미 준비돼 있으면 `npm ci`를 생략한다(ADR 0020). 계약 고정 v2.6.0, 생성 검증기에 `SetupEnvReport` 추가. 시험 `tests/setup-env.test.ts` 4개.

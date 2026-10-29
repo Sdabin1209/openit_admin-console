@@ -12,4 +12,5 @@ export const OpsFeedbackDeidentifiedTrace: V;
 export const ImageLabels: V;
 export const BuildImageRequest: V;
 export const BuildImageResult: V;
+export const SetupEnvReport: V;
 export const PIPELINE_SCHEMA_VERSION: string;
