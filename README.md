@@ -68,7 +68,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- `npm test` 137개 중 130개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-42 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.5.0). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- `npm test` 137개 중 130개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-42 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.5.1). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".

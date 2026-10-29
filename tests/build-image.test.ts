@@ -44,7 +44,7 @@ function run(req: unknown, env: Record<string, string> = {}) {
   return { ...r, calls };
 }
 
-const good = () => ({ source_dir: REPO, revision: "bad876c", versions: { boundary: "v2.5.0" }, image_tag: "deploy-build/admin-console:bad876c" });
+const good = () => ({ source_dir: REPO, revision: "bad876c", versions: { boundary: "v2.5.1" }, image_tag: "deploy-build/admin-console:bad876c" });
 
 test("정상 요청: 마지막 줄이 BuildImageResult를 통과하고 라벨이 요청 값과 같다", () => {
   const r = run(good());
@@ -55,7 +55,7 @@ test("정상 요청: 마지막 줄이 BuildImageResult를 통과하고 라벨이
   assert.equal(res.image, "deploy-build/admin-console:bad876c");
   assert.equal(res.image_id, ID);
   assert.equal(res.labels["io.openit.revision"], "bad876c");
-  assert.equal(res.labels["io.openit.contracts.boundary"], "v2.5.0");
+  assert.equal(res.labels["io.openit.contracts.boundary"], "v2.5.1");
   assert.equal(res.labels["io.openit.service"], "admin-console");
   assert.ok(!("org.opencontainers.image.x" in res.labels), "io.openit.* 라벨만 낸다");
 });
@@ -69,7 +69,7 @@ test("표준 출력은 결과 한 줄뿐이다(빌드 진행 기록은 표준 �
 test("요청 값이 build 인자로 간다(리비전, 계약 태그)", () => {
   const r = run(good());
   assert.match(r.calls, /REVISION=bad876c/);
-  assert.match(r.calls, /BOUNDARY_CONTRACTS=v2\.5\.0/);
+  assert.match(r.calls, /BOUNDARY_CONTRACTS=v2\.5\.1/);
   assert.match(r.calls, /-t deploy-build\/admin-console:bad876c/);
   assert.match(r.calls, /--provenance=false/); // 같은 요청이 같은 image_id를 내려면 필요(ADR 0019)
 });
