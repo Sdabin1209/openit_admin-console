@@ -77,3 +77,6 @@
 ## 작업 단위 U47 (노출 선언 라벨)
 - 한 일: `deploy-exposure.json`(GET /admin/*, 계정 역할 operator·release-approver·reviewer)과 `build-image.sh`가 이를 `io.openit.exposure` 라벨로 단다(ADR 0021). 시험 `tests/exposure.test.ts` 5개, `tests/build-image.test.ts` 2개 추가.
 - 어긋남(deploy와 확인 필요): 게이트웨이는 화면을 어느 계정에게나 연다. `Exposure`는 역할 1개 이상이 필수라 세 역할만 적었다.
+
+## 작업 단위 U49 (스키마 사본 정리)
+- 지운 것: `docs/change-requests/schemas/`(16개)와 `contract-ready/`(34개). 분류표는 CR-006 마지막 절. 복사본 금지 시험의 예외 폴더를 없앴다.

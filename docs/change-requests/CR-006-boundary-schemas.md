@@ -1,6 +1,6 @@
 # CR-006: admin-console이 주고받는 경계 형식의 스키마 초안 (지시서 1 B, 헤드에게)
 
-- 요청 영역: admin-console, 대상: 헤드(boundary-contracts). 상태: 제안(초안). 이 영역의 코드는 아직 이 스키마를 쓰지 않는다. 헤드가 계약에 올린 뒤의 다음 단계다.
+- 요청 영역: admin-console, 대상: 헤드(boundary-contracts). 상태: **처리됨**(승격 4종은 계약 v2.2.0에 올랐고 코드가 계약 검증기를 쓴다: ADR 0017. 스키마 사본은 U49에서 지웠다: 아래 "U49 사본 정리"). 이하 본문은 당시 제안의 기록이며 아래 "스키마 위치"의 파일은 더 이상 리포에 없다(git 기록 참고).
 - 근거: 자기 점검 보고서 `docs/audit/structure-rules-2026-10-28.md`의 AC-04, AC-08 및 5절(E) 표에서 "계약 스키마 없음"으로 표시된 것.
 - 스키마 위치: `docs/change-requests/schemas/*.schema.json` (JSON Schema 2020-12). 예시: `schemas/examples/<이름>.valid.json`(통과), `<이름>.invalid.json`(거부). 검증 스크립트: `schemas/validate.py`.
 - 공통: Id(`^[A-Za-z0-9][A-Za-z0-9._:-]*$`, 최대 128)와 Hash(`sha256:` + 64 hex) 패턴은 `_common.schema.json`의 것과 같게 인라인했다(계약 패키지에 올릴 때 `$ref`로 바꾼다).
@@ -71,3 +71,18 @@ exit=0
 ## 계약 쪽 정리 요청 (AC-08)
 
 INTERFACES.md 한눈에 표에 admin-console을 I4 읽는 쪽, I5 쓰는 쪽(approver·operator), I7 읽는 쪽·검토 쓰는 쪽으로 넣고, I5 허용 역할 문장에 `release-approver`를 맞춰 달라. 확인한 위치는 점검 보고서 AC-08.
+
+## U49 사본 정리 (2026-10-30)
+
+정본은 계약 패키지(boundary-contracts)의 `schemas/`와 `examples/`, `conformance/examples_invalid/`, `conformance/promoted/admin-console.MANIFEST.json`이다. 영역 안 사본은 계약이 바뀌면 어긋나는 두 번째 정본이라 지웠다. 내용은 git 기록에 있다.
+
+| 파일(폴더) | 분류 | 처리 | 근거 |
+| --- | --- | --- | --- |
+| `docs/change-requests/schemas/{ActivateRequest,ApprovalRequest,CaseReviewRequest,ListEnvelope}.schema.json` | (가) 승격 사본 | 삭제 | 계약에 같은 이름이 있다 |
+| `docs/change-requests/schemas/DeidentifiedTraceView.schema.json` | (나) 쓰지 않는 초안 | 삭제 | 읽는 쪽 부분집합 스키마는 두지 않기로 했고(헤드 지시) 계약 `OpsFeedbackDeidentifiedTrace`가 대신한다. 코드는 그것을 쓴다 |
+| `docs/change-requests/schemas/examples/*`(10개), `validate.py` | 위 초안의 예시·검증 스크립트 | 삭제 | 지운 초안만 검증하는 파일이다. 계약 쪽에 같은 예시가 있고 시험이 그 예시를 쓴다(`tests/contract-schemas.test.ts`) |
+| `docs/change-requests/contract-ready/schemas/*`(4개) | (가) 승격 제출본 사본 | 삭제 | 계약 v2.2.0에 올라갔다 |
+| `docs/change-requests/contract-ready/examples/{valid,invalid}/*`(19개) | (가) 승격 예시 사본 | 삭제 | 계약 `examples/`, `conformance/examples_invalid/`에 같은 이름이 있다 |
+| `docs/change-requests/contract-ready/MANIFEST.json`, `validate.py`, `tools/capture-examples.ts` | 승격 제출 도구 | 삭제 | 계약의 `conformance/promoted/admin-console.MANIFEST.json`이 정본이다. 예시는 이미 만들어졌고 이 도구를 부르는 곳이 없다 |
+
+합계 50개 삭제(`schemas/` 16, `contract-ready/` 34), (나) 중 영역 소유로 남긴 스키마는 없다. 복사본이 다시 생기지 않도록 `tests/schemas-generated.test.ts`의 예외 폴더를 없앴다.
