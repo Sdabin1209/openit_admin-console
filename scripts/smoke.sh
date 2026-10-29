@@ -22,8 +22,17 @@ BUILD_LOG="$(mktemp)"
 cleanup() { "$DOCKER" rm -f "$NAME" >/dev/null 2>&1 || true; rm -f "$BUILD_LOG"; }
 trap cleanup EXIT
 
-echo "== build $IMAGE"
-"$DOCKER" build --build-arg "REVISION=${REV}" -t "$IMAGE" . >"$BUILD_LOG" 2>&1 || { cat "$BUILD_LOG" >&2; exit 1; }
+echo "== build $IMAGE (영역 빌드 진입점 scripts/build-image.sh)"
+# 왜 진입점으로 빌드: deploy가 부르는 경로와 같은 경로를 매 변경마다 확인한다(계약 BuildImageRequest/Result 2.5.0, ADR 0019).
+# 계약 태그는 스모크에서만 Dockerfile의 ARG 기본값을 읽는다(deploy는 기준표 값을 요청에 담아 준다).
+BC_TAG="$(sed -n 's/^ARG BOUNDARY_CONTRACTS=//p' Dockerfile)"
+REQ="$(mktemp)"
+cat >"$REQ" <<JSON
+{"source_dir":"$(pwd)","revision":"${REV}","versions":{"boundary":"${BC_TAG}"},"image_tag":"${IMAGE}"}
+JSON
+RESULT="$(DOCKER="$DOCKER" bash scripts/build-image.sh "$REQ" 2>"$BUILD_LOG")" || { cat "$BUILD_LOG" >&2; rm -f "$REQ"; exit 1; }
+rm -f "$REQ"
+echo "$RESULT" | tail -n1 | head -c 400; echo
 
 PUBLISH="127.0.0.1::8080"
 [ -n "${SMOKE_PORT:-}" ] && PUBLISH="127.0.0.1:${SMOKE_PORT}:8080"

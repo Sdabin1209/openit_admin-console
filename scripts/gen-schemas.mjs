@@ -10,7 +10,9 @@ const SRC = new URL("../../boundary-contracts/", import.meta.url);
 const OUT = new URL("../generated/contract-validators.cjs", import.meta.url);
 // 모델 입출력(검토자 입력 검사) + 이 영역이 주고받는 경계 형식(D107로 승격된 것, conformance/promoted/admin-console.MANIFEST.json).
 const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "ResponseText",
-  "ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels"];
+  "ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels",
+  // 빌드 진입점(scripts/build-image.mjs)이 요청과 결과를 검사한다(계약 2.5.0, U42).
+  "BuildImageRequest", "BuildImageResult"];
 // 왜: ApprovalRequest·ActivateRequest가 $ref로 가리키는 공통 정의. 검증기로 내보내지 않고 참조 해소용으로만 넣는다.
 const SUPPORT = ["_common"];
 
@@ -28,7 +30,12 @@ export function generate() {
   if (!pipeline) throw new Error("schemas_api.py에서 PIPELINE_SCHEMA_VERSION을 찾지 못했다");
   const code = standaloneCode(ajv, Object.fromEntries(NAMES.map((n) => [n, `${n}.schema.json`])));
   const header = `// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts ${contract}\n// source-sha256: ${JSON.stringify(sources)}\n`;
-  return header + code + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\n`;
+  // 왜 인라인: 생성 코드가 require("ajv/dist/runtime/ucs2length")를 부르면 빌드 진입점이 npm ci(네트워크) 없이는 검증기를 못 쓴다.
+  // 같은 함수(ajv 8.20.0, MIT, 12줄)를 생성물 안에 두어 node만으로 돌게 한다. 브라우저 번들에도 같은 함수가 들어간다.
+  const RUNTIME = 'require("ajv/dist/runtime/ucs2length").default';
+  if (!code.includes(RUNTIME)) throw new Error("생성 코드에서 ucs2length 호출을 찾지 못했다(ajv 버전이 바뀌었는지 확인)");
+  const inline = "(function ucs2length(str){const len=str.length;let length=0,pos=0,value;while(pos<len){length++;value=str.charCodeAt(pos++);if(value>=0xd800&&value<=0xdbff&&pos<len){value=str.charCodeAt(pos);if((value&0xfc00)===0xdc00)pos++;}}return length;})";
+  return header + code.split(RUNTIME).join(inline) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\n`;
 }
 
 if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").href) {

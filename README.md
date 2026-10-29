@@ -25,6 +25,7 @@
 | `app/` | 화면. 상태(model), 컨트롤러, 뷰, `index.html`, CSS. 승인 화면, `cases-*`(실패 사례 검토), `ops-*`(릴리스 운영, `#/ops`) |
 | `api/` | I5/I7 HTTP 클라이언트와 타입. UI와 무관 |
 | `mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(`releases.ts`: 활성 포인터·목록·activate·rollback, operator 아니면 403)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
+| `scripts/build-image.sh` | 영역 빌드 진입점(계약 BuildImageRequest/Result, ADR 0019). 스모크도 이것으로 빌드한다 |
 | `serve/Caddyfile` | 이미지의 Caddy file_server 설정(`/healthz`, `/readyz`, 보안 헤더, ADR 0018) |
 | `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
 | `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열, 경계 형식 5종, ImageLabels)와 계약 버전 상수(커밋됨, ADR 0017. 정책은 CR-003에서 헤드 결정 대기) |
@@ -67,7 +68,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- `npm test` 125개 중 118개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-24 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.4.1). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- `npm test` 137개 중 130개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-42 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v2.5.0). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
@@ -102,6 +103,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0005 모의 서버와 한계](docs/adr/0005-모의-서버.md)
 - [0006 의존 없는 정적 서버](docs/adr/0006-정적-서버.md) (0018이 대체)
 - [0018 정적 서버는 Caddy file_server](docs/adr/0018-정적-서버는-Caddy-file_server.md)
+- [0019 영역 빌드 진입점 scripts/build-image.sh](docs/adr/0019-영역-빌드-진입점.md)
 - [0007 활성화·롤백 확인 문구](docs/adr/0007-활성화-롤백-확인-문구.md)
 - [0008 시간 표시 규칙](docs/adr/0008-시간-표시-규칙.md)
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)

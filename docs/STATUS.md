@@ -61,3 +61,8 @@
 - 전에: 본문이 text/plain이면 `kind=UNKNOWN`, 메시지 `HTTP 413`이었다(재시도는 하지 않았으나 사용자 안내가 없었다). 본문이 retryable=true인 BoundaryError면 재시도 가능으로 읽을 수 있었다.
 - 고침: `api/http.ts` `toError`가 413/414/431을 본문과 무관하게 `INVALID_RECORD`, 재시도 불가, "요청이 너무 크다" 계열 안내로 읽는다. 릴리스 운영 화면의 "(400)" 고정 문구는 실제 상태 코드를 쓴다. 시험 `tests/transport-limits.test.ts` 9개. 자동 재시도는 원래 없다(재시도는 사용자가 누른다).
 - 확인 못 한 것: 실제 waitress가 내는 응답(모의 fetch로만 확인).
+
+## 작업 단위 U42 (영역 빌드 진입점 + 계약 v2.5.0)
+- 한 일: `scripts/build-image.sh`(+ `build-image.mjs`)가 계약 `BuildImageRequest`를 검증하고 이미지를 만든 뒤 `BuildImageResult` 한 줄을 낸다(ADR 0019). 스모크가 이 진입점으로 빌드한다. 계약 고정을 v2.5.0으로(Dockerfile ARG, 생성 검증기에 BuildImage 2종 추가, `PIPELINE_SCHEMA_VERSION` "2.5"로 바뀌는지는 아래). 생성 검증기는 ajv 런타임 의존 없이 돈다.
+- 시험: `tests/build-image.test.ts` 12개(가짜 DOCKER). 실제 docker 빌드는 `npm run smoke`.
+- 남은 일: deploy `build-images.sh`가 이 진입점을 부르도록 바뀌는 것(deploy 몫).
