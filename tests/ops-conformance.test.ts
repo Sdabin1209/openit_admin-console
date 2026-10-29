@@ -1,4 +1,5 @@
 // 릴리스 운영 모의 서버의 출력과 클라이언트 요청이 계약 스키마(../boundary-contracts/schemas, 복사 없음)를 지키는지 검증한다.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { contract } from "../scripts/contract-src.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -45,7 +46,7 @@ test("활성화·롤백 응답과 오류가 스키마를 통과한다", async ()
   const nopass = await post("/v1/activate", { release_id: "rel-unapproved" });
   assert.equal(nopass.status, 412);
   check("BoundaryError", nopass.body);
-  const rb = { pipeline_schema_version: "2.0", request_id: "rb-c1", requested_at: "2026-10-27T00:00:00Z", from_release_id: "rel-0004", to_release_id: "rel-0003", reason: "x", evidence_refs: ["fc-1"] };
+  const rb = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-c1", requested_at: "2026-10-27T00:00:00Z", from_release_id: "rel-0004", to_release_id: "rel-0003", reason: "x", evidence_refs: ["fc-1"] };
   const r1 = await post("/v1/rollback", rb);
   assert.equal(r1.status, 201);
   check("RollbackReceipt", r1.body);

@@ -1,11 +1,12 @@
 // C9(2026-10-29 점검): 호출자는 BoundaryError의 code와 retryable로 행동한다. 기대값의 출처:
 // boundary-contracts/CONVENTIONS.md 오류 절("호출자는 code와 retryable로만 행동한다"; 같은 code 안의 재시도 사유는 details.reason)과
 // HTTP.md 공통("네트워크 오류와 5xx와 503은 UNAVAILABLE(재시도 가능)"), schemas/BoundaryError.schema.json(retryable 필수 boolean).
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Http, toError } from "../api/http.ts";
 
-const body = (o: Record<string, unknown>) => ({ pipeline_schema_version: "2.0", message: "m", ...o });
+const body = (o: Record<string, unknown>) => ({ pipeline_schema_version: PIPELINE_SCHEMA_VERSION, message: "m", ...o });
 
 test("본문 retryable=true이면 상태 코드가 409여도 재시도 가능이다(CONVENTIONS: 409 CONFLICT의 TURN_IN_PROGRESS 같은 사유)", () => {
   assert.equal(toError(409, body({ code: "CONFLICT", retryable: true, details: { reason: "TURN_IN_PROGRESS" } })).retryable, true);

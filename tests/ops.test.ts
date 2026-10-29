@@ -1,4 +1,5 @@
 // 릴리스 활성화·롤백 흐름: 모의 서버(HTTP) + 클라이언트 + 컨트롤러. DOM 없음.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ReleasesClient } from "../api/releases.ts";
@@ -72,7 +73,7 @@ test("롤백: 기본 대상은 가장 가까운 이전 릴리스, 사유·근거
 test("롤백: 같은 request_id를 다시 보내면 같은 영수증(멱등)", async () => {
   const { s, api, c } = await setup();
   try {
-    const body = { pipeline_schema_version: "2.0", request_id: "rb-fixed", requested_at: "2026-10-27T00:00:00Z", from_release_id: "rel-0003", to_release_id: "rel-0002", reason: "x", evidence_refs: ["fc-1"] };
+    const body = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-fixed", requested_at: "2026-10-27T00:00:00Z", from_release_id: "rel-0003", to_release_id: "rel-0002", reason: "x", evidence_refs: ["fc-1"] };
     const a = await api.rollback(body);
     const b = await api.rollback(body);
     assert.deepEqual(b, a);

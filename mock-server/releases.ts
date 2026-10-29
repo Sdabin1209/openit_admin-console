@@ -1,6 +1,6 @@
 // 모의 릴리스 읽기(I4 일부)와 활성화·롤백(I5). HTTP.md와 PUBLIC_API.md E절의 규칙을 따른다. 운영 서버가 아니다.
 // 규칙: 운영자(operator) 역할이 아니면 네 경로 모두 403. 행위자는 헤더 X-Openit-User로만 정하고 본문의 역할 값은 무시한다.
-import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
+import { ACTION_RULES_VERSION, PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ActivePointer, ReleaseSummary, RollbackReceipt } from "../api/types.ts";
 
@@ -13,7 +13,7 @@ function manifest(n: number): ReleaseSummary & Record<string, unknown> {
   return {
     pipeline_schema_version: V, release_id: `rel-000${n}`, created_at: `2026-10-0${n * 2}T00:00:00Z`, gate_decision_id: `gd-000${n}`,
     question_set: { id: "qs-main", version: "3", content_hash: H0 }, lora_a: { id: "lora-a", version: `1.${n}.0`, content_hash: H0 }, lora_b: { id: "lora-b", version: "1.0.1", content_hash: H0 },
-    runtime_contract_version: 1, turn_engine_version: "0.1.0", model_runtime_version: "0.1.0", content_hash: H0,
+    runtime_contract_version: 1, action_rules_version: ACTION_RULES_VERSION, model_runtime_version: "0.1.0", content_hash: H0,
     adapters: Object.fromEntries(["LORA_A", "LORA_B"].map((r) => [r, { adapter_hash: H0, serving_config: { protection_policy_version: "protect-1" }, serving_config_hash: H0,
       system_prompt: { path: "system_prompt.txt", sha256: "sha256:3def1bd06bba07ed86b77771064fc0dc969cc80f2997f159ee80b3de5b228b93" } }])),
   };

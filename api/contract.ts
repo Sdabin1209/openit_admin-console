@@ -5,6 +5,10 @@ import { ApiError, need } from "./http.ts";
 
 /** 계약 버전 상수. 정본은 계약 schemas_api.py이고 생성 때 읽어 온다. 손으로 복사하지 않는다. */
 export const PIPELINE_SCHEMA_VERSION: string = v.PIPELINE_SCHEMA_VERSION;
+/** 이 코드가 만들어진 계약 태그(생성 검증기의 원본). 이미지 라벨 io.openit.contracts.boundary의 출처다(U50). */
+export const CONTRACT_VERSION: string = v.CONTRACT_VERSION;
+/** 계약 ActionExtractionRules.rules_version. 매니페스트의 action_rules_version 값이다. */
+export const ACTION_RULES_VERSION: string = v.ACTION_RULES_VERSION;
 
 type Validator = ((x: unknown) => boolean) & { errors?: { instancePath: string; message?: string; keyword: string }[] | null };
 type Name = "ApprovalRequest" | "ActivateRequest" | "CaseReviewRequest" | "ListEnvelope" | "OpsFeedbackDeidentifiedTrace";

@@ -6,6 +6,8 @@ import { createRequire } from "node:module";
 
 // 왜 생성된 검증기: 요청·결과는 영역 경계 입력/출력이라 계약 스키마로만 검사한다(손 검사 금지, ADR 0017). npm ci 없이 돌도록 생성물은 자급식이다(gen-schemas.mjs).
 const v = createRequire(import.meta.url)("../generated/contract-validators.cjs");
+// 왜 생성물의 상수: 라벨 io.openit.contracts.boundary는 이 이미지가 실제로 쓰는 계약 버전, 곧 번들된 검증기를 만든 버전이어야 한다(U50). 요청 값을 그대로 찍으면 거짓 라벨이 나올 수 있다.
+const ACTUAL_BOUNDARY = v.CONTRACT_VERSION;
 const ROOT = realpathSync(new URL("..", import.meta.url).pathname);
 const DOCKER = process.env.DOCKER || "docker";
 
@@ -23,8 +25,10 @@ let req;
 try { req = JSON.parse(readFileSync(file, "utf8")); } catch (e) { fail(`요청 파일을 읽지 못했다: ${e.message}`, 2); }
 if (!v.BuildImageRequest(req)) fail(`요청이 계약 BuildImageRequest에 맞지 않는다: ${errs(v.BuildImageRequest)}`, 2);
 
-// 이 영역이 쓰는 것: versions.boundary(라벨), revision, image_tag. 쓰지 않는 것: dependency_sources(이미지에 이웃 소스를 넣지 않는다), model_runtime·survey_schema·turn_engine.
+// 이 영역이 쓰는 것: versions.boundary(실제 사용 버전과 같은지 확인만), revision, image_tag. 쓰지 않는 것: dependency_sources(이미지에 이웃 소스를 넣지 않는다), model_runtime·survey_schema.
 // variant가 없는 영역이 variant를 받으면 조용히 기본 이미지를 만들지 않고 실패한다(계약: 영역이 모르는 값이면 실패).
+// U50: 요청이 말한 계약 버전이 이 소스가 실제로 쓰는 버전과 다르면 라벨을 찍지 않고 실패한다(거짓 라벨 방지). deploy 기준표와 영역 고정이 어긋났다는 뜻이다.
+if (req.versions.boundary !== ACTUAL_BOUNDARY) fail(`요청의 계약 버전(${req.versions.boundary})이 이 소스가 실제로 쓰는 버전(${ACTUAL_BOUNDARY})과 다르다. 영역의 계약 고정(Dockerfile ARG, 생성 검증기)을 기준표에 맞추거나 기준표를 바로잡아라`, 2);
 if (req.variant !== undefined) fail(`이 영역은 variant가 없다: ${req.variant}`, 2);
 // 왜 확인: 다른 트리를 빌드하면서 이 리포의 revision을 라벨에 붙이는 사고를 막는다.
 let src; try { src = realpathSync(req.source_dir); } catch { fail(`source_dir가 없다: ${req.source_dir}`, 2); }
@@ -36,10 +40,10 @@ try { exposure = JSON.parse(readFileSync(`${src}/deploy-exposure.json`, "utf8"))
 if (!v.Exposure(exposure)) fail(`deploy-exposure.json이 계약 Exposure에 맞지 않는다: ${errs(v.Exposure)}`, 2);
 const exposureLabel = JSON.stringify(exposure);
 
-console.error(`build-image: ${req.image_tag} 빌드 (revision ${req.revision}, 계약 ${req.versions.boundary})`);
+console.error(`build-image: ${req.image_tag} 빌드 (revision ${req.revision}, 계약 ${ACTUAL_BOUNDARY})`);
 // 왜 --provenance=false: BuildKit이 빌드마다 붙이는 출처 증명(attestation)이 이미지 ID를 매번 바꾼다. 끄면 같은 입력이 같은 image_id를 낸다(계약: 멱등, 2회 빌드로 확인).
 const b = docker(["build", "--provenance=false", "-t", req.image_tag,
-  "--build-arg", `REVISION=${req.revision}`, "--build-arg", `BOUNDARY_CONTRACTS=${req.versions.boundary}`, "--build-arg", "SURVEY_SCHEMA=n/a",
+  "--build-arg", `REVISION=${req.revision}`, "--build-arg", `BOUNDARY_CONTRACTS=${ACTUAL_BOUNDARY}`, "--build-arg", "SURVEY_SCHEMA=n/a",
   // 왜 --label: 노출 표는 JSON이고 Dockerfile ARG로 받으면 따옴표 이스케이프가 어긋나기 쉽다. 값은 한 곳(deploy-exposure.json)에서만 온다.
   "--label", `io.openit.exposure=${exposureLabel}`,
   src], { stdoutToStderr: true });
@@ -54,7 +58,7 @@ const labels = Object.fromEntries(Object.entries(all).filter(([k]) => k.startsWi
 if (!v.ImageLabels(labels)) fail(`이미지 라벨이 계약 ImageLabels에 맞지 않는다: ${errs(v.ImageLabels)}`);
 // 요청 값이 라벨에 실제로 붙었는지: Dockerfile이 build 인자를 라벨로 옮기지 않으면 여기서 잡힌다.
 if (labels["io.openit.revision"] !== req.revision) fail(`라벨 io.openit.revision(${labels["io.openit.revision"]})이 요청(${req.revision})과 다르다`);
-if (labels["io.openit.contracts.boundary"] !== req.versions.boundary) fail(`라벨 io.openit.contracts.boundary(${labels["io.openit.contracts.boundary"]})가 요청(${req.versions.boundary})과 다르다`);
+if (labels["io.openit.contracts.boundary"] !== ACTUAL_BOUNDARY) fail(`라벨 io.openit.contracts.boundary(${labels["io.openit.contracts.boundary"]})가 실제 사용 버전(${ACTUAL_BOUNDARY})과 다르다`);
 
 // 노출 라벨이 이미지에 실제로 붙었고 선언 파일과 같은지: 안 붙으면 deploy가 노출 표를 못 읽는다.
 let attached; try { attached = JSON.parse(labels["io.openit.exposure"]); } catch { fail("라벨 io.openit.exposure가 없거나 JSON이 아니다"); }

@@ -1,5 +1,6 @@
 // 전송 계층 한도 응답(413/414/431): HTTP 서버(예: waitress)가 앱을 부르기 전에 text/plain 본문으로 낼 수 있다.
 // 기대값의 출처: boundary-contracts CONVENTIONS.md 9절(2.2.2) "클라이언트는 본문과 무관하게 INVALID_RECORD(재시도 안 함)로 읽는다".
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GateClient } from "../api/client.ts";
@@ -23,7 +24,7 @@ for (const status of [413, 414, 431]) {
   });
 
   test(`${status}: 본문이 retryable=true인 BoundaryError여도 본문과 무관하게 재시도 불가`, () => {
-    const e = toError(status, { pipeline_schema_version: "2.2", code: "UNAVAILABLE", message: "m", retryable: true });
+    const e = toError(status, { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, code: "UNAVAILABLE", message: "m", retryable: true });
     assert.equal(e.kind, "INVALID_RECORD");
     assert.equal(e.retryable, false);
   });

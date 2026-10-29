@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { GateClient } from "../api/client.ts";
 import { CasesClient } from "../api/cases.ts";
 import { ReleasesClient } from "../api/releases.ts";
-import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
+import { PIPELINE_SCHEMA_VERSION, CONTRACT_VERSION, ACTION_RULES_VERSION } from "../api/contract.ts";
 import { trace } from "../mock-server/cases.ts";
 import * as v from "../generated/contract-validators.cjs";
 
@@ -111,4 +111,28 @@ test("Dockerfile 라벨이 ImageLabels를 통과한다(기본값 none/unknown/un
   const labels = Object.fromEntries([...final.matchAll(/(io\.openit\.[\w.-]+)="([^"]*)"/g)].map((m) => [m[1], m[2].replace(/\$\{(\w+)\}/g, (_, k) => args[k] ?? `<${k}?>`)]));
   assert.ok(v.ImageLabels(labels), JSON.stringify([labels, v.ImageLabels.errors]));
   assert.ok(!/ARG \w+=(none|unknown|unset)\b/.test(final), "ARG 기본값에 none/unknown/unset이 있다");
+});
+
+test("계약 규칙 버전 상수는 계약 데이터 action_extraction_rules.json의 rules_version이다(코드에 리터럴로 적지 않는다)", { skip }, () => {
+  assert.equal(ACTION_RULES_VERSION, JSON.parse(contract.read("boundary_contracts/data/action_extraction_rules.json")).rules_version);
+});
+
+test("실제 사용 계약 버전(생성 검증기의 원본)은 Dockerfile ARG 고정과 같다", () => {
+  const df = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8");
+  assert.equal(/^ARG BOUNDARY_CONTRACTS=(\S+)$/m.exec(df)![1], CONTRACT_VERSION);
+});
+
+test("turn engine 의존·표지·라벨이 코드에 남아 있지 않다(계약 3.0.0, D109)", () => {
+  const hits: string[] = [];
+  const walk = (d: URL) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (["node_modules", ".git", "dist", "generated", "docs"].includes(e.name)) continue; // docs는 이유 있는 기록 문서
+      if (e.isDirectory()) walk(new URL(e.name + "/", d));
+      else if (/\.(ts|mjs|json|sh|html|css)$|^Dockerfile$/.test(e.name)) {
+        if (/turn[_-]engine/.test(readFileSync(new URL(e.name, d), "utf8"))) hits.push(new URL(e.name, d).pathname);
+      }
+    }
+  };
+  walk(new URL("../", import.meta.url));
+  assert.deepEqual(hits, []);
 });

@@ -80,3 +80,7 @@
 
 ## 작업 단위 U49 (스키마 사본 정리)
 - 지운 것: `docs/change-requests/schemas/`(16개)와 `contract-ready/`(34개). 분류표는 CR-006 마지막 절. 복사본 금지 시험의 예외 폴더를 없앴다.
+
+## 작업 단위 U300 (계약 3.0.0 전환 + U50 라벨 정직성)
+- 한 일: 계약 고정 v3.0.0(Dockerfile, 생성 검증기, `PIPELINE_SCHEMA_VERSION` "3.0"). 생성물이 `CONTRACT_VERSION`과 `ACTION_RULES_VERSION`(계약 `action_extraction_rules.json`의 `rules_version`)을 상수로 낸다. turn-engine 라벨·모의 매니페스트 표지 제거, 모의 릴리스는 `action_rules_version`. `build-image.sh`는 요청 버전이 실제 사용 버전과 다르면 실패하고 라벨은 실제 사용 버전으로 찍는다(ADR 0019). 시험 고정값의 `"2.x"` 리터럴을 계약 상수로.
+- 해당 없음: I9 extract, ReleaseReader, deid, SetupEnvReport(이미 environment 포함), StaticImageInterface(이 영역은 쓰지 않았다).

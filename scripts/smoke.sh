@@ -63,7 +63,7 @@ grep -E "^ℹ (pass|fail)" /tmp/admin-console-static-$$.log; rm -f /tmp/admin-co
 
 echo "== labels"
 LABELS="$("$DOCKER" inspect -f '{{json .Config.Labels}}' "$IMAGE")"
-for k in io.openit.service io.openit.revision io.openit.contracts.boundary io.openit.contracts.survey-schema io.openit.turn-engine io.openit.model-runtime; do
+for k in io.openit.service io.openit.revision io.openit.contracts.boundary io.openit.contracts.survey-schema io.openit.model-runtime; do
   echo "$LABELS" | grep -q "\"$k\"" || fail "라벨 없음: $k"
 done
 echo "$LABELS" | grep -q "\"io.openit.revision\":\"${REV}\"" || fail "revision 라벨 값"

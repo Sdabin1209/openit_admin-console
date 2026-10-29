@@ -32,6 +32,9 @@ export function generate(src = contract) {
   // 왜: 계약 버전 상수를 손으로 복사하면 계약이 오를 때 어긋난다. 정본(schemas_api.py)에서 생성 때 읽는다.
   const pipeline = /^PIPELINE_SCHEMA_VERSION\s*=\s*"([^"]+)"/m.exec(src.read("boundary_contracts/schemas_api.py"))?.[1];
   if (!pipeline) throw new Error("schemas_api.py에서 PIPELINE_SCHEMA_VERSION을 찾지 못했다");
+  // 왜 생성물에 상수로: 라벨의 계약 버전은 요청 값이 아니라 이 검증기를 실제로 만든 버전이어야 거짓이 되지 않는다(U50). 규칙 버전은 계약 데이터가 정본이라 손으로 적지 않는다(계약 3.0.0).
+  const rules = JSON.parse(src.read("boundary_contracts/data/action_extraction_rules.json")).rules_version;
+  if (typeof rules !== "string" || !rules) throw new Error("action_extraction_rules.json에서 rules_version을 찾지 못했다");
   const code = standaloneCode(ajv, Object.fromEntries(NAMES.map((n) => [n, `${n}.schema.json`])));
   const header = `// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts ${version}\n// source-sha256: ${JSON.stringify(sources)}\n`;
   // 왜 인라인: 생성 코드가 require("ajv/dist/runtime/ucs2length")를 부르면 빌드 진입점이 npm ci(네트워크) 없이는 검증기를 못 쓴다.
@@ -39,7 +42,7 @@ export function generate(src = contract) {
   const RUNTIME = 'require("ajv/dist/runtime/ucs2length").default';
   if (!code.includes(RUNTIME)) throw new Error("생성 코드에서 ucs2length 호출을 찾지 못했다(ajv 버전이 바뀌었는지 확인)");
   const inline = "(function ucs2length(str){const len=str.length;let length=0,pos=0,value;while(pos<len){length++;value=str.charCodeAt(pos++);if(value>=0xd800&&value<=0xdbff&&pos<len){value=str.charCodeAt(pos);if((value&0xfc00)===0xdc00)pos++;}}return length;})";
-  return header + code.split(RUNTIME).join(inline) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\n`;
+  return header + code.split(RUNTIME).join(inline) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\nexports.CONTRACT_VERSION = ${JSON.stringify("v" + version)};\nexports.ACTION_RULES_VERSION = ${JSON.stringify(rules)};\n`;
 }
 
 if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").href) {

@@ -1,4 +1,5 @@
 // 전수 점검 지적에 대한 시험(DOM 없음): 응답 대조, 서버 응답 이상, 본문 읽기 시간 제한, 시각 표시, 주소 해석, 가짜 시계.
+import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ApiError, Http } from "../api/http.ts";
@@ -47,7 +48,7 @@ test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시�
 
 test("승인 응답 대조: 제출·결정·report_hash가 요청과 다르면 성공으로 보이지 않는다", async () => {
   const req = { submission_id: "s1", decision: "APPROVE" as const, approver_role: "release-approver", report_hash: H };
-  const ok = { pipeline_schema_version: "2.0", approval_id: "ap-1", submission_id: "s1", decision: "APPROVE", approver_id: "u", approver_role: "release-approver", decided_at: FIXED_NOW, report_hash: H };
+  const ok = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, approval_id: "ap-1", submission_id: "s1", decision: "APPROVE", approver_id: "u", approver_role: "release-approver", decided_at: FIXED_NOW, report_hash: H };
   const mk = (b: unknown) => new GateClient({ fetch: (async () => json(b, 201)) as typeof fetch });
   assert.equal((await mk(ok).decide(req)).approval.approval_id, "ap-1");
   for (const bad of [{ ...ok, decision: "REJECT" }, { ...ok, submission_id: "s2" }, { ...ok, report_hash: "sha256:" + "1".repeat(64) }]) {
@@ -57,13 +58,13 @@ test("승인 응답 대조: 제출·결정·report_hash가 요청과 다르면 �
 });
 
 test("활성화·롤백 응답 대조", async () => {
-  const ptr = (id: string) => ({ pipeline_schema_version: "2.0", release_id: id, pointer_version: 2, activated_at: FIXED_NOW, cause: "ACTIVATE" });
+  const ptr = (id: string) => ({ pipeline_schema_version: PIPELINE_SCHEMA_VERSION, release_id: id, pointer_version: 2, activated_at: FIXED_NOW, cause: "ACTIVATE" });
   const act = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b)) as typeof fetch }).activate("rel-2");
   assert.equal((await act(ptr("rel-2"))).release_id, "rel-2");
   assert.equal((await act(ptr("rel-9")).catch((x) => x)).kind, "BAD_RESPONSE");
-  const body = { pipeline_schema_version: "2.0", request_id: "rb-1", requested_at: FIXED_NOW, from_release_id: "rel-3", to_release_id: "rel-2", reason: "x", evidence_refs: ["e"] };
+  const body = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-1", requested_at: FIXED_NOW, from_release_id: "rel-3", to_release_id: "rel-2", reason: "x", evidence_refs: ["e"] };
   const rb = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b, 201)) as typeof fetch }).rollback(body);
-  const rc = { pipeline_schema_version: "2.0", request_id: "rb-1", status: "APPLIED", decided_at: FIXED_NOW, active_pointer: ptr("rel-2") };
+  const rc = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-1", status: "APPLIED", decided_at: FIXED_NOW, active_pointer: ptr("rel-2") };
   assert.equal((await rb(rc)).status, "APPLIED");
   assert.equal((await rb({ ...rc, request_id: "other" }).catch((x) => x)).kind, "BAD_RESPONSE");
   assert.equal((await rb({ ...rc, active_pointer: ptr("rel-1") }).catch((x) => x)).kind, "BAD_RESPONSE");
@@ -73,7 +74,7 @@ test("활성화·롤백 응답 대조", async () => {
 
 test("요청 본문의 requested_by_role은 계약 값 operator다(활성화·롤백)", async () => {
   const sent: unknown[] = [];
-  const f = (async (_u: string, init: RequestInit) => { sent.push(JSON.parse(String(init.body))); return json({ pipeline_schema_version: "2.0", release_id: "r", pointer_version: 1, activated_at: FIXED_NOW, cause: "ACTIVATE" }); }) as typeof fetch;
+  const f = (async (_u: string, init: RequestInit) => { sent.push(JSON.parse(String(init.body))); return json({ pipeline_schema_version: PIPELINE_SCHEMA_VERSION, release_id: "r", pointer_version: 1, activated_at: FIXED_NOW, cause: "ACTIVATE" }); }) as typeof fetch;
   await new ReleasesClient({ fetch: f }).activate("r");
   assert.deepEqual(sent[0], { release_id: "r", requested_by_role: "operator" });
 });

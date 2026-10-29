@@ -23,7 +23,7 @@ test("외부 CDN 참조가 없다", () => {
 test("Dockerfile: non-root, 라벨, 잠금 파일 설치, 태그 고정", () => {
   const d = read("Dockerfile");
   assert.match(d, /^USER\s+(?!root)\S+/m);
-  for (const k of ["io.openit.service", "io.openit.revision", "io.openit.contracts.boundary", "io.openit.contracts.survey-schema", "io.openit.turn-engine", "io.openit.model-runtime"]) assert.ok(d.includes(k), k);
+  for (const k of ["io.openit.service", "io.openit.revision", "io.openit.contracts.boundary", "io.openit.contracts.survey-schema", "io.openit.model-runtime"]) assert.ok(d.includes(k), k);
   assert.match(d, /npm ci/);
   assert.ok(!/:latest/.test(d));
   assert.match(d, /COPY generated/);

@@ -15,3 +15,5 @@ export const BuildImageResult: V;
 export const SetupEnvReport: V;
 export const Exposure: V;
 export const PIPELINE_SCHEMA_VERSION: string;
+export const CONTRACT_VERSION: string;
+export const ACTION_RULES_VERSION: string;
