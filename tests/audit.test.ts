@@ -27,10 +27,18 @@ test("2xx인데 JSON이 아니면 '서버 응답 이상'(BAD_RESPONSE)이고 연
   assert.ok(d.text.includes("서버 응답 이상"));
 });
 
+test("시간 제한 기본값 15000ms가 타이머에 넘어간다(실제 시간을 재지 않는다, ADR 0010)", async () => {
+  const seen: number[] = [];
+  const timers = { set: (_fn: () => void, ms: number) => { seen.push(ms); return 1; }, clear: () => {} };
+  const ok = (async () => new Response("{}", { status: 200 })) as unknown as typeof fetch;
+  await new Http({ fetch: ok, timers }).json("GET", "/v1/x");
+  assert.deepEqual(seen, [15000]);
+});
+
 test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시계, 실제 대기 없음)", async () => {
-  const hold: { fire?: () => void } = {};
+  const hold: { fire?: () => void; ms?: number } = {};
   let cleared = 0;
-  const timers = { set: (fn: () => void) => { hold.fire = fn; return 1; }, clear: () => { cleared++; } };
+  const timers = { set: (fn: () => void, ms: number) => { hold.fire = fn; hold.ms = ms; return 1; }, clear: () => { cleared++; } };
   // 헤더는 오고 본문이 멈추는 서버: signal이 abort되면 text()가 실패한다.
   const stall = (async (_u: string, init: RequestInit) => ({
     ok: true, status: 200, headers: new Headers(),
@@ -39,6 +47,7 @@ test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시�
   const p = new Http({ fetch: stall, timers, timeoutMs: 1 }).json("GET", "/v1/x").catch((x) => x);
   await Promise.resolve(); await Promise.resolve();
   assert.ok(hold.fire, "시간 제한이 걸렸다");
+  assert.equal(hold.ms, 1, "넘긴 제한 값(timeoutMs)이 타이머에 그대로 간다");
   hold.fire!(); // 가짜 시계가 제한 시간이 지났다고 알린다
   const e = await p;
   assert.ok(e instanceof ApiError);

@@ -6,7 +6,7 @@ import { reportView } from "../app/components/report_view.ts";
 
 const buildGroups = (report: { comparisons: Parameters<typeof reportView>[0]["comparisons"] }, o: { sliceKind: string; sort: "default" }) => reportView({ comparisons: report.comparisons, ...o }).groups;
 import { SAFETY_METRIC } from "./mock-server/scenarios.ts";
-import { startMock } from "./helpers.ts";
+import { startMock, waitFor } from "./helpers.ts";
 
 const draft = (c: ReturnType<Awaited<ReturnType<typeof startMock>>["ctl"]>, _unused = "", reason = "") => c.setDraft({ reason });
 
@@ -137,13 +137,17 @@ test("403 권한 오류는 알리고 기록하지 않는다", async () => {
 });
 
 test("중복 클릭: 확정을 여러 번 눌러도 한 번만 간다", async () => {
-  const s = await startMock(200);
+  const s = await startMock();
   try {
     const c = s.ctl();
     await c.openReport("sub-await-slow");
     draft(c); c.requestDecision("APPROVE");
     c.setConfirmText(c.state.submissionId!);
-    await Promise.all([c.confirm(), c.confirm(), c.confirm()]);
+    s.mock.slowGate.hold(); // 첫 요청을 처리 중으로 붙잡아 둔다(시간이 아니라 사건)
+    const all = Promise.all([c.confirm(), c.confirm(), c.confirm()]);
+    await waitFor(() => s.mock.postCount() === 1, "첫 요청이 서버에 도착");
+    s.mock.slowGate.release();
+    await all;
     assert.equal(s.mock.postCount(), 1);
     assert.equal(s.mock.approvals.length, 1);
     assert.equal(c.state.phase, "done");

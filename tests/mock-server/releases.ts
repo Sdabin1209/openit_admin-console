@@ -23,7 +23,7 @@ function manifest(n: number): ReleaseSummary & Record<string, unknown> {
 
 export interface OpsLogEntry { path: string; actor: string | null; body: Record<string, unknown> }
 
-export function createReleasesMock(gatewayUser?: string, now: () => string = () => new Date().toISOString().replace(/\.\d+Z$/, "Z")) {
+export function createReleasesMock(gatewayUser: string | undefined, now: () => string) {
   let operator = true;
   let conflictNext = false;
   let releases: (ReleaseSummary & Record<string, unknown>)[] = [];

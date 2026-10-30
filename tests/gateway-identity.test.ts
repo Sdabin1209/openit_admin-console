@@ -38,7 +38,7 @@ test("헤더만 있으면 헤더 값이 승인자로 기록된다", async () => 
 });
 
 test("화면은 승인 본문에 approver_id를 싣지 않는다", async () => {
-  const mock = createMock({ now: () => "2026-10-20T00:00:00Z", slowMs: 1, gatewayUser: "gw-1" });
+  const mock = createMock({ now: () => "2026-10-20T00:00:00Z", gatewayUser: "gw-1" });
   await new Promise<void>((r) => mock.server.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${(mock.server.address() as AddressInfo).port}`;
   const bodies: string[] = [];

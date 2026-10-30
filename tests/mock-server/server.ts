@@ -17,20 +17,26 @@ function sha256Hash(v: unknown): string {
   return "sha256:" + createHash("sha256").update(canon(v)).digest("hex");
 }
 
-export interface MockOptions { staticDir?: string; slowMs?: number; gatewayUser?: string; now?: () => string }
-export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
+export interface MockOptions { staticDir?: string; gatewayUser?: string; now: () => string }
+export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; slowGate: { hold: () => void; release: () => void }; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
-export const defaultNow = (): string => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const V = PIPELINE_SCHEMA_VERSION;
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
 
-export function createMock(opts: MockOptions = {}): MockHandle {
-  const now = opts.now ?? defaultNow;
+export function createMock(opts: MockOptions): MockHandle {
+  const now = opts.now;
   const cases = createCasesMock(now);
   const releases = createReleasesMock(opts.gatewayUser, now);
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
+  // slow 시나리오의 지연: 시간이 아니라 시험이 쥔 문. hold()하면 slow 제출의 결정 요청이 release()될 때까지 처리 중으로 남는다(시간에 기대지 않는다, U421).
+  let gate: Promise<void> = Promise.resolve();
+  let openGate: () => void = () => {};
+  const slowGate = {
+    hold: () => { gate = new Promise<void>((r) => { openGate = r; }); },
+    release: () => openGate(),
+  };
   const overrides = new Map<string, ReviewReport>(); // 시험용: 다른 보고서를 흘려 보낸다
   const reset = () => {
     overrides.clear();
@@ -85,7 +91,7 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       return err(res, 409, "CONFLICT", "같은 제출에 다른 결정이 이미 있다", { reason: "ALREADY_DECIDED" });
     }
     if (s.view.status !== "AWAITING_APPROVAL") return err(res, 412, "FAILED_PRECONDITION", `승인 대기 상태가 아니다: ${s.view.status}`);
-    if (s.behavior === "slow") await new Promise((r) => setTimeout(r, opts.slowMs ?? 300 /* 모의 지연 시나리오용 임의 값, 근거 없음(시험은 조건 대기) */));
+    if (s.behavior === "slow") await gate;
     if (s.behavior === "stale" && s.reportVersion === 1) s.reportVersion = 2; // 승인자가 보는 사이 보고서가 바뀐 것을 흉내
     const current = sha256Hash(reportOf(s));
     if (b.report_hash !== undefined && b.report_hash !== current) {
@@ -143,5 +149,5 @@ export function createMock(opts: MockOptions = {}): MockHandle {
       return err(res, 503, "UNAVAILABLE", "모의 서버 내부 오류");
     }
   });
-  return { cases, releases, server, approvals, postCount: () => posts, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
+  return { cases, releases, server, approvals, postCount: () => posts, slowGate, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
 }

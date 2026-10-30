@@ -1,5 +1,5 @@
 // 연결: link_* 컴포넌트에 HTTP 보내기(link_http_send)를 주입해 화면이 쓰는 클라이언트 모양으로 묶는다. 업무 규칙은 없다.
-import { createHttpSend, type HttpPorts } from "../components/link_http_send.ts";
+import { createHttpSend, type HttpPorts, type Timers } from "../components/link_http_send.ts";
 import { createListAwaiting } from "../components/link_gate_list_awaiting.ts";
 import { createReviewReport, REPORT_HASH_HEADER } from "../components/link_gate_review_report.ts";
 import { createDecide } from "../components/link_gate_decide.ts";
@@ -30,10 +30,13 @@ import { unwrap } from "./api_error.ts";
 export { REPORT_HASH_HEADER };
 export { ApiError } from "./api_error.ts";
 
-export interface HttpOptions extends HttpPorts { baseUrl?: string; timeoutMs?: number }
+export interface HttpOptions extends Partial<HttpPorts> { baseUrl?: string; timeoutMs?: number }
+
+// 실제 타이머는 연결부(wiring)가 넣는다. 컴포넌트는 시계를 직접 읽지 않는다(ADR 0023).
+const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };
 
 // 15000ms: 값의 근거 기록 없음(측정 안 함). docs/adr/0010. 본문을 다 읽을 때까지 적용한다.
-const send = (o: HttpOptions) => createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? 15000 }, { fetch: o.fetch, timers: o.timers });
+const send = (o: HttpOptions) => createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? 15000 }, { fetch: o.fetch, timers: o.timers ?? realTimers });
 
 export class GateClient {
   private readonly list; private readonly report; private readonly decideFn;

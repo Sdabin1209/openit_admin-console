@@ -63,7 +63,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 
 export interface CasesMock { store: Map<string, FailureCase[]>; reviewPosts: () => number; reset: () => void; handle: (req: IncomingMessage, res: ServerResponse, url: URL, send: Send, err: Err, readBody: () => Promise<unknown>) => Promise<boolean> }
 
-export function createCasesMock(now: () => string = () => new Date().toISOString().replace(/\.\d+Z$/, "Z")): CasesMock {
+export function createCasesMock(now: () => string): CasesMock {
   let store = initialCases();
   let posts = 0;
   const m: CasesMock = {

@@ -7,9 +7,9 @@ import type { HttpOutcome } from "../types/HttpOutcome.ts";
 import type { ErrorInfo } from "../types/ErrorInfo.ts";
 import type { BoundaryError } from "../types/contract/BoundaryError.ts";
 
-/** 시험이 가짜 시계를 꽂을 수 있게 타이머를 주입받는다. 기본은 전역 타이머. */
+/** 시계(타이머)는 주입받는다: 컴포넌트가 전역 setTimeout을 직접 부르지 않는다(ADR 0023). wiring이 실제 타이머를, 시험이 가짜를 넣는다. */
 export interface Timers { set: (fn: () => void, ms: number) => unknown; clear: (h: unknown) => void }
-export interface HttpPorts { fetch?: typeof fetch; timers?: Timers }
+export interface HttpPorts { fetch?: typeof fetch; timers: Timers }
 export type HttpSend = (spec: HttpRequestSpec) => Promise<HttpOutcome>;
 
 type Kind = ErrorInfo["kind"];
@@ -45,11 +45,11 @@ export function toError(status: number, body: unknown): ErrorInfo {
   return { kind, status, message, retryable };
 }
 
-export function createHttpSend(config: HttpSendConfig, ports: HttpPorts = {}): HttpSend {
+export function createHttpSend(config: HttpSendConfig, ports: HttpPorts): HttpSend {
   v.assertValid(v.HttpSendConfig, config, "link_http_send 설정");
   const base = config.baseUrl.replace(/\/$/, "");
   const fetchFn: typeof fetch = ports.fetch ?? ((...a) => fetch(...a));
-  const timers: Timers = ports.timers ?? { set: (fn, ms) => setTimeout(fn, ms), clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };
+  const timers: Timers = ports.timers;
   return async (spec) => {
     v.assertValid(v.HttpRequestSpec, spec, "link_http_send");
     const ctl = new AbortController();

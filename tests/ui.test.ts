@@ -32,7 +32,7 @@ test("목록 → 보고서: SAFETY 그룹이 맨 위, n=0은 계산 못 함, 합
 });
 
 test("승인 버튼 → 확인창 → 확정 → 완료, 확정 버튼은 전송 중 잠긴다", async () => {
-  const s = await startMock(150);
+  const s = await startMock();
   try {
     const root = q("#app")!;
     const c = s.ctl();
@@ -47,9 +47,12 @@ test("승인 버튼 → 확인창 → 확정 → 완료, 확정 버튼은 전송
     assert.equal(yes.disabled, true, "제출 ID를 입력하기 전에는 확정할 수 없다");
     const idBox = q<HTMLInputElement>("#confirm-id")!;
     idBox.value = "sub-await-slow"; idBox.dispatchEvent(new dom.window.Event("input"));
+    s.mock.slowGate.hold(); // 요청을 처리 중으로 붙잡아 둔다(시간이 아니라 사건)
     yes.click(); yes.click();
     assert.equal(c.state.phase, "submitting");
     assert.equal(q<HTMLButtonElement>("#confirm-yes")!.disabled, true);
+    await waitFor(() => s.mock.postCount() === 1, "요청이 서버에 도착");
+    s.mock.slowGate.release();
     await waitFor(() => root.textContent!.includes("승인했다"), "승인 완료 표시");
     assert.equal(s.mock.postCount(), 1);
     assert.ok(root.textContent!.includes("승인했다"));
