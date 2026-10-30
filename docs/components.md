@@ -61,7 +61,7 @@
 | `app/wiring/gateway.ts` | `link_http_send`를 `link_*`에 주입해 화면이 쓰는 클라이언트(`GateClient`, `ReleasesClient`, `CasesClient`)로 묶는다 |
 | `app/wiring/api_error.ts` | `ErrorInfo`를 예외 `ApiError`로 바꾸는 도구 |
 | `app/wiring/approvals_controller.ts`, `cases_controller.ts`, `ops_controller.ts` | 화면 상태(단계, 진행 중 요청, 입력 중인 글)를 들고 컴포넌트의 출력을 다음 상태로 잇는다. 상태가 있으므로 컴포넌트가 아니다(DESIGN.md 2절) |
-| `app/wiring/ui/` | 화면 부품(DOM 그리기). `ui/`는 DESIGN.md 3절의 이름이다. 구조 검사 6번(`head/scripts/structure-check.py`)이 `ui/`를 허용 위치로 알지 못해 `wiring/` 아래에 둔다(화면 상태를 DOM에 잇는 연결이므로 wiring의 뜻과 같다). 헤드가 검사에 `ui/`를 넣으면 한 칸 올린다 |
+| `app/ui/` | 화면 부품(DOM 그리기). 컴포넌트가 아니고 연결부도 아니다(DESIGN.md 3절). 컴포넌트를 부르지만 컨트롤러 상태를 읽어 그릴 뿐 업무 규칙이 없다 |
 | `app/main.ts` | 진입점. 컨트롤러를 만들어 주소(`route_parse`)에 잇는다. 업무 규칙 없음 |
 | `tests/mock-server/` | 시험·개발용 모의 게이트·모의 FailureStore. 이웃의 메모리 구현에 해당하며 앱 코드가 아니다(ADR 0005) |
 | `scripts/` | 빌드, 생성(`gen-schemas.mjs`, `gen-types.mjs`), 이미지 빌드 진입점, 스모크 |

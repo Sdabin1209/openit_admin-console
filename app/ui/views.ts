@@ -1,11 +1,11 @@
 // DOM 그리기. innerHTML을 쓰지 않는다(textContent만). 보고서 내용을 저장소나 콘솔에 남기지 않는다.
-import type { Controller, State } from "../approvals_controller.ts";
-import { reportView as buildReportView } from "../../components/report_view.ts";
-import { timeDisplay } from "../../components/time_display.ts";
-import type { Cell } from "../../types/Cell.ts";
-import type { MetricRow } from "../../types/MetricRow.ts";
-import type { ReportDoc } from "../../types/ReportDoc.ts";
-import type { SubmissionRow } from "../../types/SubmissionRow.ts";
+import type { Controller, State } from "../wiring/approvals_controller.ts";
+import { reportView as buildReportView } from "../components/report_view.ts";
+import { timeDisplay } from "../components/time_display.ts";
+import type { Cell } from "../types/Cell.ts";
+import type { MetricRow } from "../types/MetricRow.ts";
+import type { ReportDoc } from "../types/ReportDoc.ts";
+import type { SubmissionRow } from "../types/SubmissionRow.ts";
 
 type ReviewReport = ReportDoc;
 type SubmissionView = SubmissionRow;

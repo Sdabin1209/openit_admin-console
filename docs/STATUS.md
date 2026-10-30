@@ -86,8 +86,8 @@
 - 해당 없음: I9 extract, ReleaseReader, deid, SetupEnvReport(이미 environment 포함), StaticImageInterface(이 영역은 쓰지 않았다).
 
 ## 작업 단위 U400 (영역 구조 개편, D117)
-- 한 일: 업무를 단계로 나눠 컴포넌트 24개(업무 12, 통신 12)로 분해(`docs/components.md`), `schemas/` 55개 + 통과·거부 예시, `app/types/` 생성(json-schema-to-typescript 15.0.4 고정, `scripts/gen-types.mjs`), 코드를 `app/components/`·`app/wiring/`(`ui/` 포함)로 이동하고 `api/`를 없앴다. 모의 서버는 `tests/mock-server/`로(시험 지원 코드). 계약 고정을 v3.1.1로 올렸다(Dockerfile ARG, 검증기 재생성). 이유와 대안은 [ADR 0022](adr/0022-영역-구조-개편-컴포넌트-스키마-타입-생성.md).
+- 한 일: 업무를 단계로 나눠 컴포넌트 24개(업무 12, 통신 12)로 분해(`docs/components.md`), `schemas/` 55개 + 통과·거부 예시, `app/types/` 생성(json-schema-to-typescript 15.0.4 고정, `scripts/gen-types.mjs`), 코드를 `app/components/`·`app/wiring/`·`app/ui/`로 이동하고 `api/`를 없앴다. 모의 서버는 `tests/mock-server/`로(시험 지원 코드). 계약 고정을 v3.1.1로 올렸다(Dockerfile ARG, 검증기 재생성). 이유와 대안은 [ADR 0022](adr/0022-영역-구조-개편-컴포넌트-스키마-타입-생성.md).
 - 동작: 와이어 형식·HTTP 요청/응답·화면 문구는 바꾸지 않았다. 롤백 본문을 계약 `RollbackRequest`로 보내기 전에 검사하는 것이 추가됐다(보내는 값이 계약에 맞는지 확인할 뿐 값은 같다). 옛 `getSubmission`(어디서도 쓰지 않음)은 지웠다.
 - 시험: `npm test` 162 중 통과 155, 실패 0, 건너뜀 7(전과 같은 7). 구조 검사 통과, `npm run smoke` 통과.
 - 스키마 밖 조건 5건(`schemas/README.md`). 통신 기반 라이브러리 `link`(Python)는 이 영역에 해당 없음.
-- 남은 일: `ui/`를 `wiring/` 아래에 둔 것(헤드 구조 검사가 `ui/`를 모름). 헤드가 `ui/`를 허용하면 한 칸 올린다. 실제 브라우저·이웃 연동은 전과 같이 확인 못 했다.
+- 남은 일: 실제 브라우저·이웃 연동은 전과 같이 확인 못 했다.

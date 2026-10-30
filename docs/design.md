@@ -53,7 +53,8 @@
 schemas/      내부 타입의 JSON Schema와 통과·거부 예시
 app/types/    schemas/에서 생성한 타입·검증기 (손으로 고치지 않는다)
 app/components/  업무 컴포넌트 12 + link_* 12 (docs/components.md)
-app/wiring/   gateway(link 주입), 컨트롤러 3, ui/(DOM 그리기)
+app/wiring/   gateway(link 주입), 컨트롤러 3
+app/ui/       화면 부품(DOM 그리기)
 app/main.ts, index.html, app.css
 tests/        node:test 시험, tests/mock-server/(모의 게이트·릴리스·FailureStore)
 serve/        이미지의 Caddy 설정(Caddyfile: /healthz, /readyz, 보안 헤더)

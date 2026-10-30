@@ -27,7 +27,8 @@
 | `schemas/` | 영역 내부 타입의 JSON Schema(draft 2020-12)와 통과·거부 예시. "스키마 밖 조건" 표 |
 | `app/types/` | `schemas/`와 계약 스키마에서 생성한 타입(`*.ts`, `contract/*.ts`)과 검증기(`validators.cjs`, `contract-validators.cjs`). 손으로 고치지 않는다 |
 | `app/components/` | 컴포넌트마다 파일 하나. 업무 12개(입력 스키마 -> 출력 스키마 함수)와 통신 `link_*` 12개(보내는 쪽만). 컴포넌트끼리 import하지 않는다. HTTP는 `link_*`에만 있다 |
-| `app/wiring/` | 연결·주입: `gateway.ts`(link에 HTTP 보내기 주입), 화면 상태를 들고 컴포넌트를 잇는 컨트롤러 3개, `ui/`(화면 부품, DOM 그리기) |
+| `app/wiring/` | 연결·주입: `gateway.ts`(link에 HTTP 보내기 주입), 화면 상태를 들고 컴포넌트를 잇는 컨트롤러 3개 |
+| `app/ui/` | 화면 부품(DOM 그리기). 컴포넌트도 연결부도 아니다(DESIGN.md 3절) |
 | `app/main.ts`, `app/index.html`, `app/app.css` | 진입점과 정적 파일 |
 | `tests/mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(I4·activate·rollback), 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
 | `scripts/build-image.sh` | 영역 빌드 진입점(계약 BuildImageRequest/Result, ADR 0019). 스모크도 이것으로 빌드한다 |

@@ -1,11 +1,11 @@
 // 진입점: 화면 부품(wiring/ui)과 컨트롤러를 만들어 주소(route_parse)에 따라 잇는다. 업무 규칙은 없다.
 import { CasesClient, GateClient, ReleasesClient } from "./wiring/gateway.ts";
 import { CasesController } from "./wiring/cases_controller.ts";
-import { renderCases } from "./wiring/ui/cases_view.ts";
+import { renderCases } from "./ui/cases_view.ts";
 import { OpsController } from "./wiring/ops_controller.ts";
-import { renderOps } from "./wiring/ui/ops_view.ts";
+import { renderOps } from "./ui/ops_view.ts";
 import { Controller } from "./wiring/approvals_controller.ts";
-import { render, h } from "./wiring/ui/views.ts";
+import { render, h } from "./ui/views.ts";
 import { routeParse } from "./components/route_parse.ts";
 
 const root = document.getElementById("app")!;

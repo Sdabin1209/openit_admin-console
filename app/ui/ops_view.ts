@@ -1,7 +1,7 @@
 // 릴리스 운영 화면 그리기. textContent만 쓴다. 행위자·역할 입력란은 없다(역할은 클라이언트가 계약대로 operator를 보내고, 행위자는 서버가 게이트웨이 헤더로 기록한다).
-import { activateCandidates, rollbackCandidates, type OpsController } from "../ops_controller.ts";
+import { activateCandidates, rollbackCandidates, type OpsController } from "../wiring/ops_controller.ts";
 import { h, fmtTime } from "./views.ts";
-import type { ReleaseRow } from "../../types/ReleaseRow.ts";
+import type { ReleaseRow } from "../types/ReleaseRow.ts";
 
 type ReleaseSummary = ReleaseRow;
 

@@ -1,7 +1,7 @@
 // 실패 사례 검토 화면 그리기. textContent만 쓴다. 입력 내용을 저장소·콘솔에 남기지 않는다.
-import type { CasesController, CaseState } from "../cases_controller.ts";
+import type { CasesController, CaseState } from "../wiring/cases_controller.ts";
 import { h, fmtTime } from "./views.ts";
-import type { CaseRecord } from "../../types/CaseRecord.ts";
+import type { CaseRecord } from "../types/CaseRecord.ts";
 
 type FailureCase = CaseRecord;
 

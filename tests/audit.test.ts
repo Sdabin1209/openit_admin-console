@@ -6,7 +6,7 @@ import { ApiError, Http } from "./helpers.ts";
 import { GateClient } from "../app/wiring/gateway.ts";
 import { ReleasesClient } from "../app/wiring/gateway.ts";
 import { OpsController, describeOpsError } from "../app/wiring/ops_controller.ts";
-import { fmtTime } from "../app/wiring/ui/views.ts";
+import { fmtTime } from "../app/ui/views.ts";
 import { routeParse } from "../app/components/route_parse.ts";
 import { FIXED_NOW, startMock } from "./helpers.ts";
 

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { VALID_LORA_A_INPUT, VALID_LORA_B_INPUT } from "./mock-server/cases.ts";
-import { traceFacts } from "../app/wiring/ui/cases_view.ts";
+import { traceFacts } from "../app/ui/cases_view.ts";
 import { startMock } from "./helpers.ts";
 
 const GOOD_INPUT = JSON.stringify({ ...VALID_LORA_A_INPUT, current_question: "머리가 아프신가요?", user_utterance: "가상의 사람이 머리가 아프다고 말한다" });
