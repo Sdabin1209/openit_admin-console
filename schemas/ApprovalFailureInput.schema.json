@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ApprovalFailureInput.schema.json",
+  "title": "ApprovalFailureInput",
+  "description": "approval_failure의 입력: 어느 일을 하다(load 불러오기, decide 결정 전송) 난 오류.",
+  "type": "object",
+  "required": [
+    "context",
+    "error"
+  ],
+  "properties": {
+    "context": {
+      "enum": [
+        "load",
+        "decide"
+      ]
+    },
+    "error": {
+      "$ref": "ErrorInfo.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

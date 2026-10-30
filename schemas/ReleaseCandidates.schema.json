@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReleaseCandidates.schema.json",
+  "title": "ReleaseCandidates",
+  "description": "release_candidates의 출력: 활성화 후보(현재 활성보다 새 것)와 롤백 후보(현재 활성보다 오래된 것, 가까운 순).",
+  "type": "object",
+  "required": [
+    "activate",
+    "rollback"
+  ],
+  "properties": {
+    "activate": {
+      "type": "array",
+      "items": {
+        "$ref": "ReleaseRow.schema.json"
+      }
+    },
+    "rollback": {
+      "type": "array",
+      "items": {
+        "$ref": "ReleaseRow.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

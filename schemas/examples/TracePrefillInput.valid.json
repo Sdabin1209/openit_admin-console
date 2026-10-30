@@ -1,0 +1,8 @@
+{
+  "trace": {
+    "extract_input": {
+      "a": 1
+    }
+  },
+  "kind": "LORA_A"
+}

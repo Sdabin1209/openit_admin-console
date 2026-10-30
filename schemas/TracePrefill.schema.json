@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TracePrefill.schema.json",
+  "title": "TracePrefill",
+  "description": "case_trace_prefill의 출력: 편집창에 채울 글. 채울 입력이 trace에 없으면 null.",
+  "type": "object",
+  "required": [
+    "inputText"
+  ],
+  "properties": {
+    "inputText": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

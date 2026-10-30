@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "MetricGroup.schema.json",
+  "title": "MetricGroup",
+  "description": "같은 그룹의 지표 줄들.",
+  "type": "object",
+  "required": [
+    "group",
+    "label",
+    "rows"
+  ],
+  "properties": {
+    "group": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "$ref": "MetricRow.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,8 @@
+{
+  "decision": {
+    "submissionId": "sub-1",
+    "decision": "APPROVE",
+    "reportHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "confirmText": "sub-1"
+}

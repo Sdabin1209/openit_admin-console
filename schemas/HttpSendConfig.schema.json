@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HttpSendConfig.schema.json",
+  "title": "HttpSendConfig",
+  "description": "link_http_send를 만들 때 한 번 주는 설정. baseUrl은 같은 출처(빈 문자열) 또는 http(s) 주소, timeoutMs는 응답 본문을 다 읽을 때까지의 제한(값의 근거: docs/adr/0010, 측정 안 함).",
+  "type": "object",
+  "required": [
+    "baseUrl",
+    "timeoutMs"
+  ],
+  "properties": {
+    "baseUrl": {
+      "type": "string",
+      "pattern": "^(https?://\\S+)?$"
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

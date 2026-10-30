@@ -1,9 +1,11 @@
 // 승인 흐름 전체를 모의 서버로 시험한다: 목록 → 보고서 → 확인 → 결정, STALE_REPORT, 403, 중복 클릭.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ApiError } from "../api/client.ts";
-import { buildGroups } from "../app/model.ts";
-import { SAFETY_METRIC } from "../mock-server/scenarios.ts";
+import { ApiError } from "../app/wiring/gateway.ts";
+import { reportView } from "../app/components/report_view.ts";
+
+const buildGroups = (report: { comparisons: Parameters<typeof reportView>[0]["comparisons"] }, o: { sliceKind: string; sort: "default" }) => reportView({ comparisons: report.comparisons, ...o }).groups;
+import { SAFETY_METRIC } from "./mock-server/scenarios.ts";
 import { startMock } from "./helpers.ts";
 
 const draft = (c: ReturnType<Awaited<ReturnType<typeof startMock>>["ctl"]>, _unused = "", reason = "") => c.setDraft({ reason });
@@ -194,15 +196,15 @@ test("해시는 계산하지 않고 응답 헤더 값을 그대로 쓴다", asyn
 });
 
 test("헤더가 없는 보고서 응답은 거부한다", async () => {
-  const { GateClient } = await import("../api/client.ts");
+  const { GateClient } = await import("../app/wiring/gateway.ts");
   const fake = (async () => new Response(JSON.stringify({ submission_id: "x", checks: [], comparisons: [], subject: {} }), { status: 200, headers: { "Content-Type": "application/json" } })) as typeof fetch;
   await assert.rejects(new GateClient({ fetch: fake }).getReviewReport("x"), (e: unknown) => e instanceof ApiError && e.kind === "BAD_RESPONSE");
 });
 
 test("409 사유는 details.reason으로만 구분한다(문자열 검색 없음)", async () => {
-  const { GateClient } = await import("../api/client.ts");
+  const { GateClient } = await import("../app/wiring/gateway.ts");
   const mk = (body: unknown) => new GateClient({ fetch: (async () => new Response(JSON.stringify(body), { status: 409 })) as typeof fetch });
-  const req = { submission_id: "x", decision: "APPROVE" as const, approver_role: "release-approver", report_hash: "sha256:" + "0".repeat(64) };
+  const req = { submissionId: "x", decision: "APPROVE" as const, reportHash: "sha256:" + "0".repeat(64) };
   const e1 = await mk({ code: "CONFLICT", message: "STALE_REPORT 라고 적혀 있어도", retryable: false }).decide(req).catch((e) => e);
   assert.equal(e1.kind, "CONFLICT");
   const e2 = await mk({ code: "CONFLICT", message: "m", retryable: false, details: { reason: "STALE_REPORT" } }).decide(req).catch((e) => e);

@@ -1,0 +1,18 @@
+{
+  "report": {
+    "submission_id": "sub-1",
+    "checks": [],
+    "comparisons": [
+      {
+        "role": "LORA_A",
+        "name": "m",
+        "group": "SAFETY",
+        "candidate": 0.9,
+        "candidate_n": 10,
+        "higher_is_better": true
+      }
+    ],
+    "subject": {}
+  },
+  "reportHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OpsFailureInput.schema.json",
+  "title": "OpsFailureInput",
+  "description": "ops_failure의 입력.",
+  "type": "object",
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "$ref": "ErrorInfo.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

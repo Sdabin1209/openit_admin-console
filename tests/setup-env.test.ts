@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, chmodSync, rmSync, statSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import * as v from "../generated/contract-validators.cjs";
+import * as v from "../app/types/contract-validators.cjs";
 
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const lastLine = (s: string) => s.trimEnd().split("\n").pop()!;

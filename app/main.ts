@@ -1,13 +1,12 @@
-import { CasesClient } from "../api/cases.ts";
-import { GateClient } from "../api/client.ts";
-import { ReleasesClient } from "../api/releases.ts";
-import { CasesController } from "./cases-controller.ts";
-import { renderCases } from "./cases-view.ts";
-import { OpsController } from "./ops-controller.ts";
-import { renderOps } from "./ops-view.ts";
-import { Controller } from "./controller.ts";
-import { render, h } from "./views.ts";
-import { safeDecode } from "./route.ts";
+// 진입점: 화면 부품(wiring/ui)과 컨트롤러를 만들어 주소(route_parse)에 따라 잇는다. 업무 규칙은 없다.
+import { CasesClient, GateClient, ReleasesClient } from "./wiring/gateway.ts";
+import { CasesController } from "./wiring/cases_controller.ts";
+import { renderCases } from "./wiring/ui/cases_view.ts";
+import { OpsController } from "./wiring/ops_controller.ts";
+import { renderOps } from "./wiring/ui/ops_view.ts";
+import { Controller } from "./wiring/approvals_controller.ts";
+import { render, h } from "./wiring/ui/views.ts";
+import { routeParse } from "./components/route_parse.ts";
 
 const root = document.getElementById("app")!;
 const nav = document.getElementById("nav")!;
@@ -69,13 +68,13 @@ function badAddress(): void {
 function route(): void {
   last = "";
   needFocus = true;
-  const h = location.hash;
-  let m: RegExpExecArray | null;
-  if (h === "#/ops") { screen = "ops"; drawNav(); void ops.load(); }
-  else if ((m = /^#\/cases\/(.+)$/.exec(h))) { screen = "cases"; drawNav(); const id = safeDecode(m[1]); if (id === null) badAddress(); else void cases.openCase(id); }
-  else if (h === "#/cases") { screen = "cases"; drawNav(); void cases.openList(); }
-  else if ((m = /^#\/s\/(.+)$/.exec(h))) { screen = "approvals"; drawNav(); const id = safeDecode(m[1]); if (id === null) badAddress(); else void approvals.openReport(id); }
-  else { screen = "approvals"; drawNav(); void approvals.openList(); }
+  const r = routeParse({ hash: location.hash });
+  if (r.screen === "bad_address") return badAddress();
+  screen = r.screen;
+  drawNav();
+  if (r.screen === "ops") void ops.load();
+  else if (r.screen === "cases") void (r.view === "detail" ? cases.openCase(r.id as string) : cases.openList());
+  else void (r.view === "detail" ? approvals.openReport(r.id as string) : approvals.openList());
 }
 window.addEventListener("hashchange", route);
 route();

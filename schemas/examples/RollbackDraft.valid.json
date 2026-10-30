@@ -1,0 +1,10 @@
+{
+  "request_id": "rb-1",
+  "requested_at": "2026-10-30T00:00:00Z",
+  "from_release_id": "rel-2",
+  "to_release_id": "rel-1",
+  "reason": "r",
+  "evidence_refs": [
+    "fc-1"
+  ]
+}

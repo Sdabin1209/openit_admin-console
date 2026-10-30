@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ActivePointerState.schema.json",
+  "title": "ActivePointerState",
+  "description": "link_release_active_pointer의 출력: 활성 릴리스가 아직 없으면 pointer가 null.",
+  "type": "object",
+  "required": [
+    "pointer"
+  ],
+  "properties": {
+    "pointer": {
+      "oneOf": [
+        {
+          "$ref": "PointerRecord.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

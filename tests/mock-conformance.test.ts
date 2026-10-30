@@ -4,7 +4,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
-import { baseReport } from "../mock-server/scenarios.ts";
+import { baseReport } from "./mock-server/scenarios.ts";
 import { startMock } from "./helpers.ts";
 
 const ajv = new Ajv2020({ strict: false, allErrors: true });

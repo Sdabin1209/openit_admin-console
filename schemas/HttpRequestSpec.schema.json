@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HttpRequestSpec.schema.json",
+  "title": "HttpRequestSpec",
+  "description": "link_http_send의 입력. 같은 출처의 /v1 경로만 부른다(게이트 HTTP 면 밖은 부르지 않는다, 브리프 6절). GET에는 본문이 없다.",
+  "type": "object",
+  "required": [
+    "method",
+    "path"
+  ],
+  "properties": {
+    "method": {
+      "enum": [
+        "GET",
+        "POST"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^/v1/\\S*$"
+    },
+    "body": {}
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "method": {
+        "const": "GET"
+      }
+    },
+    "required": [
+      "method"
+    ]
+  },
+  "then": {
+    "not": {
+      "required": [
+        "body"
+      ]
+    }
+  }
+}

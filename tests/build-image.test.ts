@@ -2,14 +2,14 @@
 // 여기서는 가짜 DOCKER로 진입점의 논리(요청 검증, 인자, 라벨 대조, 결과 형식)를 시험한다. 실제 docker 빌드는 npm run smoke가 이 진입점으로 한다.
 // 기대값의 출처: 계약 BuildImageRequest/BuildImageResult 스키마와 그 예시(boundary-contracts/examples).
 import { contract } from "../scripts/contract-src.mjs";
-import { CONTRACT_VERSION } from "../api/contract.ts";
+import { CONTRACT_VERSION } from "../app/types/contract-validators.cjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, chmodSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import * as v from "../generated/contract-validators.cjs";
+import * as v from "../app/types/contract-validators.cjs";
 
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const ID = "sha256:" + "ab".repeat(32);

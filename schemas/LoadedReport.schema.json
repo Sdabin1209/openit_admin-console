@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "LoadedReport.schema.json",
+  "title": "LoadedReport",
+  "description": "link_gate_review_report의 출력: 보고서와 서버가 낸 그 보고서의 해시. 해시는 계산하지 않고 응답 헤더 값 그대로다(형식만 본다).",
+  "type": "object",
+  "required": [
+    "report",
+    "reportHash"
+  ],
+  "properties": {
+    "report": {
+      "$ref": "ReportDoc.schema.json"
+    },
+    "reportHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

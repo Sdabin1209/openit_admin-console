@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TracePrefillInput.schema.json",
+  "title": "TracePrefillInput",
+  "description": "case_trace_prefill의 입력: 비식별 trace와 고른 종류.",
+  "type": "object",
+  "required": [
+    "trace",
+    "kind"
+  ],
+  "properties": {
+    "trace": {
+      "type": "object"
+    },
+    "kind": {
+      "enum": [
+        "LORA_A",
+        "LORA_B"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

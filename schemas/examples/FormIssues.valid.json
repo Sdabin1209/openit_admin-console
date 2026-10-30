@@ -1,0 +1,8 @@
+{
+  "issues": [
+    {
+      "path": "/reason",
+      "message": "반려에는 사유가 필수다."
+    }
+  ]
+}

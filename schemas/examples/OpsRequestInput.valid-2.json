@@ -1,0 +1,9 @@
+{
+  "kind": "rollback",
+  "target": "rel-1",
+  "reason": "r",
+  "evidenceText": "fc-1, fc-2",
+  "requestId": "rb-1",
+  "requestedAt": "t",
+  "pointerReleaseId": "rel-2"
+}

@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "case_id": "fc-1",
+      "version": 1,
+      "review_status": "PENDING",
+      "failure_type": "X",
+      "deidentified_trace_ref": "tr-1"
+    }
+  ]
+}

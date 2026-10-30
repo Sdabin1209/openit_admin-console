@@ -4,9 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
-import { createMock } from "../mock-server/server.ts";
-import { Controller } from "../app/controller.ts";
-import { GateClient } from "../api/client.ts";
+import { createMock } from "./mock-server/server.ts";
+import { Controller } from "../app/wiring/approvals_controller.ts";
+import { GateClient } from "../app/wiring/gateway.ts";
 
 async function raw(opts: { gatewayUser?: string }, headers: Record<string, string>, extra: Record<string, unknown>) {
   const mock = createMock({ now: () => "2026-10-20T00:00:00Z", gatewayUser: opts.gatewayUser });
@@ -57,7 +57,7 @@ test("화면은 승인 본문에 approver_id를 싣지 않는다", async () => {
 });
 
 test("개발 모드 설정 경로(ADMIN_DEV_APPROVER_ID, /config.json, dev_approver_id)가 소스에 없다", () => {
-  for (const f of ["app/main.ts", "app/controller.ts", "app/views.ts", "mock-server/main.ts", "mock-server/server.ts", "scripts/smoke.sh", "api/types.ts", "serve/Caddyfile"]) {
+  for (const f of ["app/main.ts", "app/wiring/approvals_controller.ts", "app/wiring/ui/views.ts", "tests/mock-server/main.ts", "tests/mock-server/server.ts", "scripts/smoke.sh", "app/wiring/gateway.ts", "serve/Caddyfile"]) {
     const t = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.ok(!/ADMIN_DEV_APPROVER_ID|dev_approver_id|config\.json|devApprover/.test(t), f);
   }

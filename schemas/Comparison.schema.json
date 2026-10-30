@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Comparison.schema.json",
+  "title": "Comparison",
+  "description": "보고서의 지표 비교 한 건(ReviewReport.comparisons 원소의 읽기용 투영). n=0과 null 기준값을 구분해서 읽는다.",
+  "type": "object",
+  "required": [
+    "role",
+    "name",
+    "group",
+    "candidate",
+    "higher_is_better"
+  ],
+  "properties": {
+    "role": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string"
+    },
+    "slice": {
+      "type": "object",
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "candidate": {
+      "type": "number"
+    },
+    "candidate_n": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "baseline": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "baseline_n": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "delta": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "higher_is_better": {
+      "type": "boolean"
+    },
+    "worse": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

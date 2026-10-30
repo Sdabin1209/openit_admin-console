@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReportViewRequest.schema.json",
+  "title": "ReportViewRequest",
+  "description": "report_view의 입력: 보고서의 지표 비교들과 화면의 분리 기준·정렬.",
+  "type": "object",
+  "required": [
+    "comparisons",
+    "sliceKind",
+    "sort"
+  ],
+  "properties": {
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "$ref": "Comparison.schema.json"
+      }
+    },
+    "sliceKind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sort": {
+      "enum": [
+        "default",
+        "name",
+        "candidate",
+        "delta",
+        "worse"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseReviewForm.schema.json",
+  "title": "CaseReviewForm",
+  "description": "case_review_draft의 입력: 검토 폼. 입력이나 정답을 쓰면 종류(kind)를 골라야 한다. 텍스트가 JSON인지는 스키마 밖 조건.",
+  "type": "object",
+  "required": [
+    "status",
+    "kind",
+    "inputText",
+    "expectedText"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "PENDING",
+        "CONFIRMED",
+        "DISMISSED"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "",
+        "LORA_A",
+        "LORA_B"
+      ]
+    },
+    "inputText": {
+      "type": "string"
+    },
+    "expectedText": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "status": {
+        "const": "CONFIRMED"
+      }
+    },
+    "required": [
+      "status"
+    ],
+    "anyOf": [
+      {
+        "properties": {
+          "inputText": {
+            "pattern": "\\S"
+          }
+        }
+      },
+      {
+        "properties": {
+          "expectedText": {
+            "pattern": "\\S"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "properties": {
+      "kind": {
+        "enum": [
+          "LORA_A",
+          "LORA_B"
+        ]
+      }
+    }
+  }
+}

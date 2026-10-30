@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseRecord.schema.json",
+  "title": "CaseRecord",
+  "description": "실패 사례(FailureCase의 읽기용 투영). 모르는 값과 필드는 받는다.",
+  "type": "object",
+  "required": [
+    "case_id",
+    "version",
+    "review_status",
+    "failure_type",
+    "deidentified_trace_ref"
+  ],
+  "properties": {
+    "pipeline_schema_version": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "source_release_id": {
+      "type": "string"
+    },
+    "runtime_contract_version": {
+      "type": "number"
+    },
+    "deidentified": {
+      "type": "boolean"
+    },
+    "deidentified_trace_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "failure_type": {
+      "type": "string"
+    },
+    "detection_method": {
+      "type": "string"
+    },
+    "review_status": {
+      "type": "string"
+    },
+    "expected": {
+      "type": [
+        "object",
+        "string"
+      ]
+    },
+    "expected_kind": {
+      "type": "string"
+    },
+    "reviewed_input": {
+      "type": "object"
+    },
+    "question_set": {
+      "$ref": "ArtifactRef.schema.json"
+    },
+    "ext": {
+      "type": "object"
+    }
+  }
+}

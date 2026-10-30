@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "status": 200,
+  "data": {
+    "a": 1
+  },
+  "headers": {
+    "x-openit-report-hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

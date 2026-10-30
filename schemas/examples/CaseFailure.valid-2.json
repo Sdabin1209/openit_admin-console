@@ -1,0 +1,7 @@
+{
+  "action": "back_to_case",
+  "notice": {
+    "kind": "denied",
+    "text": "t"
+  }
+}

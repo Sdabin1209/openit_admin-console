@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "RollbackDraft.schema.json",
+  "title": "RollbackDraft",
+  "description": "ops_request가 내는 롤백 요청의 알맹이. 계약 RollbackRequest에서 연결 계층이 붙이는 pipeline_schema_version과 requested_by_role을 뺀 것.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "requested_at",
+    "from_release_id",
+    "to_release_id",
+    "reason",
+    "evidence_refs"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requested_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from_release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "to_release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

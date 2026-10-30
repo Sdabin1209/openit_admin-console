@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SubmissionRow.schema.json",
+  "title": "SubmissionRow",
+  "description": "승인 대기 목록의 한 줄(SubmissionView의 읽기용 투영). 읽을 때는 관대하다: 모르는 필드는 보존하고 status의 모르는 값도 받는다(CONVENTIONS 1절, ADR 0016).",
+  "type": "object",
+  "required": [
+    "submission_id",
+    "status",
+    "subject"
+  ],
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "object"
+    },
+    "submitted_at": {
+      "type": "string"
+    },
+    "submitted_by_role": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "decision_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approval_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "release_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ActivateInput.schema.json",
+  "title": "ActivateInput",
+  "description": "link_release_activate의 입력.",
+  "type": "object",
+  "required": [
+    "releaseId"
+  ],
+  "properties": {
+    "releaseId": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

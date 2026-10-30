@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseListQuery.schema.json",
+  "title": "CaseListQuery",
+  "description": "link_failure_list의 입력: 필터. 빈 문자열은 안 건 것으로 본다. latest_only 기본은 true.",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "review_status": {
+      "type": "string"
+    },
+    "failure_type": {
+      "type": "string"
+    },
+    "source_release_id": {
+      "type": "string"
+    },
+    "latest_only": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

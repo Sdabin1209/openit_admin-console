@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "submission_id": "sub-1",
+      "status": "AWAITING_APPROVAL",
+      "subject": {},
+      "submitted_at": "2026-10-30T00:00:00Z",
+      "submitted_by_role": "release-engineer",
+      "updated_at": "2026-10-30T00:00:00Z"
+    }
+  ]
+}

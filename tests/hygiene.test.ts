@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
-const srcFiles = [...readdirSync(new URL("../app/", import.meta.url)).map((f) => `app/${f}`), ...readdirSync(new URL("../api/", import.meta.url)).map((f) => `api/${f}`)];
+import { appSourceFiles } from "./helpers.ts";
+const srcFiles = appSourceFiles();
 
 test("브라우저 저장소·콘솔·innerHTML·토큰을 쓰지 않는다", () => {
   for (const f of srcFiles) {
@@ -26,7 +27,7 @@ test("Dockerfile: non-root, 라벨, 잠금 파일 설치, 태그 고정", () => 
   for (const k of ["io.openit.service", "io.openit.revision", "io.openit.contracts.boundary", "io.openit.contracts.survey-schema", "io.openit.model-runtime"]) assert.ok(d.includes(k), k);
   assert.match(d, /npm ci/);
   assert.ok(!/:latest/.test(d));
-  assert.match(d, /COPY generated/);
+  assert.match(d, /COPY app/);
   assert.ok(existsSync(new URL("../package-lock.json", import.meta.url)));
   assert.ok(!/(TOKEN|SECRET|PASSWORD)\s*=/.test(d));
 });

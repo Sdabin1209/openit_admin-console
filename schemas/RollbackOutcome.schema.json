@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "RollbackOutcome.schema.json",
+  "title": "RollbackOutcome",
+  "description": "롤백 요청에 대한 영수증(RollbackReceipt의 읽기용 투영). APPLIED면 active_pointer가 있다.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "status",
+    "decided_at"
+  ],
+  "properties": {
+    "pipeline_schema_version": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "active_pointer": {
+      "$ref": "PointerRecord.schema.json"
+    },
+    "decided_at": {
+      "type": "string"
+    }
+  }
+}

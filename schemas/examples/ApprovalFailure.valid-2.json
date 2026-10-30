@@ -1,0 +1,7 @@
+{
+  "action": "reload_report",
+  "notice": {
+    "kind": "stale",
+    "text": "t"
+  }
+}

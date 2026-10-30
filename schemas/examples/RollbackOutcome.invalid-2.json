@@ -1,0 +1,8 @@
+{
+  "request_id": "r",
+  "status": "APPLIED",
+  "decided_at": "t",
+  "active_pointer": {
+    "release_id": "x"
+  }
+}

@@ -1,10 +1,10 @@
 // C9(2026-10-29 점검): 호출자는 BoundaryError의 code와 retryable로 행동한다. 기대값의 출처:
 // boundary-contracts/CONVENTIONS.md 오류 절("호출자는 code와 retryable로만 행동한다"; 같은 code 안의 재시도 사유는 details.reason)과
 // HTTP.md 공통("네트워크 오류와 5xx와 503은 UNAVAILABLE(재시도 가능)"), schemas/BoundaryError.schema.json(retryable 필수 boolean).
-import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
+import { PIPELINE_SCHEMA_VERSION } from "../app/types/contract-validators.cjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Http, toError } from "../api/http.ts";
+import { Http, toError } from "./helpers.ts";
 
 const body = (o: Record<string, unknown>) => ({ pipeline_schema_version: PIPELINE_SCHEMA_VERSION, message: "m", ...o });
 
@@ -29,5 +29,5 @@ test("본문이 BoundaryError가 아니면(게이트웨이의 502 HTML 등) 5xx�
 test("Http.json 경로에서도 본문 retryable이 ApiError에 실린다", async () => {
   const f = (async () => new Response(JSON.stringify(body({ code: "CONFLICT", retryable: true })), { status: 409, headers: { "Content-Type": "application/json" } })) as typeof fetch;
   const e = await new Http({ fetch: f }).json("GET", "/v1/x").catch((x) => x);
-  assert.equal(e.retryable, true);
+  assert.equal((e as { retryable: boolean }).retryable, true);
 });

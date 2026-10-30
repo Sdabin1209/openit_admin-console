@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ErrorInfo.schema.json",
+  "title": "ErrorInfo",
+  "description": "이 영역 안에서 오류를 나르는 모양. link_* 컴포넌트가 BoundaryError(HTTP 오류 본문)나 전송 실패를 이 모양으로 바꾼다. 업무 컴포넌트는 HTTP를 모르므로 이 모양만 본다. NON_API는 HTTP와 무관한 예기치 못한 예외.",
+  "type": "object",
+  "required": [
+    "kind",
+    "status",
+    "message",
+    "retryable"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "STALE_REPORT",
+        "ALREADY_DECIDED",
+        "NOT_FOUND",
+        "PERMISSION_DENIED",
+        "INVALID_RECORD",
+        "CONFLICT",
+        "FAILED_PRECONDITION",
+        "UNAVAILABLE",
+        "BAD_RESPONSE",
+        "UNKNOWN",
+        "NON_API"
+      ]
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 599
+    },
+    "message": {
+      "type": "string"
+    },
+    "retryable": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

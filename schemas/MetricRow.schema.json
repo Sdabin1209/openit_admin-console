@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "MetricRow.schema.json",
+  "title": "MetricRow",
+  "description": "지표 표의 한 줄. worse는 참고 표시일 뿐 합격/불합격이 아니다(D53).",
+  "type": "object",
+  "required": [
+    "key",
+    "role",
+    "name",
+    "group",
+    "sliceKind",
+    "sliceLabel",
+    "candidate",
+    "candidateN",
+    "baseline",
+    "baselineN",
+    "delta",
+    "worse",
+    "worseKnown",
+    "direction",
+    "sortCandidate",
+    "sortDelta"
+  ],
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sliceKind": {
+      "type": "string"
+    },
+    "sliceLabel": {
+      "type": "string"
+    },
+    "candidate": {
+      "$ref": "Cell.schema.json"
+    },
+    "candidateN": {
+      "type": "string"
+    },
+    "baseline": {
+      "$ref": "Cell.schema.json"
+    },
+    "baselineN": {
+      "type": "string"
+    },
+    "delta": {
+      "$ref": "Cell.schema.json"
+    },
+    "worse": {
+      "type": "boolean"
+    },
+    "worseKnown": {
+      "type": "boolean"
+    },
+    "direction": {
+      "type": "string"
+    },
+    "sortCandidate": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "sortDelta": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

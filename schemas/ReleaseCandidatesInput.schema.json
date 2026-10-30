@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReleaseCandidatesInput.schema.json",
+  "title": "ReleaseCandidatesInput",
+  "description": "release_candidates의 입력: 최신부터인 릴리스 목록과 현재 활성 포인터.",
+  "type": "object",
+  "required": [
+    "releases",
+    "pointer"
+  ],
+  "properties": {
+    "releases": {
+      "type": "array",
+      "items": {
+        "$ref": "ReleaseRow.schema.json"
+      }
+    },
+    "pointer": {
+      "oneOf": [
+        {
+          "$ref": "PointerRecord.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ApprovalFailure.schema.json",
+  "title": "ApprovalFailure",
+  "description": "approval_failure의 출력. reload_report는 보고서를 새로 불러오고 다시 결정하게 한다, back_to_report는 보고서 화면에 알림을 보이고 머문다, fail은 오류 화면.",
+  "type": "object",
+  "required": [
+    "action"
+  ],
+  "properties": {
+    "action": {
+      "enum": [
+        "reload_report",
+        "back_to_report",
+        "fail"
+      ]
+    },
+    "notice": {
+      "type": "object",
+      "required": [
+        "kind",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "stale",
+            "badresponse",
+            "conflict",
+            "denied",
+            "retry",
+            "invalid"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "errorText": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "fail"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "required": [
+          "errorText"
+        ]
+      },
+      "else": {
+        "required": [
+          "notice"
+        ]
+      }
+    }
+  ]
+}

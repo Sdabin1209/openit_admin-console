@@ -1,13 +1,13 @@
 // 전수 점검 지적에 대한 시험(DOM 없음): 응답 대조, 서버 응답 이상, 본문 읽기 시간 제한, 시각 표시, 주소 해석, 가짜 시계.
-import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
+import { PIPELINE_SCHEMA_VERSION } from "../app/types/contract-validators.cjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ApiError, Http } from "../api/http.ts";
-import { GateClient } from "../api/client.ts";
-import { ReleasesClient } from "../api/releases.ts";
-import { OpsController, describeOpsError } from "../app/ops-controller.ts";
-import { fmtTime } from "../app/time.ts";
-import { safeDecode } from "../app/route.ts";
+import { ApiError, Http } from "./helpers.ts";
+import { GateClient } from "../app/wiring/gateway.ts";
+import { ReleasesClient } from "../app/wiring/gateway.ts";
+import { OpsController, describeOpsError } from "../app/wiring/ops_controller.ts";
+import { fmtTime } from "../app/wiring/ui/views.ts";
+import { routeParse } from "../app/components/route_parse.ts";
 import { FIXED_NOW, startMock } from "./helpers.ts";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -20,7 +20,7 @@ test("2xx인데 JSON이 아니면 '서버 응답 이상'(BAD_RESPONSE)이고 연
   assert.equal(e.kind, "BAD_RESPONSE");
   assert.ok(e.message.includes("서버 응답 이상"));
   const down = (async () => { throw new TypeError("x"); }) as unknown as typeof fetch;
-  assert.equal((await new Http({ fetch: down }).json("GET", "/v1/x").catch((x) => x)).kind, "UNAVAILABLE");
+  assert.equal((await new Http({ fetch: down }).json("GET", "/v1/x").catch((x: unknown) => x) as { kind: string }).kind, "UNAVAILABLE");
   // 화면 문구도 다르다
   const d = describeOpsError(e);
   assert.equal(d.kind, "badresponse");
@@ -47,7 +47,7 @@ test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시�
 });
 
 test("승인 응답 대조: 제출·결정·report_hash가 요청과 다르면 성공으로 보이지 않는다", async () => {
-  const req = { submission_id: "s1", decision: "APPROVE" as const, approver_role: "release-approver", report_hash: H };
+  const req = { submissionId: "s1", decision: "APPROVE" as const, reportHash: H };
   const ok = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, approval_id: "ap-1", submission_id: "s1", decision: "APPROVE", approver_id: "u", approver_role: "release-approver", decided_at: FIXED_NOW, report_hash: H };
   const mk = (b: unknown) => new GateClient({ fetch: (async () => json(b, 201)) as typeof fetch });
   assert.equal((await mk(ok).decide(req)).approval.approval_id, "ap-1");
@@ -62,7 +62,7 @@ test("활성화·롤백 응답 대조", async () => {
   const act = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b)) as typeof fetch }).activate("rel-2");
   assert.equal((await act(ptr("rel-2"))).release_id, "rel-2");
   assert.equal((await act(ptr("rel-9")).catch((x) => x)).kind, "BAD_RESPONSE");
-  const body = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-1", requested_at: FIXED_NOW, from_release_id: "rel-3", to_release_id: "rel-2", reason: "x", evidence_refs: ["e"] };
+  const body = { request_id: "rb-1", requested_at: FIXED_NOW, from_release_id: "rel-3", to_release_id: "rel-2", reason: "x", evidence_refs: ["e"] as [string, ...string[]] };
   const rb = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b, 201)) as typeof fetch }).rollback(body);
   const rc = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-1", status: "APPLIED", decided_at: FIXED_NOW, active_pointer: ptr("rel-2") };
   assert.equal((await rb(rc)).status, "APPLIED");
@@ -88,8 +88,8 @@ test("시각 표시: UTC 원문을 그대로 두고 현지 시각을 병기한�
 });
 
 test("주소의 잘못된 퍼센트 인코딩은 예외 없이 null", () => {
-  assert.equal(safeDecode("sub%2D1"), "sub-1");
-  assert.equal(safeDecode("%E0%A4%A"), null);
+  assert.deepEqual(routeParse({ hash: "#/s/sub%2D1" }), { screen: "approvals", view: "detail", id: "sub-1" });
+  assert.equal(routeParse({ hash: "#/s/%E0%A4%A" }).screen, "bad_address");
 });
 
 test("요청 ID 생성기와 시계를 주입하면 롤백 요청 본문이 결정적이다", async () => {

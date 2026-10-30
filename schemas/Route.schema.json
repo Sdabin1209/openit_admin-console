@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Route.schema.json",
+  "title": "Route",
+  "description": "route_parse의 출력. 주소의 ID를 읽을 수 없으면 bad_address.",
+  "type": "object",
+  "required": [
+    "screen",
+    "view"
+  ],
+  "properties": {
+    "screen": {
+      "enum": [
+        "approvals",
+        "cases",
+        "ops",
+        "bad_address"
+      ]
+    },
+    "view": {
+      "enum": [
+        "list",
+        "detail",
+        "none"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "view": {
+        "const": "detail"
+      }
+    },
+    "required": [
+      "view"
+    ]
+  },
+  "then": {
+    "required": [
+      "id"
+    ]
+  },
+  "else": {
+    "not": {
+      "required": [
+        "id"
+      ]
+    }
+  }
+}

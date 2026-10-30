@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Cell.schema.json",
+  "title": "Cell",
+  "description": "지표 표의 칸. uncomputable은 n=0(계산 못 함), none은 기준 없음·비교 못 함.",
+  "type": "object",
+  "required": [
+    "kind",
+    "text"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "value",
+        "uncomputable",
+        "none"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

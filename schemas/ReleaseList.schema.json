@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReleaseList.schema.json",
+  "title": "ReleaseList",
+  "description": "link_release_list의 출력: 최신부터 모든 릴리스.",
+  "type": "object",
+  "required": [
+    "releases"
+  ],
+  "properties": {
+    "releases": {
+      "type": "array",
+      "items": {
+        "$ref": "ReleaseRow.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ApprovalDraft.schema.json",
+  "title": "ApprovalDraft",
+  "description": "approval_draft의 입력: 승인자가 버튼을 누른 순간의 폼. 반려에는 사유가 필수(공백만은 비어 있는 것).",
+  "type": "object",
+  "required": [
+    "submissionId",
+    "decision",
+    "reason",
+    "reportHash"
+  ],
+  "properties": {
+    "submissionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "enum": [
+        "APPROVE",
+        "REJECT"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "reportHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "decision": {
+        "const": "REJECT"
+      }
+    },
+    "required": [
+      "decision"
+    ]
+  },
+  "then": {
+    "properties": {
+      "reason": {
+        "pattern": "\\S"
+      }
+    }
+  }
+}

@@ -2,11 +2,11 @@
 // 모든 상태 변경 요청이 fetch 기본 모드(cors)로 나가 Origin이 출처 값(null 아님)이 되게 하는 규칙을 고정한다.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { Http } from "../api/http.ts";
+import { readFileSync } from "node:fs";
+import { Http } from "./helpers.ts";
 
-const dirs = ["app", "api"];
-const files = dirs.flatMap((d) => readdirSync(new URL(`../${d}/`, import.meta.url)).map((f) => `${d}/${f}`));
+import { appSourceFiles } from "./helpers.ts";
+const files = appSourceFiles();
 
 test("Origin: null이 될 수 있는 전송 방식(form POST·sendBeacon·no-cors·XHR·서비스 워커)을 쓰지 않는다", () => {
   for (const f of [...files]) {

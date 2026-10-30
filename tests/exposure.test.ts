@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import * as v from "../generated/contract-validators.cjs";
+import * as v from "../app/types/contract-validators.cjs";
 
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const exposure = JSON.parse(readFileSync(`${REPO}/deploy-exposure.json`, "utf8"));

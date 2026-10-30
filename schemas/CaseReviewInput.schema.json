@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseReviewInput.schema.json",
+  "title": "CaseReviewInput",
+  "description": "link_failure_review의 입력.",
+  "type": "object",
+  "required": [
+    "caseId",
+    "draft"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "draft": {
+      "$ref": "CaseReviewDraft.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

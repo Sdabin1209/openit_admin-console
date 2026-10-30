@@ -1,0 +1,9 @@
+{
+  "context": "other",
+  "error": {
+    "kind": "NOT_FOUND",
+    "status": 404,
+    "message": "없다",
+    "retryable": false
+  }
+}

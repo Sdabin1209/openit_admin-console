@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OpsRequest.schema.json",
+  "title": "OpsRequest",
+  "description": "ops_request의 출력: 보내도 되는 운영 요청 하나.",
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "activate",
+        "rollback"
+      ]
+    },
+    "releaseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rollback": {
+      "$ref": "RollbackDraft.schema.json"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "activate"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "releaseId"
+        ],
+        "not": {
+          "required": [
+            "rollback"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "rollback"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "rollback"
+        ],
+        "not": {
+          "required": [
+            "releaseId"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "path": "/v1/approvals",
+  "body": {
+    "a": 1
+  }
+}

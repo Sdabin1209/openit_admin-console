@@ -1,0 +1,8 @@
+{
+  "request_id": "rb-1",
+  "requested_at": "t",
+  "from_release_id": "a",
+  "to_release_id": "b",
+  "reason": "r",
+  "evidence_refs": []
+}

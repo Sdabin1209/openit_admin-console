@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseFailureInput.schema.json",
+  "title": "CaseFailureInput",
+  "description": "case_failure의 입력.",
+  "type": "object",
+  "required": [
+    "context",
+    "error"
+  ],
+  "properties": {
+    "context": {
+      "enum": [
+        "load",
+        "submit"
+      ]
+    },
+    "error": {
+      "$ref": "ErrorInfo.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

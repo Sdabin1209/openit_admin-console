@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReleaseRow.schema.json",
+  "title": "ReleaseRow",
+  "description": "릴리스 목록의 한 줄(ReleaseManifest의 읽기용 투영).",
+  "type": "object",
+  "required": [
+    "release_id",
+    "created_at",
+    "gate_decision_id"
+  ],
+  "properties": {
+    "release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "gate_decision_id": {
+      "type": "string"
+    },
+    "question_set": {
+      "$ref": "ArtifactRef.schema.json"
+    },
+    "lora_a": {
+      "$ref": "ArtifactRef.schema.json"
+    },
+    "lora_b": {
+      "$ref": "ArtifactRef.schema.json"
+    }
+  }
+}

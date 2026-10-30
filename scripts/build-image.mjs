@@ -5,7 +5,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 
 // 왜 생성된 검증기: 요청·결과는 영역 경계 입력/출력이라 계약 스키마로만 검사한다(손 검사 금지, ADR 0017). npm ci 없이 돌도록 생성물은 자급식이다(gen-schemas.mjs).
-const v = createRequire(import.meta.url)("../generated/contract-validators.cjs");
+const v = createRequire(import.meta.url)("../app/types/contract-validators.cjs");
 // 왜 생성물의 상수: 라벨 io.openit.contracts.boundary는 이 이미지가 실제로 쓰는 계약 버전, 곧 번들된 검증기를 만든 버전이어야 한다(U50). 요청 값을 그대로 찍으면 거짓 라벨이 나올 수 있다.
 const ACTUAL_BOUNDARY = v.CONTRACT_VERSION;
 const ROOT = realpathSync(new URL("..", import.meta.url).pathname);

@@ -11,7 +11,7 @@
     "build": "node scripts/build.mjs",
     "gen:schemas": "node scripts/gen-schemas.mjs",
     "test": "node --test \"tests/*.test.ts\"",
-    "mock": "node mock-server/main.ts",
+    "mock": "node tests/mock-server/main.ts",
     "smoke": "bash scripts/smoke.sh"
   },
   "devDependencies": {
@@ -21,6 +21,7 @@
     "ajv-formats": "3.0.1",
     "esbuild": "0.25.5",
     "jsdom": "^26.1.0",
+    "json-schema-to-typescript": "15.0.4",
     "typescript": "5.8.3"
   }
 }

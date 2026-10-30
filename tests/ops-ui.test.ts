@@ -2,15 +2,15 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
-import { ReleasesClient } from "../api/releases.ts";
+import { ReleasesClient } from "../app/wiring/gateway.ts";
 import { startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/admin/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 // 시험 간 공유 상태 초기화: 같은 JSDOM을 쓰므로 매 시험 앞에서 화면을 비운다.
 beforeEach(() => { dom.window.document.querySelector("#app")!.replaceChildren(); dom.window.document.querySelectorAll("dialog").forEach((d) => d.remove()); });
-const { renderOps } = await import("../app/ops-view.ts");
-const { OpsController } = await import("../app/ops-controller.ts");
+const { renderOps } = await import("../app/wiring/ui/ops_view.ts");
+const { OpsController } = await import("../app/wiring/ops_controller.ts");
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;
 const input = (el: HTMLInputElement | HTMLTextAreaElement, v: string) => { el.value = v; el.dispatchEvent(new dom.window.Event("input")); };
 

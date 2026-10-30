@@ -1,11 +1,11 @@
 // 릴리스 운영 모의 서버의 출력과 클라이언트 요청이 계약 스키마(../boundary-contracts/schemas, 복사 없음)를 지키는지 검증한다.
-import { PIPELINE_SCHEMA_VERSION } from "../api/contract.ts";
+import { PIPELINE_SCHEMA_VERSION } from "../app/types/contract-validators.cjs";
 import { contract } from "../scripts/contract-src.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
-import { ReleasesClient } from "../api/releases.ts";
+import { ReleasesClient } from "../app/wiring/gateway.ts";
 import { startMock } from "./helpers.ts";
 
 const ajv = new Ajv2020({ strict: false, allErrors: true });
@@ -65,7 +65,7 @@ test("활성화·롤백 응답과 오류가 스키마를 통과한다", async ()
 test("클라이언트의 롤백 본문은 RollbackRequest 스키마를 그대로 지킨다(requested_by_role: operator)", async () => {
   s.mock.reset();
   const api = new ReleasesClient({ baseUrl: s.base });
-  const { OpsController } = await import("../app/ops-controller.ts");
+  const { OpsController } = await import("../app/wiring/ops_controller.ts");
   const c = new OpsController(api);
   await c.load();
   c.startRollback();

@@ -8,7 +8,7 @@ const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://lo
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 // 시험 간 공유 상태 초기화: 같은 JSDOM을 쓰므로 매 시험 앞에서 화면을 비운다.
 beforeEach(() => { dom.window.document.querySelector("#app")!.replaceChildren(); dom.window.document.querySelectorAll("dialog").forEach((d) => d.remove()); });
-const { renderCases } = await import("../app/cases-view.ts");
+const { renderCases } = await import("../app/wiring/ui/cases_view.ts");
 const q = <T extends Element = HTMLElement>(sel: string) => dom.window.document.querySelector(sel) as T | null;
 
 test("목록 → 사례: 경고 문구, trace 구조, 편집기, 전송", async () => {

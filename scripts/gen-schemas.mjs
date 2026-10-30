@@ -7,10 +7,10 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { contract } from "./contract-src.mjs";
 
-const OUT = new URL("../generated/contract-validators.cjs", import.meta.url);
+const OUT = new URL("../app/types/contract-validators.cjs", import.meta.url);
 // 모델 입출력(검토자 입력 검사) + 이 영역이 주고받는 경계 형식(D107로 승격된 것, conformance/promoted/admin-console.MANIFEST.json).
 const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "ResponseText",
-  "ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels",
+  "ApprovalRequest", "ActivateRequest", "RollbackRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels",
   // 빌드 진입점(scripts/build-image.mjs)이 요청과 결과를 검사한다(계약 2.5.0, U42).
   "BuildImageRequest", "BuildImageResult",
   // 환경 준비 진입점(scripts/setup-env.sh)이 마지막 줄 보고를 낸다(계약 2.6.0, U43). 시험이 이 검증기로 그 줄을 검사한다.
@@ -50,10 +50,10 @@ if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").h
   const out = generate();
   if (process.argv.includes("--check")) {
     const cur = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
-    if (cur !== out) { console.error("generated/contract-validators.cjs가 최신이 아니다: node scripts/gen-schemas.mjs"); process.exit(1); }
-    console.log("generated 최신");
+    if (cur !== out) { console.error("app/types/contract-validators.cjs가 최신이 아니다: node scripts/gen-schemas.mjs"); process.exit(1); }
+    console.log("계약 검증기 최신");
   } else {
-    mkdirSync(new URL("../generated/", import.meta.url), { recursive: true });
+    mkdirSync(new URL("../app/types/", import.meta.url), { recursive: true });
     writeFileSync(OUT, out);
     console.log("written", OUT.pathname);
   }

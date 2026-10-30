@@ -5,13 +5,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 import { startMock } from "./helpers.ts";
-import { baseReport } from "../mock-server/scenarios.ts";
+import { baseReport } from "./mock-server/scenarios.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
 // 시험 간 공유 상태 초기화: 같은 JSDOM을 쓰므로 매 시험 앞에서 화면을 비운다.
 beforeEach(() => { dom.window.document.querySelector("#app")!.replaceChildren(); dom.window.document.querySelectorAll("dialog").forEach((d) => d.remove()); });
-const { render } = await import("../app/views.ts");
+const { render } = await import("../app/wiring/ui/views.ts");
 const root = dom.window.document.querySelector("#app") as HTMLElement;
 
 type Row = { role: string; cells: string[]; worse: boolean; group: string };

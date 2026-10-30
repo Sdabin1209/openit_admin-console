@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OpsRequestInput.schema.json",
+  "title": "OpsRequestInput",
+  "description": "ops_request의 입력: 릴리스 운영 화면의 확인 단계 폼. 롤백에는 사유, 근거 ID 하나 이상, 현재 활성 릴리스가 필요하다. requestId와 requestedAt은 호출자가 정해 넘긴다(같은 입력이면 같은 출력).",
+  "type": "object",
+  "required": [
+    "kind",
+    "target",
+    "reason",
+    "evidenceText",
+    "requestId",
+    "requestedAt",
+    "pointerReleaseId"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "activate",
+        "rollback"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "evidenceText": {
+      "type": "string"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requestedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pointerReleaseId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "kind": {
+        "const": "rollback"
+      }
+    },
+    "required": [
+      "kind"
+    ]
+  },
+  "then": {
+    "properties": {
+      "reason": {
+        "pattern": "\\S"
+      },
+      "evidenceText": {
+        "pattern": "[^\\s,]"
+      },
+      "pointerReleaseId": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

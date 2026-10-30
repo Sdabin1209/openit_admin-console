@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TimeInput.schema.json",
+  "title": "TimeInput",
+  "description": "time_display의 입력: 서버가 준 시각 원문(없을 수 있음)과 선택적 시간대.",
+  "type": "object",
+  "required": [
+    "iso"
+  ],
+  "properties": {
+    "iso": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timeZone": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

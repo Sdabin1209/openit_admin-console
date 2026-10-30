@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseList.schema.json",
+  "title": "CaseList",
+  "description": "link_failure_list의 출력.",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "CaseRecord.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

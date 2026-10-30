@@ -1,0 +1,9 @@
+{
+  "context": "decide",
+  "error": {
+    "kind": "STALE_REPORT",
+    "status": 409,
+    "message": "없다",
+    "retryable": false
+  }
+}

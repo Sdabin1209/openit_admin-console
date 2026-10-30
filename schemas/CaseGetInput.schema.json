@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseGetInput.schema.json",
+  "title": "CaseGetInput",
+  "description": "link_failure_get의 입력. version이 없으면 최신.",
+  "type": "object",
+  "required": [
+    "caseId"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,27 @@
+{
+  "key": "0",
+  "role": "LORA_A",
+  "name": "m",
+  "group": "SAFETY",
+  "sliceKind": "ALL",
+  "sliceLabel": "전체",
+  "candidate": {
+    "kind": "value",
+    "text": "0.9"
+  },
+  "candidateN": "10",
+  "baseline": {
+    "kind": "none",
+    "text": "기준 없음"
+  },
+  "baselineN": "—",
+  "delta": {
+    "kind": "none",
+    "text": "비교 못 함"
+  },
+  "worse": false,
+  "worseKnown": false,
+  "direction": "높을수록 좋음",
+  "sortCandidate": 0.9,
+  "sortDelta": null
+}

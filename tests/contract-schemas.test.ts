@@ -4,12 +4,13 @@ import { contract } from "../scripts/contract-src.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { GateClient } from "../api/client.ts";
-import { CasesClient } from "../api/cases.ts";
-import { ReleasesClient } from "../api/releases.ts";
-import { PIPELINE_SCHEMA_VERSION, CONTRACT_VERSION, ACTION_RULES_VERSION } from "../api/contract.ts";
-import { trace } from "../mock-server/cases.ts";
-import * as v from "../generated/contract-validators.cjs";
+import { GateClient } from "../app/wiring/gateway.ts";
+import { CasesClient } from "../app/wiring/gateway.ts";
+import { ReleasesClient } from "../app/wiring/gateway.ts";
+import { PIPELINE_SCHEMA_VERSION, CONTRACT_VERSION, ACTION_RULES_VERSION } from "../app/types/contract-validators.cjs";
+import { appSourceFiles } from "./helpers.ts";
+import { trace } from "./mock-server/cases.ts";
+import * as v from "../app/types/contract-validators.cjs";
 
 const skip = !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경";
 const ex = (n: string) => contract.json(`examples/${n}.json`);
@@ -96,11 +97,9 @@ test("비식별 trace: 클라이언트는 계약 위반 trace(원문 session_id,
 });
 
 test("pipeline_schema_version 문자열 리터럴이 코드에 박혀 있지 않다(계약 상수에서 파생)", () => {
-  for (const dir of ["api", "app", "mock-server"]) {
-    for (const f of readdirSync(new URL(`../${dir}/`, import.meta.url)).filter((x) => x.endsWith(".ts"))) {
-      const src = readFileSync(new URL(`../${dir}/${f}`, import.meta.url), "utf8");
-      assert.ok(!/["']2\.[0-9]["']/.test(src), `${dir}/${f}에 버전 리터럴이 있다`);
-    }
+  for (const f of [...appSourceFiles(), ...readdirSync(new URL("./mock-server/", import.meta.url)).map((x) => `tests/mock-server/${x}`)]) {
+    const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
+    assert.ok(!/["']2\.[0-9]["']/.test(src), `${f}에 버전 리터럴이 있다`);
   }
 });
 
@@ -126,7 +125,7 @@ test("turn engine 의존·표지·라벨이 코드에 남아 있지 않다(계�
   const hits: string[] = [];
   const walk = (d: URL) => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (["node_modules", ".git", "dist", "generated", "docs"].includes(e.name)) continue; // docs는 이유 있는 기록 문서
+      if (["node_modules", ".git", "dist", "docs"].includes(e.name)) continue; // docs는 이유 있는 기록 문서
       if (e.isDirectory()) walk(new URL(e.name + "/", d));
       else if (/\.(ts|mjs|json|sh|html|css)$|^Dockerfile$/.test(e.name)) {
         if (/turn[_-]engine/.test(readFileSync(new URL(e.name, d), "utf8"))) hits.push(new URL(e.name, d).pathname);

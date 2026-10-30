@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HttpOutcome.schema.json",
+  "title": "HttpOutcome",
+  "description": "link_http_send의 출력. 성공(2xx, JSON 해석됨)이면 status, data, headers(키는 소문자). 실패면 ErrorInfo.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "ok",
+        "status",
+        "data",
+        "headers"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 299
+        },
+        "data": {},
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "$ref": "ErrorInfo.schema.json"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

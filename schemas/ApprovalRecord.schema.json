@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ApprovalRecord.schema.json",
+  "title": "ApprovalRecord",
+  "description": "서버가 기록한 결정(GateApproval의 읽기용 투영).",
+  "type": "object",
+  "required": [
+    "approval_id",
+    "submission_id",
+    "decision",
+    "approver_id",
+    "approver_role",
+    "decided_at"
+  ],
+  "properties": {
+    "pipeline_schema_version": {
+      "type": "string"
+    },
+    "approval_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "submission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "approver_id": {
+      "type": "string"
+    },
+    "approver_role": {
+      "type": "string"
+    },
+    "decided_at": {
+      "type": "string"
+    },
+    "report_hash": {
+      "type": "string"
+    }
+  }
+}

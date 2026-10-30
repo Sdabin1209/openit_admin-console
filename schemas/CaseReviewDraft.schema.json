@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CaseReviewDraft.schema.json",
+  "title": "CaseReviewDraft",
+  "description": "case_review_draft의 출력이자 link_failure_review의 입력(caseId와 함께): 보내도 되는 검토 내용. 종류가 정해지면 입력·정답은 그 종류의 모델 입출력 계약 스키마를 통과해야 한다(LORA_A: ActionExtractionInput/ActionExtraction, LORA_B: ResponseRequest/ResponseText).",
+  "type": "object",
+  "required": [
+    "review_status"
+  ],
+  "properties": {
+    "review_status": {
+      "enum": [
+        "PENDING",
+        "CONFIRMED",
+        "DISMISSED"
+      ]
+    },
+    "expected_kind": {
+      "enum": [
+        "LORA_A",
+        "LORA_B"
+      ]
+    },
+    "reviewed_input": {
+      "type": "object"
+    },
+    "expected": {
+      "type": [
+        "object",
+        "string"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "review_status": {
+            "enum": [
+              "PENDING",
+              "DISMISSED"
+            ]
+          }
+        },
+        "required": [
+          "review_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "expected_kind": false,
+          "reviewed_input": false,
+          "expected": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "expected_kind": {
+            "const": "LORA_A"
+          }
+        },
+        "required": [
+          "expected_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reviewed_input": {
+            "$ref": "ActionExtractionInput.schema.json"
+          },
+          "expected": {
+            "$ref": "ActionExtraction.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "expected_kind": {
+            "const": "LORA_B"
+          }
+        },
+        "required": [
+          "expected_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reviewed_input": {
+            "$ref": "ResponseRequest.schema.json"
+          },
+          "expected": {
+            "$ref": "ResponseText.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "reviewed_input"
+            ]
+          },
+          {
+            "required": [
+              "expected"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "expected_kind"
+        ]
+      }
+    }
+  ]
+}

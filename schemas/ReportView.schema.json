@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReportView.schema.json",
+  "title": "ReportView",
+  "description": "report_view의 출력. 그룹은 SAFETY가 항상 맨 위. 합격/불합격은 없다.",
+  "type": "object",
+  "required": [
+    "groups",
+    "sliceKinds",
+    "worseCount"
+  ],
+  "properties": {
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "MetricGroup.schema.json"
+      }
+    },
+    "sliceKinds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "worseCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

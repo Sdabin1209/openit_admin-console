@@ -1,0 +1,12 @@
+/* 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/ 또는 고정 태그의 계약 스키마 */
+/**
+ * HTTP.md 공통 목록 봉투 {items, next_cursor}. 만드는 쪽: release-gate(I5 submissions, I4 releases), ops-feedback(I7 cases). 읽는 쪽: admin-console. items 원소의 모양은 정하지 않고(2.6.0) 원소는 호출별 계약 스키마(SubmissionView, ReleaseManifest, FailureCase)로 따로 검증한다. 쿼리: cursor(불투명 문자열), limit(기본 100, 최대 500). 모르는 키는 허용한다(읽기 쪽 관용).
+ */
+export interface ListEnvelope {
+  /**
+   * 원소 모양은 호출별 계약(객체 스키마 또는 ID 문자열)이 정하고 클라이언트가 따로 검증한다. 2.6.0(U45): 객체로만 두던 것을 풀었다(질문 세트·데이터셋·어댑터 목록은 ID 문자열을 낸다)
+   */
+  items: unknown[];
+  next_cursor: string | null;
+  [k: string]: unknown;
+}

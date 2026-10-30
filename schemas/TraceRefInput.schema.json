@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TraceRefInput.schema.json",
+  "title": "TraceRefInput",
+  "description": "link_failure_trace의 입력.",
+  "type": "object",
+  "required": [
+    "ref"
+  ],
+  "properties": {
+    "ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

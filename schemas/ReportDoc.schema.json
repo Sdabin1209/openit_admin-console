@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReportDoc.schema.json",
+  "title": "ReportDoc",
+  "description": "승인 요청 보고서(ReviewReport의 읽기용 투영). 화면이 읽는 것만 필수로 하고 모르는 필드는 보존한다.",
+  "type": "object",
+  "required": [
+    "submission_id",
+    "checks",
+    "comparisons",
+    "subject"
+  ],
+  "properties": {
+    "pipeline_schema_version": {
+      "type": "string"
+    },
+    "submission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "object"
+    },
+    "active_release_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "result"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "evidence_ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "reports": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "$ref": "Comparison.schema.json"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ext": {
+      "type": "object"
+    }
+  }
+}

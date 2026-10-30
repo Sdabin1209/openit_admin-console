@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OpsNotice.schema.json",
+  "title": "OpsNotice",
+  "description": "ops_failure의 출력: 화면에 보일 알림. 오류를 종류로 구분해 보인다(403, 409, 412, 네트워크).",
+  "type": "object",
+  "required": [
+    "kind",
+    "text"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "badresponse",
+        "denied",
+        "conflict",
+        "precondition",
+        "network",
+        "invalid",
+        "notfound",
+        "other"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}
