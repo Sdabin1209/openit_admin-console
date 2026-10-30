@@ -20,19 +20,23 @@
 
 ## 2. 구조
 
+구조 규칙 6개와 영역 설계 규칙(D117, `head/docs/DESIGN.md`)을 따른다. 컴포넌트 표(입력·출력 타입, 하는 일)는 [docs/components.md](docs/components.md), 내부 타입의 스키마는 [schemas/README.md](schemas/README.md).
+
 | 경로 | 역할 |
 | --- | --- |
-| `app/` | 화면. 상태(model), 컨트롤러, 뷰, `index.html`, CSS. 승인 화면, `cases-*`(실패 사례 검토), `ops-*`(릴리스 운영, `#/ops`) |
-| `api/` | I5/I7 HTTP 클라이언트와 타입. UI와 무관 |
-| `mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(`releases.ts`: 활성 포인터·목록·activate·rollback, operator 아니면 403)와 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
+| `schemas/` | 영역 내부 타입의 JSON Schema(draft 2020-12)와 통과·거부 예시. "스키마 밖 조건" 표 |
+| `app/types/` | `schemas/`와 계약 스키마에서 생성한 타입(`*.ts`, `contract/*.ts`)과 검증기(`validators.cjs`, `contract-validators.cjs`). 손으로 고치지 않는다 |
+| `app/components/` | 컴포넌트마다 파일 하나. 업무 12개(입력 스키마 -> 출력 스키마 함수)와 통신 `link_*` 12개(보내는 쪽만). 컴포넌트끼리 import하지 않는다. HTTP는 `link_*`에만 있다 |
+| `app/wiring/` | 연결·주입: `gateway.ts`(link에 HTTP 보내기 주입), 화면 상태를 들고 컴포넌트를 잇는 컨트롤러 3개, `ui/`(화면 부품, DOM 그리기) |
+| `app/main.ts`, `app/index.html`, `app/app.css` | 진입점과 정적 파일 |
+| `tests/mock-server/` | 모의 게이트(I5), 모의 릴리스 운영(I4·activate·rollback), 모의 FailureStore(I7). 시나리오는 제출·사례 ID로 고른다 |
 | `scripts/build-image.sh` | 영역 빌드 진입점(계약 BuildImageRequest/Result, ADR 0019). 스모크도 이것으로 빌드한다 |
 | `deploy-exposure.json` | 게이트웨이 노출 선언의 정본(계약 Exposure). 빌드 진입점이 라벨 `io.openit.exposure`로 단다(ADR 0021) |
 | `serve/Caddyfile` | 이미지의 Caddy file_server 설정(`/healthz`, `/readyz`, 보안 헤더, ADR 0018) |
-| `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 패키지 스키마 검증기 생성), `smoke.sh`(이미지 스모크) |
-| `generated/` | 생성된 계약 스키마 검증기(ActionExtraction 계열, 경계 형식 5종, ImageLabels)와 계약 버전 상수(커밋됨, ADR 0017. 정책은 CR-003에서 헤드 결정 대기) |
-| `tests/` | `node:test` 시험(jsdom 포함) |
+| `scripts/` | `build.mjs`(esbuild), `gen-schemas.mjs`(계약 검증기 생성), `gen-types.mjs`(내부 타입·검증기·계약 타입 생성), `smoke.sh`(이미지 스모크) |
+| `tests/` | `node:test` 시험(jsdom 포함). `test_structure.test.ts`가 DESIGN.md 6절을 강제한다 |
 | `Dockerfile` | 다단계 빌드, non-root(`node`), 포트 8080 |
-| `docs/` | 아래 7절 |
+| `docs/` | 아래 7절. ADR 목록은 `docs/adr/` |
 
 ```mermaid
 flowchart LR
@@ -69,8 +73,13 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인된 것
 - docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
-- `npm test` 156개 중 149개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, wo-302c 워크트리), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-29, 라벨 contracts.boundary=v3.0.2 (당시 값, 현재 정본은 Dockerfile ARG)). 이전에 실패하던 2건의 원인과 수정은 docs/STATUS.md 작업 단위 3.
+- `npm test` 162개 중 155개 통과, 실패 0, 건너뜀 7(정적 서버 동작 시험은 `npm run smoke`가 이미지에 대해 돌린다; 2026-10-30 실행, 이 PC 한 환경, 구조 개편 U400 뒤), `npm run typecheck` 통과, `npm run smoke` 통과(2026-10-30 U400 뒤). 구조 검사 `tests/test_structure.test.ts`가 시험에 들어 있다.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
+
+생성물(`app/types/`, 손으로 고치지 않는다)
+- 내부 타입과 검증기: `node scripts/gen-types.mjs`(= `npm run gen:types`). `schemas/`와 계약 고정 태그의 스키마에서 json-schema-to-typescript(15.0.4, 잠금 파일에 고정)와 Ajv standalone으로 만든다. `--check`는 최신인지만 본다(시험 `test_structure` 5번이 호출).
+- 계약 검증기(`app/types/contract-validators.cjs`): `node scripts/gen-schemas.mjs`(= `npm run gen:schemas`).
+- 두 생성기 모두 이웃 `boundary-contracts`의 고정 태그(`git show <태그>`)를 읽는다. 태그가 없으면 종료 코드 2.
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
 
@@ -118,3 +127,4 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0015 재시도 가능 여부는 계약 필드로](docs/adr/0015-재시도-가능-여부는-계약-필드로.md)
 - [0016 값의 출처 분류(측정하지 않은 값)](docs/adr/0016-값의-출처-분류.md)
 - [0017 경계 형식은 계약 스키마로 만든 검증기로](docs/adr/0017-경계-형식은-계약-스키마-검증기로.md)
+- [0022 영역 구조 개편: 컴포넌트, schemas/, 생성 타입, wiring](docs/adr/0022-영역-구조-개편-컴포넌트-스키마-타입-생성.md)

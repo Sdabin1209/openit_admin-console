@@ -47,17 +47,21 @@
 
 모의 서버는 `X-Openit-Report-Hash`를 내고 `report_hash`를 대조하며, `X-Openit-User`(없으면 게이트웨이를 흉내 내는 옵션)를 `approver_id`로 쓰고, 같은 결정 재전송은 200, 다른 결정은 409 CONFLICT, 반려에 사유 없으면 400을 낸다. 출력은 자동 시험에서 `../boundary-contracts/schemas`로 검증한다(복사 없음).
 
-## 5. 디렉터리 구조
+## 5. 디렉터리 구조 (U400에서 바뀜, [ADR 0022](adr/0022-영역-구조-개편-컴포넌트-스키마-타입-생성.md))
 
 ```
-api/          게이트 HTTP 클라이언트(types, client). UI와 무관
-app/          화면(view-model, controller, views, main, index.html, style.css)
-mock-server/  모의 게이트 + 개발용 정적 서빙
+schemas/      내부 타입의 JSON Schema와 통과·거부 예시
+app/types/    schemas/에서 생성한 타입·검증기 (손으로 고치지 않는다)
+app/components/  업무 컴포넌트 12 + link_* 12 (docs/components.md)
+app/wiring/   gateway(link 주입), 컨트롤러 3, ui/(DOM 그리기)
+app/main.ts, index.html, app.css
+tests/        node:test 시험, tests/mock-server/(모의 게이트·릴리스·FailureStore)
 serve/        이미지의 Caddy 설정(Caddyfile: /healthz, /readyz, 보안 헤더)
-scripts/      build.mjs, smoke.sh
-tests/        node:test 시험, fixtures/
+scripts/      build.mjs, gen-schemas.mjs, gen-types.mjs, smoke.sh
 Dockerfile, package.json, package-lock.json
 ```
+
+이 문서의 1~4, 6~10절이 말하는 `api/`, `app/model`, `controller`, `views`, `mock-server/`는 U400 이전 이름이다. 같은 동작이 위 배치로 옮겨졌다(컴포넌트 대응은 `docs/components.md`).
 
 ## 6. 기술 선택과 이유
 
