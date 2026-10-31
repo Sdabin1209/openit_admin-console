@@ -91,3 +91,6 @@
 - 시험: `npm test` 162 중 통과 155, 실패 0, 건너뜀 7(전과 같은 7). 구조 검사 통과, `npm run smoke` 통과.
 - 스키마 밖 조건 5건(`schemas/README.md`). 통신 기반 라이브러리 `link`(Python)는 이 영역에 해당 없음.
 - 남은 일: 실제 브라우저·이웃 연동은 전과 같이 확인 못 했다.
+
+## 작업 단위 U427 (노출 선언 시한)
+- `deploy-exposure.json`의 `timeouts_ms`를 `{dial: 1000, response_header: 10000}`으로(deploy 시간 사슬). 이 서버(Caddy file_server)는 상류 호출·자체 시한이 없고 응답 머리글이 로컬 파일 읽기나 고정 응답에서만 나온다. 합산할 시한이 0개이므로 response_header 상한보다 짧다는 비교는 설정 값(Caddyfile에 상류 지시어·timeouts 없음)으로 `tests/exposure.test.ts`가 고정한다. 파일 읽기 자체는 설정된 한도가 없어 수치로 상한을 보이지는 못한다(측정 안 함). model-runtime은 쓰지 않는다(라벨 n/a).

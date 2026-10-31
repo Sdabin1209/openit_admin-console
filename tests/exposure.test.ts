@@ -36,3 +36,17 @@ test("이미지는 /v1을 처리하지 않는다(API는 다른 서비스의 노�
 test("이 이미지는 사용자 헤더를 읽지 않는다: user_header는 strip이다", () => {
   for (const r of exposure.routes) assert.equal(r.user_header, "strip");
 });
+
+// 시간 사슬(D119, deploy ADR 0048): 게이트웨이 상한 > 이 서버가 응답 머리글을 내기까지의 최악 시간. 실제 시간을 재지 않고 설정 값으로 비교한다.
+test("노출 선언의 시한은 dial 1000, response_header 10000이다(deploy 시간 사슬의 값)", () => {
+  for (const r of exposure.routes) assert.deepEqual(r.timeouts_ms, { dial: 1000, response_header: 10000 });
+});
+
+test("이 서버는 상류 호출이 없어 응답 머리글까지의 최악 시간에 더할 상류 시한이 0개다(정적 파일만)", () => {
+  const code = caddy.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
+  // 상류를 부르는 지시어가 하나도 없다: 응답 머리글은 로컬 파일 읽기(file_server) 또는 고정 응답(respond)에서만 나온다.
+  assert.doesNotMatch(code, /reverse_proxy|forward_auth|php_fastcgi|\bexec\b|\bimport_upstream\b|dynamic/);
+  assert.match(code, /file_server/);
+  // 이 서버가 정한 시한(servers 블록의 timeouts)은 없다. 따라서 합산할 값이 없고 상한은 게이트웨이의 response_header 하나다.
+  assert.doesNotMatch(code, /\btimeouts\b|read_timeout|write_timeout|idle_timeout/);
+});
