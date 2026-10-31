@@ -19,7 +19,8 @@ REV="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 IMAGE="${REPO}:smoke-${REV}"
 NAME="${REPO}-smoke-$$"
 BUILD_LOG="$(mktemp)"
-cleanup() { "$DOCKER" rm -f "$NAME" >/dev/null 2>&1 || true; rm -f "$BUILD_LOG"; }
+STATIC_LOG="$(mktemp)"
+cleanup() { "$DOCKER" rm -f "$NAME" >/dev/null 2>&1 || true; rm -f "$BUILD_LOG" "$STATIC_LOG"; }
 trap cleanup EXIT
 
 echo "== build $IMAGE (영역 빌드 진입점 scripts/build-image.sh)"
@@ -58,8 +59,8 @@ CODE="$(curl -s --path-as-is --max-time 3 -o /dev/null -w '%{http_code}' "http:/
 [ "$CODE" = "404" ] || fail "경로 이탈 응답 $CODE"
 
 echo "== 동작 시험(tests/static-behavior.test.ts, 이미지에 대해)"
-STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >/tmp/admin-console-static-$$.log 2>&1 || { cat /tmp/admin-console-static-$$.log >&2; rm -f /tmp/admin-console-static-$$.log; fail "정적 서버 동작 시험"; }
-grep -E "^ℹ (pass|fail)" /tmp/admin-console-static-$$.log; rm -f /tmp/admin-console-static-$$.log
+STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >"$STATIC_LOG" 2>&1 || { cat "$STATIC_LOG" >&2; rm -f "$STATIC_LOG"; fail "정적 서버 동작 시험"; }
+grep -E "^ℹ (pass|fail)" "$STATIC_LOG"; rm -f "$STATIC_LOG"
 
 echo "== labels"
 LABELS="$("$DOCKER" inspect -f '{{json .Config.Labels}}' "$IMAGE")"

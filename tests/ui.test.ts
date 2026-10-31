@@ -1,4 +1,4 @@
-// 실제 DOM 그리기(app/views.ts)를 jsdom에서 돌려 화면을 확인한다. 브라우저 시험은 아니다(레이아웃·접근성 도구 검사는 못 한다).
+// 실제 DOM 그리기(app/ui/views.ts)를 jsdom에서 돌려 화면을 확인한다. 브라우저 시험은 아니다(레이아웃·접근성 도구 검사는 못 한다).
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";

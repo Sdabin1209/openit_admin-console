@@ -27,7 +27,7 @@ docker run --rm -p 127.0.0.1::8080 admin-console:local
 
 ## 계약 버전을 올릴 때
 1. 이웃 `boundary-contracts`를 새 태그로 맞춘다.
-2. `node scripts/gen-schemas.mjs`로 `generated/contract-validators.cjs`를 다시 만든다.
+2. `node scripts/gen-schemas.mjs`로 `app/types/contract-validators.cjs`를 다시 만든다.
 3. Dockerfile `ARG BOUNDARY_CONTRACTS`, `docs/boundary.md`를 고친다. `npm test`로 모의 서버가 새 스키마를 지키는지 확인한다.
 
 ## 장애
@@ -43,6 +43,6 @@ docker run --rm -p 127.0.0.1::8080 admin-console:local
 - 게이트웨이가 열어 줘야 하는 경로(operator 역할 계정만): `GET /v1/active-pointer`, `GET /v1/releases`, `POST /v1/activate`, `POST /v1/rollback`. 열려 있는지는 deploy의 문서를 본다(요구는 CR-004). 열려 있지 않으면 화면은 404로 "요청에 실패했다"를 보인다.
 - 오류 문구: 403 = operator 역할이 아님. 409 = 다른 운영자가 먼저 바꿈(화면이 현재 상태를 다시 읽는다). 412 = 게이트 결정이 PASS가 아님. 연결 실패 = 적용 여부를 모르니 새로고침으로 확인.
 - 누가 했는지는 서버가 게이트웨이 헤더 `X-Openit-User`로 기록한다. 화면은 이름을 보내지 않고 역할만 계약대로 `operator`로 보낸다(서버는 이 값을 믿지 않는다). 화면에서 '활성화한 사람'과 포인터 변경 이력은 볼 수 없다: 서버가 돌려주는 `ActivePointer`·`RollbackReceipt`에 행위자 필드가 없어서이고(CR-004), 화면에 그 이유를 적어 둔다. 승인 완료 화면은 서버가 기록한 `approver_id`를 보인다.
-- 롤백이 이상하게 보이면 게이트에서 `GET /v1/active-pointer`로 실제 포인터를 확인한다. 롤백 요청 본문에 `requested_by_role`을 보내지 않는데, release-gate가 이를 거절하면 400이 나온다(CR-004 2항).
+- 롤백이 이상하게 보이면 게이트에서 `GET /v1/active-pointer`로 실제 포인터를 확인한다. 롤백·활성화 본문에는 계약대로 `requested_by_role: operator`를 실어 보낸다(행위자 이름은 보내지 않는다). release-gate가 거절하면 400이 나온다(CR-004 2항).
 - 개발에서 눈으로 보기: `npm run build && npm run mock` 뒤 출력된 주소의 `#/ops`. 모의 서버는 rel-0003이 활성이고 rel-0004가 활성화 후보다.
 - 시험: `node --test tests/ops.test.ts tests/ops-ui.test.ts tests/ops-conformance.test.ts` (jsdom, 브라우저 아님).

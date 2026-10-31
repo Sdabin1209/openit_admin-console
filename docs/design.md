@@ -20,7 +20,7 @@
 | 화면 동작 | 호출 | 응답 |
 | --- | --- | --- |
 | 목록 | `GET /v1/submissions?status=AWAITING_APPROVAL&limit=&cursor=` | `{items: SubmissionView[], next_cursor}` |
-| 제출 정보 | `GET /v1/submissions/{id}` | `SubmissionView`(404 가능) |
+| 제출 정보 | `GET /v1/submissions/{id}` | `SubmissionView`(404 가능). 화면은 이 호출을 쓰지 않는다(U400에서 안 쓰는 클라이언트 메서드를 지웠다) |
 | 보고서 | `GET /v1/submissions/{id}/review-report` | `ReviewReport`. 자동 검사 전이면 409(CONFLICT) |
 | 결정 | `POST /v1/approvals` 본문 `{submission_id, decision, approver_role, reason?, report_hash}`(승인자는 본문에 싣지 않는다, 8절) | 201 `GateApproval`, 같은 결정 재전송은 200, 다른 결정이면 409 |
 
@@ -31,7 +31,7 @@
 - 해시는 서버 한 곳이 만든다. `GET .../review-report` 응답 헤더 `X-Openit-Report-Hash`를 **계산하지 않고** 그대로 `POST /v1/approvals`의 `report_hash`로 돌려보낸다. 클라이언트에 JCS/SHA-256 구현은 없다. 헤더가 없거나 형식이 틀리면 응답을 거부한다.
 - 409 사유는 `BoundaryError.details.reason`으로만 구분한다(문자열 검색 없음). `STALE_REPORT`이면 보고서를 새로 불러오고(새 헤더 해시) 처음부터 다시 확인하게 한다(자동 재전송 없음). `ALREADY_DECIDED`이면 이미 다른 결정이 있다고 알리고 목록을 새로 보게 한다.
 
-## 4. 모의 서버 시나리오 (`mock-server/`)
+## 4. 모의 서버 시나리오 (`tests/mock-server/`)
 
 `HTTP.md` I5와 스키마를 따르는 Node `http` 서버다. 시나리오는 제출 ID로 고른다(고정 데이터, 서버 시작 시 `MOCK_SCENARIO` 또는 기본 전체 세트).
 

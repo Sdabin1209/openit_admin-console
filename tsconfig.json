@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["app", "mock-server", "tests", "scripts/*.d.mts"]
+  "include": ["app", "tests", "scripts/*.d.mts"]
 }

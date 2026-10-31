@@ -16,7 +16,7 @@ export function opsRequest(input: OpsRequestInput): Result {
   if (!v.OpsRequestInput(input)) {
     const found = v.issues(v.OpsRequestInput).filter((i) => i.keyword !== "if");
     found.sort((a, b) => ORDER.indexOf(a.path) - ORDER.indexOf(b.path));
-    return { ok: false, issues: found.map((i) => ({ path: i.path || "/", message: MESSAGE[i.path] ?? `입력이 맞지 않는다: ${i.message}` })) };
+    return { ok: false, issues: v.assertValid(v.FormIssues, { issues: found.map((i) => ({ path: i.path || "/", message: MESSAGE[i.path] ?? `입력이 맞지 않는다: ${i.message}` })) }, "ops_request").issues };
   }
   const out = input.kind === "activate"
     ? { kind: "activate", releaseId: input.target }

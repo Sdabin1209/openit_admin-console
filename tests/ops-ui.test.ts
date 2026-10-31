@@ -1,9 +1,9 @@
-// 릴리스 운영 화면의 실제 DOM 그리기(app/ops-view.ts)를 jsdom에서 돌린다. 브라우저 시험은 아니다.
+// 릴리스 운영 화면의 실제 DOM 그리기(app/ui/ops_view.ts)를 jsdom에서 돌린다. 브라우저 시험은 아니다.
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { ReleasesClient } from "../app/wiring/gateway.ts";
-import { startMock, waitFor } from "./helpers.ts";
+import { FIXED_NOW, startMock, waitFor } from "./helpers.ts";
 
 const dom = new JSDOM('<!doctype html><main id="app"></main>', { url: "http://localhost/admin/" });
 Object.assign(globalThis, { document: dom.window.document, window: dom.window, location: dom.window.location });
@@ -17,7 +17,7 @@ const input = (el: HTMLInputElement | HTMLTextAreaElement, v: string) => { el.va
 async function open() {
   const s = await startMock();
   const root = q("#app")!;
-  const c = new OpsController(new ReleasesClient({ baseUrl: s.base }));
+  const c = new OpsController(new ReleasesClient({ baseUrl: s.base }), () => FIXED_NOW);
   c.subscribe(() => renderOps(root, c));
   await c.load();
   return { s, root, c };
@@ -107,7 +107,7 @@ test("조회가 403이면 화면은 권한 안내와 다시 불러오기를 보�
   try {
     s.mock.releases.setOperator(false);
     const root = q("#app")!;
-    const c = new OpsController(new ReleasesClient({ baseUrl: s.base }));
+    const c = new OpsController(new ReleasesClient({ baseUrl: s.base }), () => FIXED_NOW);
     c.subscribe(() => renderOps(root, c));
     await c.load();
     assert.ok(q("#ops-load-error")!.textContent!.includes("operator"));

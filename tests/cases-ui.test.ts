@@ -1,4 +1,4 @@
-// 실제 DOM 그리기(app/cases-view.ts)를 jsdom에서 돌린다. 브라우저 시험은 아니다.
+// 실제 DOM 그리기(app/ui/cases_view.ts)를 jsdom에서 돌린다. 브라우저 시험은 아니다.
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";

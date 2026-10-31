@@ -45,6 +45,8 @@ export class CasesController {
   };
   private listeners = new Set<() => void>();
   private inflight = new Set<string>();
+  // 왜 순번: 먼저 보낸 목록·사례 불러오기가 늦게 도착해 지금 화면을 덮어쓰지 못하게 한다(approvals_controller와 같은 이유).
+  private seq = 0;
   private readonly api: CasesClient;
   constructor(api: CasesClient) {
     this.api = api;
@@ -62,28 +64,33 @@ export class CasesController {
   }
 
   async openList(filter = this.state.filter): Promise<void> {
+    const my = ++this.seq;
     this.set({ phase: "list-loading", filter, error: null, notice: null, result: null, errors: [] });
     try {
       const cases = await this.api.list(filter ? { review_status: filter, latest_only: true } : { latest_only: true });
+      if (my !== this.seq) return;
       this.set({ phase: "list", cases });
     } catch (e) {
-      this.set({ phase: "error", error: this.describe(e) });
+      if (my === this.seq) this.set({ phase: "error", error: this.describe(e) });
     }
   }
 
   async openCase(id: string, version?: number): Promise<void> {
+    const my = ++this.seq;
     this.set({ phase: "case-loading", current: null, trace: null, traceError: null, form: emptyForm(), errors: [], notice: null, result: null, error: null });
     try {
       const c = await this.api.get(id, version);
+      if (my !== this.seq) return;
       const form: CaseForm = { ...emptyForm(), kind: c.expected_kind === "LORA_A" || c.expected_kind === "LORA_B" ? c.expected_kind : "" };
       this.set({ phase: "case", current: c, form });
       try {
-        this.set({ trace: await this.api.getTrace(c.deidentified_trace_ref) });
+        const trace = await this.api.getTrace(c.deidentified_trace_ref);
+        if (my === this.seq) this.set({ trace });
       } catch (e) {
-        this.set({ traceError: this.describe(e) });
+        if (my === this.seq) this.set({ traceError: this.describe(e) });
       }
     } catch (e) {
-      this.set({ phase: "error", error: this.describe(e) });
+      if (my === this.seq) this.set({ phase: "error", error: this.describe(e) });
     }
   }
 

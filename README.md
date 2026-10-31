@@ -8,7 +8,7 @@
 
 | 방향 | 이웃 | 인터페이스 | 내용 |
 | --- | --- | --- | --- |
-| 입력 | release-gate | I5 GateService: `GET /v1/submissions`, `GET /v1/submissions/{id}`, `GET /v1/submissions/{id}/review-report` | 승인 대기 제출 목록, 승인 요청 보고서(`ReviewReport`) |
+| 입력 | release-gate | I5 GateService: `GET /v1/submissions`, `GET /v1/submissions/{id}/review-report` | 승인 대기 제출 목록, 승인 요청 보고서(`ReviewReport`) |
 | 입력 | ops-feedback | I7 FailureStore: `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/deidentified-traces/{ref}` | 실패 사례, 비식별 trace |
 | 출력 | release-gate | I5: `POST /v1/approvals` | 승인/반려 결정(`report_hash` 포함) |
 | 입력 | release-gate | I4: `GET /v1/active-pointer`, `GET /v1/releases` | 현재 활성 포인터, 릴리스 목록(이력) |

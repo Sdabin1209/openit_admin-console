@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 
-test("generated/contract-validators.cjs가 원본 스키마와 같다", { skip: !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경" }, async () => {
+test("app/types/contract-validators.cjs가 원본 스키마와 같다", { skip: !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경" }, async () => {
   const { generate } = await import("../scripts/gen-schemas.mjs");
   const cur = readFileSync(new URL("../app/types/contract-validators.cjs", import.meta.url), "utf8");
   assert.equal(cur, generate(), "node scripts/gen-schemas.mjs 로 다시 생성하라");

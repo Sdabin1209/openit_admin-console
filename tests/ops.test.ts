@@ -5,12 +5,12 @@ import assert from "node:assert/strict";
 import { ReleasesClient } from "../app/wiring/gateway.ts";
 import { ApiError } from "./helpers.ts";
 import { OpsController, activateCandidates, rollbackCandidates } from "../app/wiring/ops_controller.ts";
-import { startMock } from "./helpers.ts";
+import { FIXED_NOW, startMock } from "./helpers.ts";
 
 async function setup() {
   const s = await startMock();
   const api = new ReleasesClient({ baseUrl: s.base });
-  const c = new OpsController(api);
+  const c = new OpsController(api, () => FIXED_NOW);
   await c.load();
   return { s, api, c };
 }
@@ -199,7 +199,7 @@ test("C5 릴리스 목록 오류면 화면은 후보를 계산하지 않고 오�
   const s = await startMock();
   try {
     s.mock.releases.seedOlder(9997);
-    const c = new OpsController(new ReleasesClient({ baseUrl: s.base }));
+    const c = new OpsController(new ReleasesClient({ baseUrl: s.base }), () => FIXED_NOW);
     await c.load();
     assert.equal(c.state.phase, "error");
     assert.deepEqual(c.state.releases, []);

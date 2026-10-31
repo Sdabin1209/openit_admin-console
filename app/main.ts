@@ -13,7 +13,7 @@ const nav = document.getElementById("nav")!;
 const approvals = new Controller(new GateClient({ baseUrl: "" }));
 const cases = new CasesController(new CasesClient({ baseUrl: "" }));
 
-const ops = new OpsController(new ReleasesClient({ baseUrl: "" }));
+const ops = new OpsController(new ReleasesClient({ baseUrl: "" }), () => new Date().toISOString().replace(/\.\d+Z$/, "Z") /* 실제 시계는 진입점이 넣는다(ADR 0023) */);
 
 type Screen = "approvals" | "cases" | "ops";
 let screen: Screen = "approvals";

@@ -37,6 +37,8 @@ export class Controller {
   };
   private listeners = new Set<() => void>();
   private inflight = new Set<string>();
+  // 왜 순번: 화면 이동이 빠르면 먼저 보낸 불러오기가 나중에 도착해 지금 화면을 덮어쓴다(다른 제출의 보고서가 이 제출 ID 아래 보이는 결함). 불러오기를 시작할 때마다 올리고, 도착했을 때 순번이 바뀌었으면 버린다.
+  private seq = 0;
   private readonly api: GateClient;
   constructor(api: GateClient) {
     this.api = api;
@@ -56,35 +58,41 @@ export class Controller {
   }
 
   async openList(): Promise<void> {
+    const my = ++this.seq;
     this.set({ phase: "list-loading", error: null, notice: null, result: null, pending: null, loaded: null, submissionId: null });
     try {
       const r = await this.api.listAwaiting();
+      if (my !== this.seq) return;
       this.set({ phase: "list", items: r.items, nextCursor: r.nextCursor });
     } catch (e) {
-      this.fail(e);
+      if (my === this.seq) this.fail(e);
     }
   }
 
   async loadMore(): Promise<void> {
     if (!this.state.nextCursor || this.inflight.has("more")) return;
     this.inflight.add("more");
+    const my = this.seq;
     try {
       const r = await this.api.listAwaiting(this.state.nextCursor);
+      if (my !== this.seq) return;
       this.set({ items: [...this.state.items, ...r.items], nextCursor: r.nextCursor });
     } catch (e) {
-      this.fail(e);
+      if (my === this.seq) this.fail(e);
     } finally {
       this.inflight.delete("more");
     }
   }
 
   async openReport(id: string, notice: State["notice"] = null): Promise<void> {
+    const my = ++this.seq;
     this.set({ phase: "report-loading", submissionId: id, error: null, notice, pending: null, result: null, sliceKind: "ALL_KINDS", sort: "default" });
     try {
       const loaded = await this.api.getReviewReport(id);
+      if (my !== this.seq) return;
       this.set({ phase: "report", loaded });
     } catch (e) {
-      this.fail(e, { loaded: null });
+      if (my === this.seq) this.fail(e, { loaded: null });
     }
   }
 

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { ReleasesClient } from "../app/wiring/gateway.ts";
-import { startMock } from "./helpers.ts";
+import { FIXED_NOW, startMock } from "./helpers.ts";
 
 const ajv = new Ajv2020({ strict: false, allErrors: true });
 (addFormats as unknown as (a: unknown) => void)(ajv);
@@ -66,7 +66,7 @@ test("클라이언트의 롤백 본문은 RollbackRequest 스키마를 그대로
   s.mock.reset();
   const api = new ReleasesClient({ baseUrl: s.base });
   const { OpsController } = await import("../app/wiring/ops_controller.ts");
-  const c = new OpsController(api);
+  const c = new OpsController(api, () => FIXED_NOW);
   await c.load();
   c.startRollback();
   c.setField({ reason: "사유", evidenceText: "fc-1" });

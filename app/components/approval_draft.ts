@@ -10,7 +10,8 @@ const MESSAGE: Record<string, string> = { "/reason": "반려에는 사유가 필
 
 export function approvalDraft(input: ApprovalDraft): Result {
   if (!v.ApprovalDraft(input)) {
-    return { ok: false, issues: v.issues(v.ApprovalDraft).map((i) => ({ path: i.path || "/", message: MESSAGE[i.path] ?? `입력이 맞지 않는다: ${i.message}` })) };
+    const out = { issues: v.issues(v.ApprovalDraft).map((i) => ({ path: i.path || "/", message: MESSAGE[i.path] ?? `입력이 맞지 않는다: ${i.message}` })) };
+    return { ok: false, issues: v.assertValid(v.FormIssues, out, "approval_draft").issues };
   }
   const reason = input.reason.trim();
   const out: ApprovalDecision = { submissionId: input.submissionId, decision: input.decision, reportHash: input.reportHash, ...(input.decision === "REJECT" ? { reason } : {}) };

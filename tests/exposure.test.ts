@@ -50,3 +50,9 @@ test("이 서버는 상류 호출이 없어 응답 머리글까지의 최악 시
   // 이 서버가 정한 시한(servers 블록의 timeouts)은 없다. 따라서 합산할 값이 없고 상한은 게이트웨이의 response_header 하나다.
   assert.doesNotMatch(code, /\btimeouts\b|read_timeout|write_timeout|idle_timeout/);
 });
+
+test("시간 사슬: 게이트웨이 response_header 상한(선언) < 화면의 요청 시간 제한(기본값)", () => {
+  const gw = readFileSync(`${REPO}/app/wiring/gateway.ts`, "utf8");
+  const screen = Number(/timeoutMs \?\? (\d+)/.exec(gw)![1]);
+  for (const r of exposure.routes) assert.ok(r.timeouts_ms.response_header < screen, `${r.timeouts_ms.response_header} < ${screen}`);
+});

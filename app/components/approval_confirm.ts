@@ -9,7 +9,7 @@ export function approvalConfirm(input: ApprovalConfirmInput): Result {
   v.assertValid(v.ApprovalConfirmInput, input, "approval_confirm");
   // 필드 간 같음은 JSON Schema로 쓸 수 없다(schemas/README.md 스키마 밖 조건). 앞뒤 공백만 무시한다.
   if (input.confirmText.trim() !== input.decision.submissionId) {
-    return { ok: false, issues: [{ path: "/confirmText", message: "제출 ID가 같지 않다." }] };
+    return { ok: false, issues: v.assertValid(v.FormIssues, { issues: [{ path: "/confirmText", message: "제출 ID가 같지 않다." }] }, "approval_confirm").issues };
   }
   return { ok: true, value: input.decision };
 }

@@ -22,6 +22,7 @@ export interface Pending {
   reason: string; // 롤백 사유(활성화에는 쓰지 않는다)
   evidenceText: string; // 롤백 근거 ID(쉼표/공백 구분)
   requestId: string; // 같은 확인 단계의 재전송은 같은 ID(멱등)
+  requestedAt: string; // 확인 단계를 연 시각. 재전송도 같은 값이어야 같은 요청 본문이다(같은 request_id에 다른 본문은 멱등 재생이 아니다)
 }
 
 export interface Receipt {
@@ -65,10 +66,13 @@ export const activateCandidates = (releases: ReleaseSummary[], pointer: ActivePo
 export class OpsController {
   state: OpsState = { phase: "loading", pointer: null, releases: [], pending: null, receipt: null, notice: null, errors: [], error: null, rev: 0 };
   private listeners = new Set<() => void>();
+  // 왜 순번: 불러오기가 겹칠 때 먼저 보낸 것이 늦게 도착해 최신 상태를 덮어쓰지 못하게 한다.
+  private seq = 0;
   private readonly api: ReleasesClient;
   private readonly now: () => string;
   private readonly uuid: UuidFn;
-  constructor(api: ReleasesClient, now: () => string = () => new Date().toISOString().replace(/\.\d+Z$/, "Z"), uuid: UuidFn = defaultUuid) {
+  /** 시계(now)는 주입받는다: 실제 시계는 main.ts가 넣는다(ADR 0023). */
+  constructor(api: ReleasesClient, now: () => string, uuid: UuidFn = defaultUuid) {
     this.api = api;
     this.now = now;
     this.uuid = uuid;
@@ -85,11 +89,14 @@ export class OpsController {
 
   /** 불러오기. keep=true면 영수증과 알림을 지우지 않는다. */
   async load(keep = false): Promise<void> {
+    const my = ++this.seq;
     this.set({ phase: "loading", error: null, ...(keep ? {} : { notice: null, receipt: null }), pending: null, errors: [] });
     try {
       const [pointer, releases] = await Promise.all([this.api.activePointer(), this.api.listReleases()]);
+      if (my !== this.seq) return;
       this.set({ phase: "ready", pointer, releases });
     } catch (e) {
+      if (my !== this.seq) return;
       const d = describeOpsError(e);
       this.set({ phase: "error", error: d.text });
     }
@@ -97,13 +104,13 @@ export class OpsController {
 
   /** 확인 단계를 연다. 롤백 대상은 기본으로 가장 가까운 이전 릴리스. */
   startActivate(target: string): void {
-    this.set({ pending: { kind: "activate", target, reason: "", evidenceText: "", requestId: this.newId("act") }, errors: [], notice: null, receipt: null });
+    this.set({ pending: { kind: "activate", target, reason: "", evidenceText: "", requestId: this.newId("act"), requestedAt: this.now() }, errors: [], notice: null, receipt: null });
   }
   startRollback(target?: string): void {
     const cand = rollbackCandidates(this.state.releases, this.state.pointer);
     const t = target ?? cand[0]?.release_id;
     if (!t) return;
-    this.set({ pending: { kind: "rollback", target: t, reason: "", evidenceText: "", requestId: this.newId("rb") }, errors: [], notice: null, receipt: null });
+    this.set({ pending: { kind: "rollback", target: t, reason: "", evidenceText: "", requestId: this.newId("rb"), requestedAt: this.now() }, errors: [], notice: null, receipt: null });
   }
   cancel(): void {
     this.set({ pending: null, errors: [] });
@@ -119,7 +126,7 @@ export class OpsController {
   async submit(): Promise<void> {
     const p = this.state.pending;
     if (!p || this.state.phase === "submitting") return;
-    const req = opsRequest({ kind: p.kind, target: p.target, reason: p.reason, evidenceText: p.evidenceText, requestId: p.requestId, requestedAt: this.now(), pointerReleaseId: this.state.pointer?.release_id ?? null });
+    const req = opsRequest({ kind: p.kind, target: p.target, reason: p.reason, evidenceText: p.evidenceText, requestId: p.requestId, requestedAt: p.requestedAt, pointerReleaseId: this.state.pointer?.release_id ?? null });
     if (!req.ok) { this.set({ errors: req.issues.map((i) => i.message) }); return; }
     this.set({ phase: "submitting", errors: [], notice: null });
     try {
