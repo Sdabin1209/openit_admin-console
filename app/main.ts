@@ -1,5 +1,5 @@
 // 진입점: 화면 부품(wiring/ui)과 컨트롤러를 만들어 주소(route_parse)에 따라 잇는다. 업무 규칙은 없다.
-import { CasesClient, GateClient, ReleasesClient } from "./wiring/gateway.ts";
+import { CasesClient, GateClient, ReleasesClient, realTimers } from "./wiring/gateway.ts";
 import { CasesController } from "./wiring/cases_controller.ts";
 import { renderCases } from "./ui/cases_view.ts";
 import { OpsController } from "./wiring/ops_controller.ts";
@@ -10,10 +10,10 @@ import { routeParse } from "./components/route_parse.ts";
 
 const root = document.getElementById("app")!;
 const nav = document.getElementById("nav")!;
-const approvals = new Controller(new GateClient({ baseUrl: "" }));
-const cases = new CasesController(new CasesClient({ baseUrl: "" }));
+const approvals = new Controller(new GateClient({ baseUrl: "" }), realTimers);
+const cases = new CasesController(new CasesClient({ baseUrl: "" }), realTimers);
 
-const ops = new OpsController(new ReleasesClient({ baseUrl: "" }), () => new Date().toISOString().replace(/\.\d+Z$/, "Z") /* 실제 시계는 진입점이 넣는다(ADR 0023) */);
+const ops = new OpsController(new ReleasesClient({ baseUrl: "" }), () => new Date().toISOString().replace(/\.\d+Z$/, "Z") /* 실제 시계는 진입점이 넣는다(ADR 0023) */, undefined, realTimers);
 
 type Screen = "approvals" | "cases" | "ops";
 let screen: Screen = "approvals";
@@ -24,11 +24,11 @@ const TITLES: Record<Screen, string> = { approvals: "출고 승인", cases: "실
 function signature(): string {
   if (screen === "approvals") {
     const s = approvals.state;
-    return ["a", s.phase, s.submissionId, s.items.length, s.notice?.text, s.sliceKind, s.sort, s.error, s.loaded?.reportHash].join("|");
+    return ["a", s.phase, s.submissionId, s.items.length, s.notice?.text, s.sliceKind, s.sort, s.error, s.loaded?.reportHash, approvals.slowStage].join("|");
   }
-  if (screen === "ops") return ["o", ops.state.rev].join("|");
+  if (screen === "ops") return ["o", ops.state.rev, ops.slowStage].join("|");
   const s = cases.state;
-  return ["c", s.phase, s.filter, s.cases.length, s.current?.case_id, s.current?.version, s.trace ? 1 : 0, s.traceError, s.notice?.text, s.errors.join(";"), s.form.status, s.form.kind, s.form.inputText.length, s.form.expectedText.length, s.error].join("|");
+  return ["c", s.phase, s.filter, s.cases.length, s.current?.case_id, s.current?.version, s.trace ? 1 : 0, s.traceError, s.notice?.text, s.errors.join(";"), s.form.status, s.form.kind, s.form.inputText.length, s.form.expectedText.length, s.error, cases.slowStage].join("|");
 }
 
 function draw(): void {

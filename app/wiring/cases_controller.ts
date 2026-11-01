@@ -1,5 +1,7 @@
 // 실패 사례 검토 화면의 상태 기계. DOM 없음. 입력 내용(reviewed_input, expected)은 메모리에만 두고 저장소·콘솔에 남기지 않는다.
 import type { CasesClient } from "./gateway.ts";
+import { SlowNotice, type SlowStage } from "./slow_notice.ts";
+import type { Timers } from "../components/link_http_send.ts";
 import { toErrorInfo } from "./api_error.ts";
 import { caseFailure } from "../components/case_failure.ts";
 import { caseReviewDraft } from "../components/case_review_draft.ts";
@@ -48,15 +50,21 @@ export class CasesController {
   // 왜 순번: 먼저 보낸 목록·사례 불러오기가 늦게 도착해 지금 화면을 덮어쓰지 못하게 한다(approvals_controller와 같은 이유).
   private seq = 0;
   private readonly api: CasesClient;
-  constructor(api: CasesClient) {
+  private readonly slow: SlowNotice;
+  /** 타이머(시계)는 주입받는다: 실제 타이머는 main.ts가 넣는다(ADR 0023, 0024). */
+  constructor(api: CasesClient, timers?: Timers) {
     this.api = api;
+    this.slow = new SlowNotice(timers, () => this.listeners.forEach((f) => f()));
   }
+  get slowStage(): SlowStage { return this.slow.stage; }
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
   }
   private set(p: Partial<CaseState>): void {
     this.state = { ...this.state, ...p };
+    const ph = this.state.phase;
+    this.slow.track(ph, ph === "list-loading" || ph === "case-loading" || ph === "submitting");
     this.listeners.forEach((f) => f());
   }
   private describe(e: unknown): string {

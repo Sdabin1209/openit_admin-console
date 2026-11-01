@@ -1,6 +1,6 @@
 // 릴리스 운영 화면 그리기. textContent만 쓴다. 행위자·역할 입력란은 없다(역할은 클라이언트가 계약대로 operator를 보내고, 행위자는 서버가 게이트웨이 헤더로 기록한다).
 import { activateCandidates, rollbackCandidates, type OpsController } from "../wiring/ops_controller.ts";
-import { h, fmtTime } from "./views.ts";
+import { h, fmtTime, slowLine } from "./views.ts";
 import type { ReleaseRow } from "../types/ReleaseRow.ts";
 
 type ReleaseSummary = ReleaseRow;
@@ -69,7 +69,7 @@ function receiptView(c: OpsController): HTMLElement | null {
 export function renderOps(root: HTMLElement, c: OpsController): void {
   const st = c.state;
   root.replaceChildren();
-  if (st.phase === "loading") { root.append(h("p", { role: "status" }, "불러오는 중…")); return; }
+  if (st.phase === "loading") { root.append(h("p", { role: "status" }, "불러오는 중…"), slowLine(c.slowStage) ?? ""); return; }
   if (st.phase === "error") {
     root.append(h("section", {}, h("p", { class: "notice error", role: "alert", id: "ops-load-error" }, st.error), h("p", {}, h("button", { type: "button", onclick: () => void c.load() }, "다시 불러오기"))));
     return;
@@ -80,6 +80,7 @@ export function renderOps(root: HTMLElement, c: OpsController): void {
   const down = rollbackCandidates(st.releases, ptr);
   root.append(h("section", {}, h("h2", {}, "릴리스 운영"),
     h("p", {}, h("button", { type: "button", id: "ops-refresh", disabled: busy, onclick: () => void c.load() }, "새로고침")),
+    busy && slowLine(c.slowStage),
     st.notice && h("p", { class: `notice ${st.notice.kind}`, id: "ops-notice", role: "alert" }, st.notice.text),
     receiptView(c),
     h("h3", {}, "현재 활성 릴리스"),

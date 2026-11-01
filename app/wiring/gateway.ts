@@ -33,7 +33,7 @@ export { ApiError } from "./api_error.ts";
 export interface HttpOptions extends Partial<HttpPorts> { baseUrl?: string; timeoutMs?: number }
 
 // 실제 타이머는 연결부(wiring)가 넣는다. 컴포넌트는 시계를 직접 읽지 않는다(ADR 0023).
-const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };
+export const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };
 
 // 화면 요청 대기 상한(D125, boundary-contracts CONVENTIONS.md "시간 상한 사슬"): 화면 > gateway > 서버여야 안쪽이 끝나기 전에 화면이 포기해
 // 같은 요청을 이중으로 처리하지 않는다. 값은 측정이 아니라 gateway 상한(release-gate 180초, ops-feedback 60초)에 10초를 더한 여유다.

@@ -1,6 +1,6 @@
 // 실패 사례 검토 화면 그리기. textContent만 쓴다. 입력 내용을 저장소·콘솔에 남기지 않는다.
 import type { CasesController, CaseState } from "../wiring/cases_controller.ts";
-import { h, fmtTime } from "./views.ts";
+import { h, fmtTime, slowLine } from "./views.ts";
 import type { CaseRecord } from "../types/CaseRecord.ts";
 
 type FailureCase = CaseRecord;
@@ -104,14 +104,14 @@ export function renderCases(root: HTMLElement, c: CasesController): void {
   switch (st.phase) {
     case "list-loading":
     case "case-loading":
-      root.append(h("p", { role: "status" }, "불러오는 중…"));
+      root.append(h("p", { role: "status" }, "불러오는 중…"), slowLine(c.slowStage) ?? "");
       break;
     case "list":
       root.append(caseList(st, c));
       break;
     case "case":
     case "submitting":
-      root.append(caseDetail(st, c, st.current!));
+      root.append(caseDetail(st, c, st.current!), st.phase === "submitting" ? (slowLine(c.slowStage) ?? "") : "");
       break;
     case "done": {
       const r = st.result!;

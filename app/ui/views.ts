@@ -1,5 +1,6 @@
 // DOM 그리기. innerHTML을 쓰지 않는다(textContent만). 보고서 내용을 저장소나 콘솔에 남기지 않는다.
 import type { Controller, State } from "../wiring/approvals_controller.ts";
+import { slowText, type SlowStage } from "../wiring/slow_notice.ts";
 import { reportView as buildReportView } from "../components/report_view.ts";
 import { timeDisplay } from "../components/time_display.ts";
 import type { Cell } from "../types/Cell.ts";
@@ -13,6 +14,12 @@ type SubmissionView = SubmissionRow;
 /** 서버가 준 시각 원문 옆에 현지 시각을 덧붙인 글(time_display). */
 export function fmtTime(iso: string | undefined | null, timeZone?: string): string {
   return timeDisplay({ iso: iso ?? null, ...(timeZone ? { timeZone } : {}) }).text;
+}
+
+/** 요청이 오래 걸릴 때의 진행 표시·안내(1초, 10초). 없으면 null. */
+export function slowLine(stage: SlowStage): HTMLElement | null {
+  const t = slowText(stage);
+  return t ? h("p", { role: "status", class: "slow-notice" }, t) : null;
 }
 
 type Child = Node | string | null | undefined | false;
@@ -123,6 +130,7 @@ function confirmDialog(st: State, c: Controller): HTMLElement {
     p.reason && h("p", {}, `사유: ${p.reason}`),
     h("p", {}, "승인자: 게이트웨이가 인증한 사용자"),
     h("p", { class: "muted" }, "확정하면 이 결정이 기록되고 되돌릴 수 없다."),
+    sending && slowLine(c.slowStage),
     h("p", {}, h("label", { for: "confirm-id" }, `확인: 제출 ID(${st.submissionId})를 그대로 입력 `), idInput),
     h("p", {},
       h("button", { type: "button", id: "confirm-no", autofocus: true, disabled: sending, onclick: () => c.cancelConfirm() }, "취소"), " ",
@@ -144,7 +152,7 @@ export function render(root: HTMLElement, c: Controller): void {
   switch (st.phase) {
     case "list-loading":
     case "report-loading":
-      root.append(h("p", { role: "status" }, "불러오는 중…"));
+      root.append(h("p", { role: "status" }, "불러오는 중…"), slowLine(c.slowStage) ?? "");
       break;
     case "list":
       root.append(listView(st, c));

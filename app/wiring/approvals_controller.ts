@@ -1,5 +1,7 @@
 // 화면 상태 기계. DOM 없음. 중복 요청은 한 번만 보낸다.
 import type { GateClient } from "./gateway.ts";
+import { SlowNotice, type SlowStage } from "./slow_notice.ts";
+import type { Timers } from "../components/link_http_send.ts";
 import { toErrorInfo } from "./api_error.ts";
 import { approvalConfirm } from "../components/approval_confirm.ts";
 import { approvalDraft } from "../components/approval_draft.ts";
@@ -40,9 +42,13 @@ export class Controller {
   // 왜 순번: 화면 이동이 빠르면 먼저 보낸 불러오기가 나중에 도착해 지금 화면을 덮어쓴다(다른 제출의 보고서가 이 제출 ID 아래 보이는 결함). 불러오기를 시작할 때마다 올리고, 도착했을 때 순번이 바뀌었으면 버린다.
   private seq = 0;
   private readonly api: GateClient;
-  constructor(api: GateClient) {
+  private readonly slow: SlowNotice;
+  /** 타이머(시계)는 주입받는다: 실제 타이머는 main.ts가 넣는다(ADR 0023, 0024). */
+  constructor(api: GateClient, timers?: Timers) {
     this.api = api;
+    this.slow = new SlowNotice(timers, () => this.listeners.forEach((f) => f()));
   }
+  get slowStage(): SlowStage { return this.slow.stage; }
 
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
@@ -50,6 +56,8 @@ export class Controller {
   }
   private set(patch: Partial<State>): void {
     this.state = { ...this.state, ...patch };
+    const ph = this.state.phase;
+    this.slow.track(ph, ph === "list-loading" || ph === "report-loading" || ph === "submitting");
     this.listeners.forEach((f) => f());
   }
   private fail(e: unknown, base: Partial<State> = {}): void {

@@ -1,5 +1,7 @@
 // 릴리스 운영 화면(활성화·롤백)의 상태 기계. DOM 없음. 역할은 클라이언트가 계약대로 보내고(operator), 행위자는 보내지 않는다(서버가 헤더로 기록).
 import type { ReleasesClient } from "./gateway.ts";
+import { SlowNotice, type SlowStage } from "./slow_notice.ts";
+import type { Timers } from "../components/link_http_send.ts";
 import { toErrorInfo } from "./api_error.ts";
 import { opsFailure } from "../components/ops_failure.ts";
 import { opsRequest } from "../components/ops_request.ts";
@@ -72,11 +74,15 @@ export class OpsController {
   private readonly now: () => string;
   private readonly uuid: UuidFn;
   /** 시계(now)는 주입받는다: 실제 시계는 main.ts가 넣는다(ADR 0023). */
-  constructor(api: ReleasesClient, now: () => string, uuid: UuidFn = defaultUuid) {
+  private readonly slow: SlowNotice;
+  /** 타이머도 주입받는다(진행 표시 1초·10초, ADR 0024). 없으면 표시를 만들지 않는다. */
+  constructor(api: ReleasesClient, now: () => string, uuid: UuidFn = defaultUuid, timers?: Timers) {
     this.api = api;
     this.now = now;
     this.uuid = uuid;
+    this.slow = new SlowNotice(timers, () => this.set({}));
   }
+  get slowStage(): SlowStage { return this.slow.stage; }
   private newId(prefix: string): string { return `${prefix}-${this.uuid()}`; }
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
@@ -84,6 +90,7 @@ export class OpsController {
   }
   private set(p: Partial<OpsState>): void {
     this.state = { ...this.state, ...p, rev: this.state.rev + 1 };
+    this.slow.track(this.state.phase, this.state.phase === "loading" || this.state.phase === "submitting");
     this.listeners.forEach((f) => f());
   }
 
