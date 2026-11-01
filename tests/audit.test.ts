@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ApiError, Http } from "./helpers.ts";
 import { GateClient } from "../app/wiring/gateway.ts";
-import { ReleasesClient } from "../app/wiring/gateway.ts";
+import { ReleasesClient, CasesClient } from "../app/wiring/gateway.ts";
 import { OpsController, describeOpsError } from "../app/wiring/ops_controller.ts";
 import { fmtTime } from "../app/ui/views.ts";
 import { routeParse } from "../app/components/route_parse.ts";
@@ -27,12 +27,14 @@ test("2xx인데 JSON이 아니면 '서버 응답 이상'(BAD_RESPONSE)이고 연
   assert.ok(d.text.includes("서버 응답 이상"));
 });
 
-test("시간 제한 기본값 15000ms가 타이머에 넘어간다(실제 시간을 재지 않는다, ADR 0010)", async () => {
+test("시간 제한 기본값이 경로별로 타이머에 넘어간다: release-gate 190000, ops-feedback 70000(실제 시간을 재지 않는다, ADR 0010·0024)", async () => {
   const seen: number[] = [];
   const timers = { set: (_fn: () => void, ms: number) => { seen.push(ms); return 1; }, clear: () => {} };
   const ok = (async () => new Response("{}", { status: 200 })) as unknown as typeof fetch;
-  await new Http({ fetch: ok, timers }).json("GET", "/v1/x");
-  assert.deepEqual(seen, [15000]);
+  // 응답 모양 검사는 이 시험의 관심이 아니다: 타이머에 넘어간 값만 본다
+  await new ReleasesClient({ fetch: ok, timers }).listReleases().catch(() => {});
+  await new CasesClient({ fetch: ok, timers }).list().catch(() => {});
+  assert.deepEqual(seen, [190000, 70000]);
 });
 
 test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시계, 실제 대기 없음)", async () => {
