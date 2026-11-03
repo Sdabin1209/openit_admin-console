@@ -34,7 +34,8 @@ test("userinfo: 이름과 역할이 보이고, admin이 아니면 계정 승인 
     assert.equal(q("#who-roles")!.textContent, "(clinician, reviewer)");
     assert.equal(q("#admin-approve-link"), null);
     assert.equal(q("#logout-link")!.getAttribute("href"), logoutUrl());
-    assert.equal(logoutUrl(), "/oauth2/sign_out?rd=%2Fauth%2Frealms%2Fopenit%2Fprotocol%2Fopenid-connect%2Flogout");
+    assert.equal(logoutUrl("https://clinic.example"), "/oauth2/sign_out?rd=" + encodeURIComponent("/auth/realms/openit/protocol/openid-connect/logout?client_id=openit-gateway&post_logout_redirect_uri=" + encodeURIComponent("https://clinic.example/")));
+    assert.equal(q("#logout-link")!.getAttribute("href"), logoutUrl("http://localhost"), "현재 출처(window.location.origin)를 쓴다");
   } finally { off(); await s.close(); }
 });
 

@@ -7,14 +7,15 @@ import type { SessionView } from "../types/SessionView.ts";
 export const USERINFO_PATH = "/oauth2/userinfo";
 // 왜 계정 승인 링크가 Keycloak 표준 관리 화면인가: 승인 화면을 다시 만들지 않는다(ADR 0014 결정 5, 이 영역 ADR 0029).
 export const ADMIN_CONSOLE_URL = "/auth/admin/openit/console/#/openit/users";
-// 로그아웃 뒤 Keycloak 세션도 끝낸다. client_id·post_logout_redirect_uri는 배포 값이라 넣지 않았다(Keycloak이 확인 화면을 보인다): 배포 규약 확인 전 가정이다.
-export const KEYCLOAK_LOGOUT_URL = "/auth/realms/openit/protocol/openid-connect/logout";
+// 로그아웃 뒤 Keycloak 세션도 끝낸다. 클라이언트 ID와 돌아올 주소는 헤드가 확정한 값이다(2026-11-03): 확인 화면 없이 앱 첫 화면(origin + "/")으로 돌아온다(OIDC RP-Initiated Logout의 client_id, post_logout_redirect_uri).
+export const KEYCLOAK_CLIENT_ID = "openit-gateway";
+export const keycloakLogoutUrl = (origin: string): string => `/auth/realms/openit/protocol/openid-connect/logout?client_id=${KEYCLOAK_CLIENT_ID}&post_logout_redirect_uri=${encodeURIComponent(origin + "/")}`;
 export const ADMIN_ROLE = "admin";
 
 /** 로그인: oauth2-proxy 표준 /oauth2/start. rd는 로그인 뒤 돌아올 현재 경로다. 비밀번호는 이 화면이 받지 않는다. */
 export const loginUrl = (currentPath: string): string => `/oauth2/start?rd=${encodeURIComponent(currentPath)}`;
 /** 로그아웃: oauth2-proxy 쿠키를 지우고 rd(Keycloak 로그아웃)로 보낸다. */
-export const logoutUrl = (): string => `/oauth2/sign_out?rd=${encodeURIComponent(KEYCLOAK_LOGOUT_URL)}`;
+export const logoutUrl = (origin: string = window.location.origin): string => `/oauth2/sign_out?rd=${encodeURIComponent(keycloakLogoutUrl(origin))}`;
 
 export function sessionView(info: UserInfo): SessionView {
   v.assertValid(v.UserInfo, info, "session_view");
