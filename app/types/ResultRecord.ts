@@ -12,6 +12,10 @@ export interface ResultRecord {
   question_bank_version?: string | null;
   question_set_id?: string | null;
   question_set_title?: string | null;
+  /**
+   * 정지 사유(RISK|REASK_LIMIT|OTHER, 모르는 값은 OTHER로 보인다). 있을 때만 보인다.
+   */
+  pause_reason?: string | null;
   answers: {
     key: string;
     status: string;

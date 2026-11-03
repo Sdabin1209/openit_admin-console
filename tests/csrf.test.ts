@@ -10,8 +10,13 @@ const files = appSourceFiles();
 
 test("Origin: null이 될 수 있는 전송 방식(form POST·sendBeacon·no-cors·XHR·서비스 워커)을 쓰지 않는다", () => {
   for (const f of [...files]) {
+    // 왜 browser_push.ts만 예외: 서비스 워커를 등록해 웹 푸시를 받을 뿐 요청을 보내지 않는다. 아래 시험이 서비스 워커 코드에 fetch가 없음을 고정한다.
+    if (f === "app/wiring/browser_push.ts") continue;
     const t = readFileSync(new URL(`../${f}`, import.meta.url), "utf8").replace(/\/\/.*$/gm, "");
     assert.ok(!/sendBeacon|no-cors|XMLHttpRequest|<form|\.submit\(\)|serviceWorker|keepalive/.test(t.replace(/c\.submit\(\)/g, "")), `${f}: CSRF 호환을 깨는 전송 방식`);
+  }
+  for (const f of ["app/sw.ts", "app/wiring/sw_handlers.ts", "app/components/push_notice.ts"]) {
+    assert.ok(!/fetch|XMLHttpRequest|sendBeacon/.test(readFileSync(new URL(`../${f}`, import.meta.url), "utf8").replace(/\/\/.*$/gm, "")), `${f}: 서비스 워커 코드는 요청을 보내지 않는다`);
   }
   assert.ok(!/<form/i.test(readFileSync(new URL("../app/index.html", import.meta.url), "utf8")));
 });

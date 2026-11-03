@@ -24,10 +24,13 @@ export function sessionResult(n: number, o: Partial<Rec> = {}): Rec {
 
 export function createResultsMock(gatewayUser: string | undefined, now: () => string) {
   let clinician = true;
+  // 웹 푸시(계약 3.4.0): 공개키 null이면 꺼짐. 구독은 endpoint별(같은 endpoint는 갱신, 멱등).
+  let vapid: string | null = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
+  const subs = new Map<string, Record<string, unknown>>();
   let rows: Rec[] = [];
   const clients = new Set<ServerResponse>();
   const reset = () => {
-    clinician = true;
+    clinician = true; vapid = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"; subs.clear();
     // 최신부터 내려주므로 번호가 클수록 최신(시작 날짜가 큼). 4번은 직원이 종료한 부분 결과.
     rows = [sessionResult(1), sessionResult(2), sessionResult(3, { status: "ENDED_LEFT", answers: [{ key: "Q1", value: "복통", status: "ANSWERED", precision: "exact" }], skipped_details: [] }),
       sessionResult(4, { status: "ENDED_STAFF", ended_at: "2026-11-14T00:05:00Z", subject_ref: null })];
@@ -43,6 +46,24 @@ export function createResultsMock(gatewayUser: string | undefined, now: () => st
       res.write(`event: heartbeat\ndata: {"ts":"${now()}"}\n\n`);
       clients.add(res);
       res.on("close", () => clients.delete(res));
+      return true;
+    }
+    if (req.method === "GET" && p === "/v1/staff/push-config") return send(res, 200, { vapid_public_key: vapid }), true;
+    if (req.method === "POST" && p === "/v1/staff/push-subscriptions") {
+      let b: Record<string, unknown>;
+      try { b = (await body()) as Record<string, unknown>; } catch { return err(res, 400, "INVALID_RECORD", "JSON이 아니다"), true; }
+      const topics = b.topics === undefined ? ["alerts"] : b.topics;
+      if (typeof b.endpoint !== "string" || !b.endpoint || typeof b.keys !== "object" || !Array.isArray(topics) || !topics.every((t) => t === "alerts" || t === "results")) return err(res, 400, "INVALID_RECORD", "구독 본문"), true;
+      if (!clinician && topics.includes("results")) return err(res, 403, "PERMISSION_DENIED", "results는 clinician 역할만"), true;
+      subs.set(b.endpoint, { ...b, topics });
+      return send(res, 201, {}), true;
+    }
+    if (req.method === "POST" && p === "/v1/staff/push-subscriptions/unsubscribe") {
+      let b: Record<string, unknown>;
+      try { b = (await body()) as Record<string, unknown>; } catch { return err(res, 400, "INVALID_RECORD", "JSON이 아니다"), true; }
+      if (typeof b.endpoint !== "string" || !b.endpoint) return err(res, 400, "INVALID_RECORD", "endpoint"), true;
+      subs.delete(b.endpoint);
+      res.writeHead(204, { "Cache-Control": "no-store" }); res.end();
       return true;
     }
     let m = /^\/v1\/results(?:\/([^/]+)(\/ack)?)?$/.exec(p);
@@ -76,6 +97,9 @@ export function createResultsMock(gatewayUser: string | undefined, now: () => st
     /** 시험용: 이 계정을 clinician이 아닌 것으로 만든다(목록·상세·ack·스트림 403). */
     setClinician: (v: boolean) => { clinician = v; },
     rows: () => rows,
+    /** 시험용: 푸시 공개키(null이면 푸시 꺼짐). */
+    setVapid: (k: string | null) => { vapid = k; },
+    pushSubs: () => [...subs.values()],
     add: (r: Rec) => { rows = [r, ...rows]; },
     /** 세션이 끝났다는 알림을 연결된 구독자 모두에게 보낸다(계약: id: 없음, data는 session_id·status·ended_at). */
     emitReady: (r: Pick<Rec, "session_id" | "status" | "ended_at">) => {

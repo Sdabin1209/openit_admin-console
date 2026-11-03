@@ -1,11 +1,22 @@
 // 문진 결과 화면 그리기(의사용). textContent만 쓴다. 환자 발화 원문은 이 화면에 오지 않는다(계약: 결과에 발화 없음). 브라우저 저장소·콘솔에 남기지 않는다.
 import type { ResultsController, ResultsState } from "../wiring/results_controller.ts";
+import { PUSH_TEXT, type PushController } from "../wiring/push_controller.ts";
 import { resultSheet } from "../components/result_sheet.ts";
 import { h, fmtTime, slowLine } from "./views.ts";
 
 const STATUS_FILTERS: [string, string][] = [["", "전체"], ["ENDED_COMPLETE", "완료"], ["ENDED_LEFT", "환자 이탈"], ["ENDED_STAFF", "직원 종료"], ["IN_PROGRESS", "진행 중"], ["PAUSED_RISK", "위험 멈춤"]];
 
-function list(st: ResultsState, c: ResultsController): HTMLElement {
+function pushPanel(p: PushController): HTMLElement {
+  const st = p.state;
+  const busy = st.phase === "busy";
+  return h("section", { class: "push-panel", id: "push-panel", "aria-label": "웹 푸시 알림" },
+    h("h3", {}, "웹 푸시 알림"),
+    h("p", { class: st.phase === "error" ? "notice error" : "muted", id: "push-status", role: st.phase === "error" ? "alert" : "status" }, st.message ?? PUSH_TEXT[st.phase]),
+    st.phase === "idle" || st.phase === "error" ? h("button", { type: "button", id: "push-enable", disabled: busy, onclick: () => void p.enable() }, "푸시 알림 켜기") : null,
+    st.phase === "subscribed" ? h("button", { type: "button", id: "push-disable", onclick: () => void p.disable() }, "푸시 알림 끄기(해지)") : null);
+}
+
+function list(st: ResultsState, c: ResultsController, push?: PushController): HTMLElement {
   const sel = h("select", { id: "result-status", onchange: (e) => void c.openList((e.target as HTMLSelectElement).value) },
     ...STATUS_FILTERS.map(([v, t]) => h("option", { value: v }, t)));
   (sel as HTMLSelectElement).value = st.status;
@@ -13,6 +24,7 @@ function list(st: ResultsState, c: ResultsController): HTMLElement {
     h("h2", {}, "문진 결과"),
     h("p", {}, h("label", { for: "result-status" }, "상태 "), sel, " ",
       h("span", { class: "muted", id: "result-live", role: "status" }, st.live ? "실시간 연결됨: 새 결과가 오면 자동으로 갱신된다" : "실시간 연결 없음: 새로고침으로 확인하라")),
+    push && pushPanel(push),
     st.notice && h("p", { class: "notice error", role: "alert" }, st.notice),
     st.items.length === 0 ? h("p", { class: "muted" }, "결과가 없다.") : h("table", { class: "grid" },
       h("thead", {}, h("tr", {}, ...["세션", "환자 참조", "문진표", "상태", "시작", "끝", "확인"].map((t) => h("th", { scope: "col" }, t)))),
@@ -39,6 +51,7 @@ function detail(st: ResultsState, c: ResultsController): HTMLElement {
       h("dt", {}, "환자 참조"), h("dd", {}, r.subject_ref ?? "—"),
       h("dt", {}, "시작"), h("dd", {}, fmtTime(r.started_at)), h("dt", {}, "끝"), h("dd", {}, fmtTime(r.ended_at)),
       h("dt", {}, "문진표"), h("dd", { id: "result-question-set" }, s.setText),
+      s.pauseText && h("dt", {}, "정지 사유"), s.pauseText && h("dd", { id: "result-pause-reason" }, s.pauseText),
       h("dt", {}, "릴리스 / 문항 은행"), h("dd", {}, `${r.release_id ?? "—"} / ${r.question_bank_version ?? "—"}`),
       h("dt", {}, "의사 확인"), h("dd", { id: "result-ack-text" }, s.ack.text)),
     !s.complete && h("p", { class: "notice warn", role: "note", id: "result-partial" }, "이 결과는 완료되지 않았다. 아래는 그때까지 저장된 부분 결과이며, 빈 문항이 미응답의 전부를 뜻하지 않는다."),
@@ -56,14 +69,14 @@ function detail(st: ResultsState, c: ResultsController): HTMLElement {
       " ", h("span", { class: "muted" }, "확인한 사람은 게이트웨이가 인증한 계정으로 서버가 기록한다.")));
 }
 
-export function renderResults(root: HTMLElement, c: ResultsController): void {
+export function renderResults(root: HTMLElement, c: ResultsController, push?: PushController): void {
   const st = c.state;
   root.replaceChildren();
   switch (st.phase) {
     case "list-loading": case "detail-loading":
       root.append(h("p", { role: "status" }, "불러오는 중…"), slowLine(c.slowStage) ?? "");
       break;
-    case "list": root.append(list(st, c)); break;
+    case "list": root.append(list(st, c, push)); break;
     case "detail": root.append(detail(st, c)); break;
     case "error":
       root.append(h("section", {}, h("h2", {}, "문진 결과"), h("p", { class: st.forbidden ? "notice denied" : "notice error", role: "alert", id: "result-error" }, st.error),

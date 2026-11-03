@@ -1,0 +1,8 @@
+{
+  "endpoint": "https://push.example/abc",
+  "keys": {
+    "p256dh": "BP",
+    "auth": "au"
+  },
+  "expirationTime": null
+}

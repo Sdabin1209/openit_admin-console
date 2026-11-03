@@ -65,7 +65,7 @@ test("5. types/가 schemas/에서 다시 생성한 결과와 같다", { skip: !c
 });
 
 test("6. 시험을 뺀 모든 코드 파일이 components/, wiring/, types/, ui/ 또는 진입점 중 하나에 속한다", () => {
-  const ENTRY = /^app\/main\.ts$/;
+  const ENTRY = /^app\/(main|sw)\.ts$/; // sw.ts: 서비스 워커 진입점(웹 푸시 수신, 별도 번들)
   for (const f of codeFiles()) {
     if (f.startsWith("tests/mock-server/")) continue; // 위 3번과 같은 이유로 시험 지원 코드
     assert.ok(/^app\/(components|wiring|types|ui)\//.test(f) || ENTRY.test(f), `${f}가 어디에도 속하지 않는다`);

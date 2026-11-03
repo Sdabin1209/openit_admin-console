@@ -55,6 +55,10 @@
 | link_failure_review | `components/link_failure_review.ts` | `CaseReviewInput` | `CaseReviewResult` | I7 `POST /v1/cases/{id}/review` (계약 `CaseReviewRequest`) |
 | link_result_list | `components/link_result_list.ts` | `ResultListQuery` | `ResultPage` | 문진 서비스 `GET /v1/results` (한 쪽, 최신부터) |
 | link_result_get | `components/link_result_get.ts` | `ResultIdInput` | `ResultRecord` | 문진 서비스 `GET /v1/results/{id}` |
+| link_push_config | `components/link_push_config.ts` | (없음) | `PushConfig`(계약) | 직원 콘솔 `GET /v1/staff/push-config`. 공개키 null이면 푸시 꺼짐 |
+| link_push_subscribe | `components/link_push_subscribe.ts` | `PushSubscriptionInput` | (성공 여부) | `POST /v1/staff/push-subscriptions` (본문 endpoint, keys, `topics:["results"]`) |
+| link_push_unsubscribe | `components/link_push_unsubscribe.ts` | `PushEndpointInput` | (성공 여부) | `POST /v1/staff/push-subscriptions/unsubscribe` (204) |
+| push_notice | `components/push_notice.ts` | `StaffPushPayload`(계약) | `PushNotice` | 푸시 본문 -> 알림 문구·tag(`result-`+세션)·클릭 목적지 |
 | link_result_ack | `components/link_result_ack.ts` | `ResultIdInput` | `ResultRecord` | 문진 서비스 `POST /v1/results/{id}/ack` (본문 `{}`, 서버 멱등) |
 | link_result_events | `components/link_result_events.ts` | 구독 핸들러(SSE는 요청-응답이 아니라 스키마 하나로 쓰지 않는다) | `ResultReady` 이벤트 | 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready` |
 | result_sheet | `components/result_sheet.ts` | `ResultRecord` | `SheetView` | 결과를 문진표 모양(문항·칸·값, 빈칸 사유, 확인 표시)으로 바꾼다. 판단하지 않는다 |

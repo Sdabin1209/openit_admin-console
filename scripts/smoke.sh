@@ -55,6 +55,7 @@ get /healthz | grep -q '"ok"' || fail "/healthz 본문"
 get /readyz | grep -q '"ok"' || fail "/readyz 본문"
 get / | grep -q 'app.js' || fail "index.html"
 [ "$(get /app.js | wc -c)" -gt 1000 ] || fail "app.js"
+[ "$(get /sw.js | wc -c)" -gt 1000 ] || fail "sw.js (서비스 워커)"
 CODE="$(curl -s --path-as-is --max-time 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}/../../etc/passwd")"
 [ "$CODE" = "404" ] || fail "경로 이탈 응답 $CODE"
 

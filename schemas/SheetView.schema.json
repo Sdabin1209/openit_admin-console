@@ -24,6 +24,12 @@
     "statusText": {
       "type": "string"
     },
+    "pauseText": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "complete": {
       "type": "boolean"
     },

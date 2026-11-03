@@ -16,7 +16,9 @@ const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "
   // 환경 준비 진입점(scripts/setup-env.sh)이 마지막 줄 보고를 낸다(계약 2.6.0, U43). 시험이 이 검증기로 그 줄을 검사한다.
   "SetupEnvReport",
   // 노출 선언(deploy-exposure.json, 라벨 io.openit.exposure)을 빌드 진입점과 시험이 검사한다(계약 Exposure, U47).
-  "Exposure"];
+  "Exposure",
+  // 결과 탭 웹 푸시(계약 3.4.0, U92): 푸시 설정 응답과 서비스 워커가 받는 푸시 본문.
+  "PushConfig", "StaffPushPayload"];
 // 왜: ApprovalRequest·ActivateRequest가 $ref로 가리키는 공통 정의. 검증기로 내보내지 않고 참조 해소용으로만 넣는다.
 const SUPPORT = ["_common"];
 

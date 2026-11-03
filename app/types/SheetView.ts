@@ -6,6 +6,7 @@ export interface SheetView {
   sessionId: string;
   setText: string;
   statusText: string;
+  pauseText?: string | null;
   complete: boolean;
   groups: {
     item: string;

@@ -15,6 +15,12 @@ import { createFailureReview } from "../components/link_failure_review.ts";
 import { createResultList } from "../components/link_result_list.ts";
 import { createResultGet } from "../components/link_result_get.ts";
 import { createResultAck } from "../components/link_result_ack.ts";
+import { createPushConfig } from "../components/link_push_config.ts";
+import { createPushSubscribe } from "../components/link_push_subscribe.ts";
+import { createPushUnsubscribe } from "../components/link_push_unsubscribe.ts";
+import type { PushConfig } from "../types/contract/PushConfig.ts";
+import type { PushSubscriptionInput } from "../types/PushSubscriptionInput.ts";
+import type { PushEndpointInput } from "../types/PushEndpointInput.ts";
 import { createResultEvents, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
 import type { ResultListQuery } from "../types/ResultListQuery.ts";
 import type { ResultPage } from "../types/ResultPage.ts";
@@ -137,4 +143,16 @@ export class ResultsClient {
   /** 확인 표시. 서버가 멱등이라 이미 확인된 결과면 처음 값이 돌아온다. */
   async ack(sessionId: string): Promise<ResultRecord> { return unwrap(await this.ackFn({ sessionId })); }
   subscribe(h: ResultEventHandlers): () => void { return this.events(h); }
+}
+
+/** 결과 탭 웹 푸시(계약 3.4.0): 설정 읽기, 구독 등록(topics results), 해지. 문진 서비스 직원 경로라 결과와 같은 대기 상한을 쓴다. */
+export class PushClient {
+  private readonly cfg; private readonly sub; private readonly unsub;
+  constructor(opts: HttpOptions = {}) {
+    const s = send(opts, RESULTS_TIMEOUT_MS);
+    this.cfg = createPushConfig(s); this.sub = createPushSubscribe(s); this.unsub = createPushUnsubscribe(s);
+  }
+  async config(): Promise<PushConfig> { return unwrap(await this.cfg()); }
+  async subscribe(input: PushSubscriptionInput): Promise<void> { const r = await this.sub(input); if (!r.ok) unwrap(r); }
+  async unsubscribe(input: PushEndpointInput): Promise<void> { const r = await this.unsub(input); if (!r.ok) unwrap(r); }
 }

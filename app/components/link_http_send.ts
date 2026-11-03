@@ -78,7 +78,8 @@ export function createHttpSend(config: HttpSendConfig, ports: HttpPorts): HttpSe
       let data: unknown = null;
       let parsed = true;
       try {
-        data = JSON.parse(text);
+        // 왜 204만 빈 본문 허용: 푸시 해지는 204 본문 없음(계약 PUBLIC_API). 200인데 빈 본문은 여전히 이상 응답이다.
+        if (!(res.status === 204 && text === "")) data = JSON.parse(text);
       } catch {
         parsed = false;
       }

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PushSubscriptionInput.schema.json",
+  "title": "PushSubscriptionInput",
+  "description": "link_push_subscribe의 입력: 브라우저 PushSubscription.toJSON()의 endpoint와 keys. 구독 주제(topics)는 컴포넌트가 results로 정한다. 모르는 필드(expirationTime)는 받되 보내지 않는다.",
+  "type": "object",
+  "required": [
+    "endpoint",
+    "keys"
+  ],
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "keys": {
+      "type": "object",
+      "required": [
+        "p256dh",
+        "auth"
+      ],
+      "properties": {
+        "p256dh": {
+          "type": "string",
+          "minLength": 1
+        },
+        "auth": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

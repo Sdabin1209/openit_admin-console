@@ -21,6 +21,13 @@ function splitKey(key: string): [string, string] {
   return i < 0 ? [key, ""] : [key.slice(0, i), key.slice(i)];
 }
 
+// 정지 사유(계약 PUBLIC_API H): RISK, REASK_LIMIT, OTHER. 모르는 값은 OTHER로 취급한다. 값이 없으면 정지(PAUSED_RISK) 결과에서만 "미상"을 보이고 그 밖에는 칸을 두지 않는다.
+const PAUSE: Record<string, string> = { RISK: "위험 신호로 정지(RISK)", REASK_LIMIT: "되묻기 한도 초과로 정지(REASK_LIMIT)", OTHER: "그 밖의 사유로 정지(OTHER)" };
+function pauseText(r: ResultRecord): string | null {
+  if (r.pause_reason) return PAUSE[r.pause_reason] ?? PAUSE.OTHER;
+  return r.status === "PAUSED_RISK" ? "미상(서버가 사유를 보내지 않았다)" : null;
+}
+
 function setText(r: ResultRecord): string {
   const name = r.question_set_title || r.question_set_id;
   if (!name) return "—";
@@ -42,6 +49,7 @@ export function resultSheet(input: ResultRecord): SheetView {
     sessionId: input.session_id,
     // 왜 제목 우선·ID 대체: 사람이 알아보는 것은 제목이다. 둘 다 없으면(옛 결과) 대시. 버전은 문항 은행 버전(question_bank_version)이다.
     setText: setText(input),
+    pauseText: pauseText(input),
     statusText: STATUS[input.status] ?? input.status,
     complete: input.status === "ENDED_COMPLETE",
     groups, blanks,

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PushEndpointInput.schema.json",
+  "title": "PushEndpointInput",
+  "description": "link_push_unsubscribe의 입력: 해지할 구독의 endpoint. URL이 아니라 본문으로 보낸다(엔드포인트 URL은 그 자체가 푸시 권한이다).",
+  "type": "object",
+  "required": [
+    "endpoint"
+  ],
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

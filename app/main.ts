@@ -1,5 +1,5 @@
 // 진입점: 화면 부품(wiring/ui)과 컨트롤러를 만들어 주소(route_parse)에 따라 잇는다. 업무 규칙은 없다.
-import { CasesClient, GateClient, ReleasesClient, ResultsClient, realTimers } from "./wiring/gateway.ts";
+import { CasesClient, GateClient, ReleasesClient, ResultsClient, PushClient, realTimers } from "./wiring/gateway.ts";
 import { CasesController } from "./wiring/cases_controller.ts";
 import { renderCases } from "./ui/cases_view.ts";
 import { OpsController } from "./wiring/ops_controller.ts";
@@ -8,6 +8,8 @@ import { Controller } from "./wiring/approvals_controller.ts";
 import { render, h } from "./ui/views.ts";
 import { ResultsController } from "./wiring/results_controller.ts";
 import { renderResults } from "./ui/results_view.ts";
+import { PushController } from "./wiring/push_controller.ts";
+import { browserPushPorts } from "./wiring/browser_push.ts";
 import { routeParse } from "./components/route_parse.ts";
 
 const root = document.getElementById("app")!;
@@ -17,6 +19,8 @@ const cases = new CasesController(new CasesClient({ baseUrl: "" }), realTimers);
 
 const ops = new OpsController(new ReleasesClient({ baseUrl: "" }), () => new Date().toISOString().replace(/\.\d+Z$/, "Z") /* 실제 시계는 진입점이 넣는다(ADR 0023) */, undefined, realTimers);
 const results = new ResultsController(new ResultsClient({ baseUrl: "" }), realTimers);
+
+const push = new PushController(new PushClient({ baseUrl: "" }), browserPushPorts());
 
 type Screen = "approvals" | "cases" | "ops" | "results";
 let screen: Screen = "approvals";
@@ -29,7 +33,7 @@ function signature(): string {
     const s = approvals.state;
     return ["a", s.phase, s.submissionId, s.items.length, s.notice?.text, s.sliceKind, s.sort, s.error, s.loaded?.reportHash, approvals.slowStage].join("|");
   }
-  if (screen === "results") return ["r", results.state.rev, results.slowStage].join("|");
+  if (screen === "results") return ["r", results.state.rev, push.state.rev, results.slowStage].join("|");
   if (screen === "ops") return ["o", ops.state.rev, ops.slowStage].join("|");
   const s = cases.state;
   return ["c", s.phase, s.filter, s.cases.length, s.current?.case_id, s.current?.version, s.trace ? 1 : 0, s.traceError, s.notice?.text, s.errors.join(";"), s.form.status, s.form.kind, s.form.inputText.length, s.form.expectedText.length, s.error, cases.slowStage].join("|");
@@ -40,7 +44,7 @@ function draw(): void {
   if (sig === last) return;
   last = sig;
   if (screen === "approvals") render(root, approvals);
-  else if (screen === "results") renderResults(root, results);
+  else if (screen === "results") renderResults(root, results, push);
   else if (screen === "ops") renderOps(root, ops);
   else renderCases(root, cases);
   if (needFocus) {
@@ -51,6 +55,7 @@ function draw(): void {
 approvals.subscribe(() => { if (screen === "approvals") draw(); });
 cases.subscribe(() => { if (screen === "cases") draw(); });
 ops.subscribe(() => { if (screen === "ops") draw(); });
+push.subscribe(() => { if (screen === "results") draw(); });
 results.subscribe(() => { if (screen === "results") draw(); drawNav(); });
 
 function drawNav(): void {
@@ -85,7 +90,7 @@ function route(): void {
   if (r.screen === "bad_address") return badAddress();
   screen = r.screen;
   drawNav();
-  if (r.screen === "results") void (r.view === "detail" ? results.openDetail(r.id as string) : results.openList());
+  if (r.screen === "results") { void (r.view === "detail" ? results.openDetail(r.id as string) : results.openList()); if (r.view !== "detail") void push.refresh(); }
   else if (r.screen === "ops") void ops.load();
   else if (r.screen === "cases") void (r.view === "detail" ? cases.openCase(r.id as string) : cases.openList());
   else void (r.view === "detail" ? approvals.openReport(r.id as string) : approvals.openList());

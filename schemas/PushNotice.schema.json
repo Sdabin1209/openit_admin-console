@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PushNotice.schema.json",
+  "title": "PushNotice",
+  "description": "push_notice의 출력: 서비스 워커가 띄울 알림. sessionId가 있으면 클릭이 결과 상세로 가고, 없으면 결과 목록으로 간다.",
+  "type": "object",
+  "required": [
+    "title",
+    "body",
+    "tag",
+    "sessionId"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body": {
+      "type": "string"
+    },
+    "tag": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sessionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
