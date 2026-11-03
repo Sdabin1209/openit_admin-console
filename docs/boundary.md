@@ -8,7 +8,7 @@
 - 변경 요청: `docs/change-requests/`의 CR-001~CR-006(처리 상태는 각 문서).
 
 ## 작업 단위 2: 실패 사례 검토 (I7, 소비)
-- 소비하는 계약: I7 FailureStore의 `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/deidentified-traces/{ref}`, `POST /v1/cases/{id}/review`(쓰기 역할 `reviewer`). 스키마 `FailureCase`와 모델 입출력 `ActionExtractionInput`, `ActionExtraction`, `ResponseRequest`, `ResponseText`(검증 전용). `expected_kind`는 `LORA_A`/`LORA_B`이고 v1의 `PARSER`/`GENERATOR`는 없다. LORA_B의 `expected`는 문자열이다.
+- 소비하는 계약: I7 FailureStore의 `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/review-traces/{ref}`(reviewer 전용, 발화 두 칸만 원문), `POST /v1/cases/{id}/review`(쓰기 역할 `reviewer`). 스키마 `FailureCase`와 모델 입출력 `ActionExtractionInput`, `ActionExtraction`, `ResponseRequest`, `ResponseText`(검증 전용). `expected_kind`는 `LORA_A`/`LORA_B`이고 v1의 `PARSER`/`GENERATOR`는 없다. LORA_B의 `expected`는 문자열이다.
 - 소유 저장소 없음. 입력 내용(reviewed_input, expected)은 메모리에만 두고 저장소·콘솔에 남기지 않는다.
 - 장애 영향: ops-feedback이 죽으면 이 메뉴만 UNAVAILABLE 안내가 뜬다. 출고 승인 화면에는 영향이 없다.
 - 변경 요청: CR-003.

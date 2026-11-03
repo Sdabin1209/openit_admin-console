@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { VALID_LORA_A_INPUT, VALID_LORA_B_INPUT } from "./mock-server/cases.ts";
 import { traceFacts } from "../app/ui/cases_view.ts";
+import { MOCK_UTTERANCE } from "./mock-server/cases.ts";
 import { startMock } from "./helpers.ts";
 
 const GOOD_INPUT = JSON.stringify({ ...VALID_LORA_A_INPUT, current_question: "머리가 아프신가요?", user_utterance: "가상의 사람이 머리가 아프다고 말한다" });
@@ -192,5 +193,30 @@ test("목록: 한 쪽(100건)을 넘는 사례를 next_cursor를 따라 모두 �
     const all = await new CasesClient({ baseUrl: s.base }).list({ review_status: "PENDING" });
     assert.equal(all.length, 254);
     assert.equal(new Set(all.map((c) => c.case_id)).size, 254, "중복 없이");
+  } finally { await s.close(); }
+});
+
+test("review-traces: 발화 두 칸이 원문으로 오고 화면 사실에 들어간다", async () => {
+  const s = await startMock();
+  try {
+    const c = s.cases();
+    await c.openCase("fc-4");
+    const facts = Object.fromEntries(traceFacts(c.state.trace as unknown as Record<string, unknown>));
+    assert.equal(facts["환자 발화(원문, 개인정보 주의)"], MOCK_UTTERANCE);
+    assert.equal(facts["LoRA-A 입력 발화(원문)"], MOCK_UTTERANCE);
+    assert.equal(c.state.traceError, null);
+  } finally { await s.close(); }
+});
+
+test("review-traces: reviewer가 아니면 403이고 '검토 권한 필요' 안내가 뜬다", async () => {
+  const s = await startMock();
+  try {
+    const seed = s.mock.cases.store.get("fc-1")![0];
+    s.mock.cases.store.set("fc-forbidden", [{ ...seed, case_id: "fc-forbidden", deidentified_trace_ref: "tr-fc-forbidden" }]);
+    const c = s.cases();
+    await c.openCase("fc-forbidden");
+    assert.equal(c.state.trace, null);
+    assert.match(c.state.traceError ?? "", /검토 권한 필요/);
+    assert.equal(c.state.phase, "case", "사례 화면은 열린 채 trace만 막힌다");
   } finally { await s.close(); }
 });

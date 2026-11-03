@@ -9,7 +9,7 @@ export const ActivateRequest: V;
 export const RollbackRequest: V;
 export const CaseReviewRequest: V;
 export const ListEnvelope: V;
-export const OpsFeedbackDeidentifiedTrace: V;
+export const OpsFeedbackReviewTrace: V;
 export const ImageLabels: V;
 export const BuildImageRequest: V;
 export const BuildImageResult: V;

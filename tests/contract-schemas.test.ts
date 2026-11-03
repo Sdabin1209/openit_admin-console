@@ -34,7 +34,7 @@ test("계약 버전 상수는 계약 schemas_api.py의 PIPELINE_SCHEMA_VERSION�
 });
 
 test("승격 스키마 검증기: 계약 예시는 통과하고 examples_invalid는 모두 거부한다", { skip }, () => {
-  const names = ["ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackDeidentifiedTrace", "ImageLabels"] as const;
+  const names = ["ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "ListEnvelope", "OpsFeedbackReviewTrace", "ImageLabels"] as const;
   for (const n of names) {
     const fn = (v as unknown as Record<string, (x: unknown) => boolean>)[n];
     assert.equal(typeof fn, "function", `${n} 검증기가 생성되지 않았다`);
@@ -81,18 +81,18 @@ test("목록 응답: ListEnvelope 위반(next_cursor 없음·빈 문자열·item
   }
 });
 
-test("비식별 trace: 모의 서버 trace()가 OpsFeedbackDeidentifiedTrace를 통과한다", () => {
+test("검토용 trace: 모의 서버 trace()가 OpsFeedbackReviewTrace를 통과한다", () => {
   const t = trace("tr-fc-1");
-  assert.ok(v.OpsFeedbackDeidentifiedTrace(t), JSON.stringify(v.OpsFeedbackDeidentifiedTrace.errors?.slice(0, 5)));
-  assert.ok(v.OpsFeedbackDeidentifiedTrace(trace("tr-fc-5")));
+  assert.ok(v.OpsFeedbackReviewTrace(t), JSON.stringify(v.OpsFeedbackReviewTrace.errors?.slice(0, 5)));
+  assert.ok(v.OpsFeedbackReviewTrace(trace("tr-fc-5")));
 });
 
-test("비식별 trace: 클라이언트는 계약 위반 trace(원문 session_id, 모르는 키 등)를 받지 않는다", { skip }, async () => {
-  for (const [name, body] of bad("OpsFeedbackDeidentifiedTrace")) {
+test("검토용 trace: 클라이언트는 계약 위반 trace(원문 session_id, 모르는 키 등)를 받지 않는다", { skip }, async () => {
+  for (const [name, body] of bad("OpsFeedbackReviewTrace")) {
     const { f } = fakeFetch(() => ({ body }));
     await assert.rejects(new CasesClient({ fetch: f }).getTrace("tr-fc-1"), (e: Error) => /응답 형식/.test(e.message), name);
   }
-  const { f } = fakeFetch(() => ({ body: ex("OpsFeedbackDeidentifiedTrace") }));
+  const { f } = fakeFetch(() => ({ body: ex("OpsFeedbackReviewTrace") }));
   assert.ok(await new CasesClient({ fetch: f }).getTrace("tr-fc-1"));
 });
 

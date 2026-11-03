@@ -32,16 +32,18 @@ export function initialCases(): Map<string, FailureCase[]> {
   return new Map(rows.map((r) => [r[0].case_id, r]));
 }
 
-// 계약 OpsFeedbackDeidentifiedTrace(예시 examples/OpsFeedbackDeidentifiedTrace.json)를 따른다: 29개 키가 모두 있고 session_id·turn_id는 가명(p-<32 hex>)이다.
+// 계약 OpsFeedbackReviewTrace(예시 examples/OpsFeedbackReviewTrace.json)를 따른다: 29개 키가 모두 있고 session_id·turn_id는 가명(p-<32 hex>)이다.
 // 비식별 뒤 값 자리(key, value 등)는 [MASKED]다. 이 모양은 ops-feedback 서버의 실제 출력이 아니라 계약 예시를 따른 모의다.
+// 검토용 trace는 발화 두 칸만 원문이다(3.2.0). 모의 값이며 실제 환자 발화가 아니다.
+export const MOCK_UTTERANCE = "머리가 계속 아파요(모의 발화)";
 export function trace(ref: string): Record<string, unknown> | null {
   if (!ref.startsWith("tr-fc-")) return null;
   const sid = "p-" + "18a3512ebb50d67046b64712466b1562";
   return {
     session_id: sid, turn_id: "p-" + "825eaad83e41f19bb747ace04c02897d", contract_version: 1,
-    frontend_message: { session_id: sid, kind: "UTTERANCE", utterance: "[MASKED]" },
+    frontend_message: { session_id: sid, kind: "UTTERANCE", utterance: MOCK_UTTERANCE },
     intervention_decision: null, orchestrator_input: null,
-    extract_input: VALID_LORA_A_INPUT,
+    extract_input: { ...VALID_LORA_A_INPUT, user_utterance: MOCK_UTTERANCE },
     extract_output: { action: "NEXT", next_item: "Q1.D04", reason: "[MASKED]", targets: [], note: "[MASKED]",
       values: [{ key: "[MASKED]", value: "[MASKED]", precision: "[MASKED]", status: "[MASKED]", save: true }] },
     extract_attempts: 1, extract_status: "OK", extract_protections: {}, validation_ok: true, validation_violations: [],
@@ -101,8 +103,10 @@ export function createCasesMock(now: () => string): CasesMock {
         if (!c) return err(res, 404, "NOT_FOUND", "그 버전이 없다"), true;
         return send(res, 200, c), true;
       }
-      mm = /^\/v1\/deidentified-traces\/([^/]+)$/.exec(p);
+      mm = /^\/v1\/review-traces\/([^/]+)$/.exec(p);
       if (req.method === "GET" && mm) {
+        // 시나리오: 사례 ID에 forbidden이 들어 있으면 reviewer가 아닌 계정으로 본다(403).
+        if (mm[1].includes("forbidden")) return err(res, 403, "PERMISSION_DENIED", "reviewer 역할만 읽을 수 있다"), true;
         const t = trace(decodeURIComponent(mm[1]));
         return t ? send(res, 200, t) : err(res, 404, "NOT_FOUND", "trace가 없다"), true;
       }

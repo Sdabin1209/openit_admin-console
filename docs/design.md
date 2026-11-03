@@ -103,7 +103,7 @@ Dockerfile, package.json, package-lock.json
 | --- | --- |
 | 목록 | `GET /v1/cases?review_status=&latest_only=true` (필터에 `failure_type`, `source_release_id` 지원) |
 | 사례 | `GET /v1/cases/{id}?version=` |
-| trace | `GET /v1/deidentified-traces/{deidentified_trace_ref}` |
+| trace | `GET /v1/review-traces/{deidentified_trace_ref}` (reviewer 전용, 403이면 "검토 권한 필요") |
 | 검토 | `POST /v1/cases/{id}/review` 본문 `{review_status, expected?, expected_kind?, reviewed_input?}` → 201 새 버전 / 200 같은 검토 |
 
 **모의 서버(I7).** 사례: `fc-1`(PENDING, LORA_A), `fc-2`(PENDING, LORA_B), `fc-3`(PENDING, 종류 미정), `fc-403`(검토가 403), `fc-4`(v1 PENDING → v2 CONFIRMED), `fc-5`(v1 PENDING → v2 DISMISSED). 400은 형식 위반과 마스킹된 입력 그대로 보냈을 때, 403은 `fc-403`, 같은 검토 재전송은 200. 출력은 시험에서 `FailureCase`·`BoundaryError` 스키마로 검증한다.

@@ -26,7 +26,7 @@
 | `getReviewReport`의 헤더 존재·`sha256:` 형식 | `LoadedReport.reportHash` 패턴 |
 | `decide`의 `assertRequest("ApprovalRequest")` 등 3종 | 계약 검증기 (`link_gate_decide`, `link_release_activate`, `link_failure_review`). 롤백 본문은 옛 코드가 검사하지 않았으나 계약 `RollbackRequest`로 검사한다(보내는 쪽이 낸다고 한 값이 계약에 맞는지 확인하는 것이라 동작 변화는 없다) |
 | `readEnvelope`, `need(`active-pointer`)` | 계약 `ListEnvelope`, `ActivePointerState` |
-| `assertResponse("OpsFeedbackDeidentifiedTrace")` | 계약 검증기 (`link_failure_trace`) |
+| `assertResponse("OpsFeedbackReviewTrace")` | 계약 검증기 (`link_failure_trace`) |
 | `Controller.requestDecision`: 반려 사유 필수 | `ApprovalDraft`의 `if/then` |
 | `Controller.confirmMatches` | 스키마 밖 1 |
 | `CasesController.buildRequest`: 종류 필수, JSON 문법, 객체, 계약 스키마 | `CaseReviewForm`의 `if/then`, 스키마 밖 2, `CaseReviewDraft`의 `$ref` |

@@ -24,7 +24,7 @@ import type { CaseRecord } from "../types/CaseRecord.ts";
 import type { CaseListQuery } from "../types/CaseListQuery.ts";
 import type { CaseReviewDraft } from "../types/CaseReviewDraft.ts";
 import type { CaseReviewResult } from "../types/CaseReviewResult.ts";
-import type { OpsFeedbackDeidentifiedTrace } from "../types/contract/OpsFeedbackDeidentifiedTrace.ts";
+import type { OpsFeedbackReviewTrace } from "../types/contract/OpsFeedbackReviewTrace.ts";
 import { unwrap } from "./api_error.ts";
 
 export { REPORT_HASH_HEADER };
@@ -95,7 +95,7 @@ export class CasesClient {
   async get(id: string, version?: number): Promise<CaseRecord> {
     return unwrap(await this.getFn({ caseId: id, ...(version === undefined ? {} : { version }) }));
   }
-  async getTrace(ref: string): Promise<OpsFeedbackDeidentifiedTrace> {
+  async getTrace(ref: string): Promise<OpsFeedbackReviewTrace> {
     return unwrap(await this.traceFn({ ref }));
   }
   /** 201이면 새 version, 200이면 이미 같은 검토가 있던 것. */

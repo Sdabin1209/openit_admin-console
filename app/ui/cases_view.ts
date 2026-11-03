@@ -23,10 +23,12 @@ export function expectedKindLabel(k: FailureCase): string {
 }
 const show = (x: unknown): string => (x === undefined || x === null ? "—" : typeof x === "object" ? JSON.stringify(x) : String(x));
 
-/** 비식별 trace에서 구조 정보만 뽑는다. 값은 마스킹되어 있을 수 있다. 모르는 구조는 건너뛴다. */
+/** 검토용 trace에서 구조 정보와 발화 두 칸(원문)을 뽑는다. 나머지 값은 마스킹되어 있을 수 있다. 모르는 구조는 건너뛴다. */
 export function traceFacts(trace: Record<string, unknown>): [string, string][] {
   const values = get(trace, "extract_output", "values");
   return [
+    ["환자 발화(원문, 개인정보 주의)", show(get(trace, "frontend_message", "utterance"))],
+    ["LoRA-A 입력 발화(원문)", show(get(trace, "extract_input", "user_utterance"))],
     ["계약 버전", show(trace.contract_version)],
     ["LoRA-A 추출 상태", show(trace.extract_status)],
     ["LoRA-A 시도 횟수", show(trace.extract_attempts)],
@@ -73,7 +75,7 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
         ["문항 세트", k.question_set ? `${k.question_set.id}@${k.question_set.version}` : "—"]] as [string, string][]).flatMap(([a, b]) => [h("dt", {}, a), h("dd", {}, b)])),
     k.version > 1 && h("p", {}, "버전 보기: ", ...versions.map((v) => h("button", { type: "button", onclick: () => void c.openCase(k.case_id, v) }, `v${v}`)), " ",
       h("button", { type: "button", onclick: () => void c.openCase(k.case_id) }, "최신")),
-    h("h3", {}, "비식별 trace (구조 정보)"),
+    h("h3", {}, "검토용 trace (발화 두 칸만 원문, 나머지는 구조 정보)"),
     h("p", { class: "muted" }, "자유 문자열은 [MASKED]로 가려져 있을 수 있다."),
     st.traceError ? h("p", { class: "notice error", role: "alert" }, `trace를 읽지 못했다: ${st.traceError}`)
       : st.trace ? h("div", {}, h("dl", { class: "facts" }, ...traceFacts(st.trace as unknown as Record<string, unknown>).flatMap(([a, b]) => [h("dt", {}, a), h("dd", {}, b)])),

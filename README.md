@@ -9,7 +9,7 @@
 | 방향 | 이웃 | 인터페이스 | 내용 |
 | --- | --- | --- | --- |
 | 입력 | release-gate | I5 GateService: `GET /v1/submissions`, `GET /v1/submissions/{id}/review-report` | 승인 대기 제출 목록, 승인 요청 보고서(`ReviewReport`) |
-| 입력 | ops-feedback | I7 FailureStore: `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/deidentified-traces/{ref}` | 실패 사례, 비식별 trace |
+| 입력 | ops-feedback | I7 FailureStore: `GET /v1/cases`, `GET /v1/cases/{id}`, `GET /v1/review-traces/{ref}`(reviewer 전용, 발화 두 칸만 원문) | 실패 사례, 비식별 trace |
 | 출력 | release-gate | I5: `POST /v1/approvals` | 승인/반려 결정(`report_hash` 포함) |
 | 입력 | release-gate | I4: `GET /v1/active-pointer`, `GET /v1/releases` | 현재 활성 포인터, 릴리스 목록(이력) |
 | 출력 | release-gate | I5: `POST /v1/activate`, `POST /v1/rollback` | 릴리스 활성화, 롤백 요청(operator 역할만. 본문에 `requested_by_role: operator`를 계약대로 보내고, 행위자는 서버가 `X-Openit-User`로 기록한다. 본문에 이름은 보내지 않는다) |
@@ -122,6 +122,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)
 - [0010 시간 제한과 한도 상수](docs/adr/0010-시간-제한과-한도-상수.md)
 - [0024 화면 요청 대기 상한(D125)](docs/adr/0024-화면-요청-대기-상한-D125.md)
+- [0025 검토용 trace는 review-traces로 읽는다](docs/adr/0025-검토용-trace는-review-traces로-읽는다.md)
 - [0011 devDependency 취약점을 최소 범위로 올린다](docs/adr/0011-devDependency-취약점-최소-범위-상향.md)
 - [0012 승인자 식별은 게이트웨이 헤더 한 길](docs/adr/0012-승인자-식별은-게이트웨이-헤더-한-길.md)
 - [0013 목록이 20쪽을 넘으면 오류](docs/adr/0013-목록-상한-초과는-오류.md)

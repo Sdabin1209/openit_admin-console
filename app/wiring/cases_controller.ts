@@ -1,5 +1,6 @@
 // 실패 사례 검토 화면의 상태 기계. DOM 없음. 입력 내용(reviewed_input, expected)은 메모리에만 두고 저장소·콘솔에 남기지 않는다.
 import type { CasesClient } from "./gateway.ts";
+import { ApiError } from "./api_error.ts";
 import { SlowNotice, type SlowStage } from "./slow_notice.ts";
 import type { Timers } from "../components/link_http_send.ts";
 import { toErrorInfo } from "./api_error.ts";
@@ -8,12 +9,12 @@ import { caseReviewDraft } from "../components/case_review_draft.ts";
 import { caseTracePrefill } from "../components/case_trace_prefill.ts";
 import type { CaseRecord } from "../types/CaseRecord.ts";
 import type { CaseReviewResult } from "../types/CaseReviewResult.ts";
-import type { OpsFeedbackDeidentifiedTrace } from "../types/contract/OpsFeedbackDeidentifiedTrace.ts";
+import type { OpsFeedbackReviewTrace } from "../types/contract/OpsFeedbackReviewTrace.ts";
 
 type ExpectedKind = "LORA_A" | "LORA_B";
 type ReviewStatus = "PENDING" | "CONFIRMED" | "DISMISSED";
 type FailureCase = CaseRecord;
-type DeidentifiedTrace = OpsFeedbackDeidentifiedTrace;
+type ReviewTrace = OpsFeedbackReviewTrace;
 
 export type CasePhase = "list-loading" | "list" | "case-loading" | "case" | "submitting" | "done" | "error";
 
@@ -29,7 +30,7 @@ export interface CaseState {
   filter: string; // review_status 필터, "" = 전체
   cases: FailureCase[];
   current: FailureCase | null;
-  trace: DeidentifiedTrace | null;
+  trace: ReviewTrace | null;
   traceError: string | null;
   form: CaseForm;
   errors: string[]; // 전송 전 검증 오류
@@ -95,7 +96,8 @@ export class CasesController {
         const trace = await this.api.getTrace(c.deidentified_trace_ref);
         if (my === this.seq) this.set({ trace });
       } catch (e) {
-        if (my === this.seq) this.set({ traceError: this.describe(e) });
+        // 왜 따로: review-traces는 reviewer 역할 전용이라 403이 정상 경로의 하나다(계약 HTTP.md I7). 일반 오류 문구보다 필요한 조치를 말한다.
+        if (my === this.seq) this.set({ traceError: e instanceof ApiError && e.status === 403 ? "검토 권한 필요: 이 계정은 reviewer 역할이 아니어서 환자 발화가 담긴 trace를 열 수 없다" : this.describe(e) });
       }
     } catch (e) {
       if (my === this.seq) this.set({ phase: "error", error: this.describe(e) });

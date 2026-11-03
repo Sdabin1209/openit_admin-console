@@ -4,6 +4,10 @@
  */
 export type Pseudonym = string;
 /**
+ * 검토 사본에서는 원문, 정책이 끄면 마스킹 토큰
+ */
+export type UtteranceOrRedacted = Redacted | string;
+/**
  * 자유 문자열 잎의 비식별 결과. 정책 unlisted_string_action이 mask면 [MASKED], drop이면 키를 지우거나 [DROPPED]. 제안: 소비자는 이 값을 내용으로 쓰지 않는다.
  */
 export type Redacted = "[MASKED]" | "[DROPPED]";
@@ -19,9 +23,9 @@ export type CountMap = null | {
 };
 
 /**
- * I7 `GET /v1/deidentified-traces/{ref}`(`get_trace`)가 돌려주는 비식별 TurnTrace. 정본이다: admin-console(사례 화면)과 model-lab(회귀 평가)은 이 스키마를 읽고 읽는 쪽 부분집합 스키마를 따로 두지 않는다. 계약 `TraceEnvelope`와의 관계: 같은 것이 아니다. `TraceEnvelope.trace`(문진 스키마 `TurnTrace`)에서 ops-feedback 비식별 처리기가 만든 비식별 뷰이고 봉투 필드(pipeline_schema_version, release_id, runtime_contract_version, sent_at, ext)는 없다. 릴리스는 `FailureCase.source_release_id`, 문진 스키마 버전은 `contract_version`에 있다. 만드는 쪽: ops-feedback 비식별 처리기. 읽는 쪽: admin-console, model-lab, synthetic-data, 문항 저작(I7 소비자). 최상위 키는 `TurnTrace`(contract_version 1)와 같고(29개 필수 + `turn_index` 선택) 모르는 최상위 키는 거부한다(허용 목록 방식이라 모르는 키는 이미 제거되어 있다). 안쪽 객체는 비식별이 보장하는 것만 적는다: (1) 자유 문자열 잎은 "[MASKED]"/"[DROPPED]"이거나 keep 키의 식별자 모양 값이다, (2) session_id/turn_id(어디에 나오든)는 의사 식별자 p-<32 hex>이다, (3) 구조 없는 자유 객체(extract_input.state, response_input.next 등)는 비워진다. 실패 사례 화면과 규칙 탐지가 읽는 안쪽 필드(turn_failure_signal, log_entry.turn_result, intervention_result, persistence_commit_result)만 정밀하게 적고 나머지 안쪽 객체는 object 또는 null로만 검사한다(문진 스키마 복사본을 만들지 않기 위해). 발화 문장 보존 범위는 사용자 결정(O19) 전이라 기본 정책에서 자유 문장은 모두 마스킹된다. 이웃 쪽 미확인: admin-console이 화면에 쓰는 필드 목록과 model-lab 회귀 평가가 쓰는 필드 목록은 이 영역이 읽지 못했다. 최상위 29개 필드가 모두 있으므로 어떤 필드를 읽든 자리는 있으나, 마스킹된 값으로 회귀 평가가 성립하는지는 확인하지 못했다.
+ * I7 `GET /v1/review-traces/{ref}`(reviewer 역할 전용)가 돌려주는 검토용 trace(3.2.0, L12, 사용자 결정 2026-11-03). OpsFeedbackDeidentifiedTrace 와 같은 모양이되 환자 발화 두 칸(frontend_message.utterance, extract_input.user_utterance)만 원문 문자열(최대 1000자, 문진 스키마 UtteranceBody 상한)을 허용한다. 왜: 발화 없이는 검토자가 실패 원인을 볼 수 없다. 조건: reviewer 역할만 읽고, 읽을 때마다 접근 기록을 남기며(보존 365일, 감사 기록), 확정 사례와 같은 보존(180일), 외부 전송 없음. 기존 get_trace 는 그대로 마스킹된 뷰를 낸다.
  */
-export interface OpsFeedbackDeidentifiedTrace {
+export interface OpsFeedbackReviewTrace {
   session_id: Pseudonym;
   turn_id: Pseudonym;
   contract_version: number;
@@ -29,12 +33,12 @@ export interface OpsFeedbackDeidentifiedTrace {
   frontend_message: null | {
     session_id: Pseudonym;
     kind: "SESSION_START" | "UTTERANCE" | "SESSION_END";
-    utterance?: Redacted;
+    utterance?: UtteranceOrRedacted;
   };
   extract_input: null | {
     question_id: Ident;
     current_question: Redacted;
-    user_utterance: Redacted;
+    user_utterance: UtteranceOrRedacted;
     state: {};
   };
   extract_output: null | {
