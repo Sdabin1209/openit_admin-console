@@ -1,3 +1,4 @@
+// 규칙 D69 (승인 요청의 report_hash·충돌 사유 STALE_REPORT·승인자 식별). 규칙 D88 승인자 식별은 gateway-identity.test.ts.
 // 승인 흐름 전체를 모의 서버로 시험한다: 목록 → 보고서 → 확인 → 결정, STALE_REPORT, 403, 중복 클릭.
 import { test } from "node:test";
 import assert from "node:assert/strict";

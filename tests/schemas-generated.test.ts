@@ -1,3 +1,4 @@
+// 규칙 D90 규칙 D101 (스키마에서 생성한 검증기를 커밋하고, 생성기를 다시 돌린 결과가 커밋본과 같다).
 // 생성된 검증기가 원본(../boundary-contracts의 고정 태그 내용)과 어긋나지 않았는지 확인하고, 복사본을 두지 않았음을 확인한다.
 import { contract } from "../scripts/contract-src.mjs";
 import { test } from "node:test";
@@ -27,3 +28,11 @@ test("스키마 JSON 복사본을 리포에 두지 않았다", { skip: !contract
   };
   assert.deepEqual(walk(new URL("../", import.meta.url)), []);
 });
+
+// 규칙 D90·D101: 생성기를 다시 돌려도 커밋본과 같다(--check는 파일을 쓰지 않고 달라지면 비0으로 끝난다).
+import { execFileSync } from "node:child_process";
+for (const gen of ["scripts/gen-schemas.mjs", "scripts/gen-types.mjs"]) {
+  test(`${gen} --check: 생성 결과가 커밋본과 같다`, { skip: !contract.available() && "고정 태그를 가진 boundary-contracts 리포가 없다" }, () => {
+    execFileSync(process.execPath, [gen, "--check"], { cwd: new URL("../", import.meta.url).pathname, stdio: "pipe" });
+  });
+}

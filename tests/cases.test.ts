@@ -1,3 +1,4 @@
+// 규칙 D71 (실패 사례 검토 화면: 사례 목록·검토 게시).
 // 실패 사례 검토 흐름: 모의 FailureStore(I7)와 컨트롤러.
 import { test } from "node:test";
 import assert from "node:assert/strict";
