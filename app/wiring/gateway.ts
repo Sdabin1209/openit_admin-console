@@ -23,7 +23,7 @@ import { createPushUnsubscribe } from "../components/link_push_unsubscribe.ts";
 import type { PushConfig } from "../types/contract/PushConfig.ts";
 import type { PushSubscriptionInput } from "../types/PushSubscriptionInput.ts";
 import type { PushEndpointInput } from "../types/PushEndpointInput.ts";
-import { createResultEvents, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
+import { createResultEvents, RESULT_STREAM_PATH, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
 import type { ResultListQuery } from "../types/ResultListQuery.ts";
 import type { ResultPage } from "../types/ResultPage.ts";
 import type { ResultRecord } from "../types/ResultRecord.ts";
@@ -149,7 +149,9 @@ export class ResultsClient {
     const base = (opts.baseUrl ?? "").replace(/\/$/, "");
     // 왜 지연 생성: 브라우저 밖(시험)에는 EventSource가 없다. 같은 출처 경로라 쿠키·기본 인증이 그대로 붙는다.
     const factory: EventSourceFactory = opts.eventSource ?? ((path) => new (globalThis as unknown as { EventSource: new (u: string) => ReturnType<EventSourceFactory> }).EventSource(base + path));
-    this.events = createResultEvents(factory);
+    // 닫힌 SSE의 사유 탐침(fetch로 같은 경로를 한 번): 상태와 Retry-After만 읽고 본문은 받지 않는다.
+    const probe = async () => { const ctl = new AbortController(); try { const r = await (opts.fetch ?? fetch)(base + RESULT_STREAM_PATH, { credentials: "same-origin", cache: "no-store", signal: ctl.signal }); const ra = r.headers.get("retry-after"); return { status: r.status, retryAfterS: ra !== null && /^\d+$/.test(ra) ? Number(ra) : null }; } finally { ctl.abort(); } };
+    this.events = createResultEvents(factory, { probe, setTimer: (fn, ms) => (opts.timers ?? realTimers).set(fn, ms), clearTimer: (h) => (opts.timers ?? realTimers).clear(h), onUnauthenticated: () => authListeners.forEach((f) => f("UNAUTHENTICATED")) });
   }
   async list(q: ResultListQuery = {}): Promise<ResultPage> { return unwrap(await this.listFn(q)); }
   async get(sessionId: string): Promise<ResultRecord> { return unwrap(await this.getFn({ sessionId })); }
