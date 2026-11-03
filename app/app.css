@@ -21,3 +21,10 @@ nav a[aria-current="page"] { font-weight: bold; border-bottom: 3px solid current
 pre { overflow: auto; border: 1px solid var(--line); padding: 8px; max-height: 320px; }
 .notice.ok { border-left-color: #1e7e34; }
 .notice.conflict, .notice.denied, .notice.precondition, .notice.network, .notice.invalid, .notice.notfound, .notice.other { border-left-color: var(--bad); }
+.badge { display: inline-block; min-width: 1.4em; padding: 0 6px; border-radius: 1em; background: var(--bad); color: #fff; text-align: center; font-size: .85em; }
+/* 인쇄: 메뉴와 버튼을 감추고 문진표만 남긴다(브라우저 인쇄) */
+@media print {
+  header, nav, .no-print, button { display: none !important; }
+  body { max-width: none; padding: 0; }
+  .grid th, .grid td { border-color: #000; }
+}

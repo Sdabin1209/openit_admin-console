@@ -53,6 +53,11 @@
 | link_failure_trace | `components/link_failure_trace.ts` | `TraceRefInput` | 계약 `OpsFeedbackReviewTrace` | I7 `GET /v1/deidentified-traces/{ref}` |
 | link_failure_masked_trace | `components/link_failure_masked_trace.ts` | `TraceRefInput` | 계약 `OpsFeedbackDeidentifiedTrace` | I7 `GET /v1/deidentified-traces/{ref}`. 편집창 채우기 전용(마스킹본, ADR 0025) |
 | link_failure_review | `components/link_failure_review.ts` | `CaseReviewInput` | `CaseReviewResult` | I7 `POST /v1/cases/{id}/review` (계약 `CaseReviewRequest`) |
+| link_result_list | `components/link_result_list.ts` | `ResultListQuery` | `ResultPage` | 문진 서비스 `GET /v1/results` (한 쪽, 최신부터) |
+| link_result_get | `components/link_result_get.ts` | `ResultIdInput` | `ResultRecord` | 문진 서비스 `GET /v1/results/{id}` |
+| link_result_ack | `components/link_result_ack.ts` | `ResultIdInput` | `ResultRecord` | 문진 서비스 `POST /v1/results/{id}/ack` (본문 `{}`, 서버 멱등) |
+| link_result_events | `components/link_result_events.ts` | 구독 핸들러(SSE는 요청-응답이 아니라 스키마 하나로 쓰지 않는다) | `ResultReady` 이벤트 | 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready` |
+| result_sheet | `components/result_sheet.ts` | `ResultRecord` | `SheetView` | 결과를 문진표 모양(문항·칸·값, 빈칸 사유, 확인 표시)으로 바꾼다. 판단하지 않는다 |
 
 ## 3. 컴포넌트가 아닌 것
 
@@ -61,7 +66,7 @@
 | `app/types/` | `schemas/`와 계약 스키마에서 생성한 타입·검증기. 손으로 고치지 않는다 |
 | `app/wiring/gateway.ts` | `link_http_send`를 `link_*`에 주입해 화면이 쓰는 클라이언트(`GateClient`, `ReleasesClient`, `CasesClient`)로 묶는다 |
 | `app/wiring/api_error.ts` | `ErrorInfo`를 예외 `ApiError`로 바꾸는 도구 |
-| `app/wiring/approvals_controller.ts`, `cases_controller.ts`, `ops_controller.ts` | 화면 상태(단계, 진행 중 요청, 입력 중인 글)를 들고 컴포넌트의 출력을 다음 상태로 잇는다. 상태가 있으므로 컴포넌트가 아니다(DESIGN.md 2절) |
+| `app/wiring/approvals_controller.ts`, `cases_controller.ts`, `ops_controller.ts`, `results_controller.ts` | 화면 상태(단계, 진행 중 요청, 입력 중인 글)를 들고 컴포넌트의 출력을 다음 상태로 잇는다. 상태가 있으므로 컴포넌트가 아니다(DESIGN.md 2절) |
 | `app/ui/` | 화면 부품(DOM 그리기). 컴포넌트가 아니고 연결부도 아니다(DESIGN.md 3절). 컴포넌트를 부르지만 컨트롤러 상태를 읽어 그릴 뿐 업무 규칙이 없다 |
 | `app/main.ts` | 진입점. 컨트롤러를 만들어 주소(`route_parse`)에 잇는다. 업무 규칙 없음 |
 | `tests/mock-server/` | 시험·개발용 모의 게이트·모의 FailureStore. 이웃의 메모리 구현에 해당하며 앱 코드가 아니다(ADR 0005) |

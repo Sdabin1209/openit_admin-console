@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SheetView.schema.json",
+  "title": "SheetView",
+  "description": "result_sheet의 출력: 문진표 모양(문항별 칸과 값, 빈칸과 사유, 확인 표시). 완료 여부는 status가 ENDED_COMPLETE인지로만 정한다.",
+  "type": "object",
+  "required": [
+    "sessionId",
+    "statusText",
+    "complete",
+    "groups",
+    "blanks",
+    "ack"
+  ],
+  "properties": {
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "statusText": {
+      "type": "string"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "item",
+          "rows"
+        ],
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "slot",
+                "valueText",
+                "statusText",
+                "precision"
+              ],
+              "properties": {
+                "slot": {
+                  "type": "string"
+                },
+                "valueText": {
+                  "type": "string"
+                },
+                "statusText": {
+                  "type": "string"
+                },
+                "precision": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "blanks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "item",
+          "reasonCode",
+          "reasonText"
+        ],
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "reasonText": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ack": {
+      "type": "object",
+      "required": [
+        "acknowledged",
+        "text"
+      ],
+      "properties": {
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

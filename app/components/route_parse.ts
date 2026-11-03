@@ -21,6 +21,10 @@ export function routeParse(input: RouteInput): Route {
     const id = decode(m[1]);
     const screen = h.startsWith("#/cases/") ? "cases" : "approvals";
     out = id === null || id === "" ? { screen: "bad_address", view: "none" } : { screen, view: "detail", id };
+  } else if (h === "#/results") out = { screen: "results", view: "list" };
+  else if ((m = /^#\/results\/(.+)$/.exec(h))) {
+    const id = decode(m[1]);
+    out = id === null || id === "" ? { screen: "bad_address", view: "none" } : { screen: "results", view: "detail", id };
   } else if (h === "#/cases") out = { screen: "cases", view: "list" };
   else out = { screen: "approvals", view: "list" };
   return v.assertValid(v.Route, out, "route_parse");

@@ -1,6 +1,6 @@
 # admin-console (운영 콘솔)
 
-사람이 직접 쓰는 내부 운영 화면이다. 지금은 세 화면이 있다. 출고 승인, 실패 사례 검토, 릴리스 운영(활성화·롤백, D85).
+사람이 직접 쓰는 내부 운영 화면이다. 지금은 네 화면이 있다. 출고 승인, 실패 사례 검토, 릴리스 운영(활성화·롤백, D85), 문진 결과(의사용, U83).
 
 이 앱은 웹 브라우저에서 여는 정적 웹 앱(TypeScript, 프레임워크 없음)이다. AI 학습 담당자가 새 모델 릴리스의 평가 보고서를 읽고 승인 또는 반려한다(출고 승인). 또 운영 중 모인 실패 사례(환자 발화는 비식별된 것)를 보고 정답을 확정하거나 기각한다(실패 사례 검토). 환자용 화면이 아니다(환자용은 `kiosk-frontend`). 하지 않는 것: 승인 판단(사람이 한다. 화면은 합격/불합격을 판정하지 않는다), 지표 계산, 서버 토큰 보관, 데이터 저장(소유 저장소 없음). (docs/brief.md, docs/boundary.md)
 
@@ -14,6 +14,8 @@
 | 입력 | release-gate | I4: `GET /v1/active-pointer`, `GET /v1/releases` | 현재 활성 포인터, 릴리스 목록(이력) |
 | 출력 | release-gate | I5: `POST /v1/activate`, `POST /v1/rollback` | 릴리스 활성화, 롤백 요청(operator 역할만. 본문에 `requested_by_role: operator`를 계약대로 보내고, 행위자는 서버가 `X-Openit-User`로 기록한다. 본문에 이름은 보내지 않는다) |
 | 출력 | ops-feedback | I7: `POST /v1/cases/{id}/review` | 검토 결과(확정/기각/대기) |
+| 입력 | 문진 서비스 | 결과 조회: `GET /v1/results`, `GET /v1/results/{session_id}`, 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready` (계약 PUBLIC_API B) | 의사용 문진 결과, 도착 알림 |
+| 출력 | 문진 서비스 | `POST /v1/results/{session_id}/ack` | 의사 확인 표시(clinician 역할만, 확인한 사람은 서버가 `X-Openit-User`로 기록) |
 | 중계 | deploy 게이트웨이 | 같은 출처의 `/v1` | 사람 인증, 토큰, `X-Openit-User` 부착. 이 이미지는 `/v1`을 프록시하지 않는다 |
 
 콘솔이 멈춰도 문진 서비스와 게이트의 자동 검사는 영향이 없다. 출고 승인만 막힌다(게이트 API로 직접 승인은 가능). (docs/boundary.md)
@@ -99,7 +101,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 | `docs/design.md` | 화면 흐름, HTTP 대응표, 해시와 409, 모의 시나리오, 기술 선택 |
 | `docs/boundary.md` | 소유 저장소, 소비 계약과 버전, 장애 영향 |
 | `docs/STATUS.md` | 한 일, 남은 일, 막힌 것 |
-| `docs/change-requests/` | CR-001(해결), CR-002, CR-003, CR-004(릴리스 운영 경로·계약 확인), CR-005, CR-006(경계 스키마 승격 처리됨, 사본 삭제 분류표 포함) |
+| `docs/change-requests/` | CR-001(해결), CR-002, CR-003, CR-004(릴리스 운영 경로·계약 확인), CR-005, CR-007(문진 결과 스키마 문구 어긋남), CR-006(경계 스키마 승격 처리됨, 사본 삭제 분류표 포함) |
 
 런북: `docs/runbook.md`.
 
@@ -122,6 +124,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - [0009 시험 구조와 한계](docs/adr/0009-시험-구조와-한계.md)
 - [0010 시간 제한과 한도 상수](docs/adr/0010-시간-제한과-한도-상수.md)
 - [0024 화면 요청 대기 상한(D125)](docs/adr/0024-화면-요청-대기-상한-D125.md)
+- [0026 의사용 문진 결과는 콘솔 안의 탭으로](docs/adr/0026-문진-결과는-콘솔-안의-탭으로.md)
 - [0025 검토용 trace는 review-traces로 읽는다](docs/adr/0025-검토용-trace는-review-traces로-읽는다.md)
 - [0011 devDependency 취약점을 최소 범위로 올린다](docs/adr/0011-devDependency-취약점-최소-범위-상향.md)
 - [0012 승인자 식별은 게이트웨이 헤더 한 길](docs/adr/0012-승인자-식별은-게이트웨이-헤더-한-길.md)

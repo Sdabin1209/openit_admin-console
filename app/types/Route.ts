@@ -3,7 +3,7 @@
  * route_parse의 출력. 주소의 ID를 읽을 수 없으면 bad_address.
  */
 export interface Route {
-  screen: "approvals" | "cases" | "ops" | "bad_address";
+  screen: "approvals" | "cases" | "ops" | "results" | "bad_address";
   view: "list" | "detail" | "none";
   id?: string;
 }

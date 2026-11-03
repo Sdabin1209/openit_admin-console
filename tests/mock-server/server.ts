@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import type { ApprovalRecord as GateApproval } from "../../app/types/ApprovalRecord.ts";
 import { createCasesMock } from "./cases.ts";
 import { createReleasesMock } from "./releases.ts";
+import { createResultsMock } from "./results.ts";
 import { baseReport, initialScenarios, type Scenario } from "./scenarios.ts";
 import type { ReportDoc as ReviewReport } from "../../app/types/ReportDoc.ts";
 
@@ -18,7 +19,7 @@ function sha256Hash(v: unknown): string {
 }
 
 export interface MockOptions { staticDir?: string; gatewayUser?: string; now: () => string }
-export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; server: Server; approvals: GateApproval[]; postCount: () => number; slowGate: { hold: () => void; release: () => void }; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
+export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; results: ReturnType<typeof createResultsMock>; server: Server; approvals: GateApproval[]; postCount: () => number; slowGate: { hold: () => void; release: () => void }; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 const V = PIPELINE_SCHEMA_VERSION;
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
@@ -27,6 +28,7 @@ export function createMock(opts: MockOptions): MockHandle {
   const now = opts.now;
   const cases = createCasesMock(now);
   const releases = createReleasesMock(opts.gatewayUser, now);
+  const results = createResultsMock(opts.gatewayUser, now);
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
@@ -45,6 +47,7 @@ export function createMock(opts: MockOptions): MockHandle {
     posts = 0;
     cases.reset();
     releases.reset();
+    results.reset();
   };
   reset();
 
@@ -133,6 +136,7 @@ export function createMock(opts: MockOptions): MockHandle {
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Openit-Report-Hash": sha256Hash(rep) });
         return res.end(JSON.stringify(rep));
       }
+      if (await results.handle(req, res, url, send, err, () => body(req))) return;
       if (await releases.handle(req, res, url, send, err, () => body(req))) return;
       if (await cases.handle(req, res, url, send, err, () => body(req))) return;
       if (req.method === "POST" && p === "/v1/approvals") return await decide(req, res);
@@ -149,5 +153,5 @@ export function createMock(opts: MockOptions): MockHandle {
       return err(res, 503, "UNAVAILABLE", "모의 서버 내부 오류");
     }
   });
-  return { cases, releases, server, approvals, postCount: () => posts, slowGate, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
+  return { cases, releases, results, server, approvals, postCount: () => posts, slowGate, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
 }

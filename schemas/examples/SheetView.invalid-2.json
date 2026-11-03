@@ -1,0 +1,29 @@
+{
+  "sessionId": "s-1",
+  "statusText": "완료",
+  "complete": "yes",
+  "groups": [
+    {
+      "item": "Q7_1",
+      "rows": [
+        {
+          "slot": "[soju].amount",
+          "valueText": "2",
+          "statusText": "ANSWERED",
+          "precision": "exact"
+        }
+      ]
+    }
+  ],
+  "blanks": [
+    {
+      "item": "Q3",
+      "reasonCode": "UNKNOWN",
+      "reasonText": "환자가 모름"
+    }
+  ],
+  "ack": {
+    "acknowledged": false,
+    "text": "확인 전"
+  }
+}

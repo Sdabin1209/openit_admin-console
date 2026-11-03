@@ -12,6 +12,13 @@ import { createFailureGet } from "../components/link_failure_get.ts";
 import { createFailureTrace } from "../components/link_failure_trace.ts";
 import { createFailureMaskedTrace } from "../components/link_failure_masked_trace.ts";
 import { createFailureReview } from "../components/link_failure_review.ts";
+import { createResultList } from "../components/link_result_list.ts";
+import { createResultGet } from "../components/link_result_get.ts";
+import { createResultAck } from "../components/link_result_ack.ts";
+import { createResultEvents, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
+import type { ResultListQuery } from "../types/ResultListQuery.ts";
+import type { ResultPage } from "../types/ResultPage.ts";
+import type { ResultRecord } from "../types/ResultRecord.ts";
 import type { ApprovalDecision } from "../types/ApprovalDecision.ts";
 import type { ApprovalResult } from "../types/ApprovalResult.ts";
 import type { LoadedReport } from "../types/LoadedReport.ts";
@@ -43,6 +50,8 @@ export const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: 
 // 이 콘솔은 저작(question-authoring) 경로를 부르지 않는다(130초 값은 쓰지 않는다). 본문을 다 읽을 때까지 적용한다. docs/adr/0024(ADR 0010의 15초를 대체).
 export const RELEASE_GATE_TIMEOUT_MS = 190_000;
 export const OPS_FEEDBACK_TIMEOUT_MS = 70_000;
+// 문진 결과(survey-service) 경로: gateway 직원 경로 상한 56초(CONVENTIONS "시간 상한 사슬")에 10초를 더한 70초. 이 경로의 gateway 설정값은 확인하지 못했다(추정), 측정 안 함. ADR 0026.
+export const RESULTS_TIMEOUT_MS = 70_000;
 const send = (o: HttpOptions, defaultMs: number) => createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? defaultMs }, { fetch: o.fetch, timers: o.timers ?? realTimers });
 
 export class GateClient {
@@ -109,4 +118,23 @@ export class CasesClient {
   async review(id: string, draft: CaseReviewDraft): Promise<CaseReviewResult> {
     return unwrap(await this.reviewFn({ caseId: id, draft }));
   }
+}
+
+export interface ResultsOptions extends HttpOptions { eventSource?: EventSourceFactory }
+
+export class ResultsClient {
+  private readonly listFn; private readonly getFn; private readonly ackFn; private readonly events;
+  constructor(opts: ResultsOptions = {}) {
+    const s = send(opts, RESULTS_TIMEOUT_MS);
+    this.listFn = createResultList(s); this.getFn = createResultGet(s); this.ackFn = createResultAck(s);
+    const base = (opts.baseUrl ?? "").replace(/\/$/, "");
+    // 왜 지연 생성: 브라우저 밖(시험)에는 EventSource가 없다. 같은 출처 경로라 쿠키·기본 인증이 그대로 붙는다.
+    const factory: EventSourceFactory = opts.eventSource ?? ((path) => new (globalThis as unknown as { EventSource: new (u: string) => ReturnType<EventSourceFactory> }).EventSource(base + path));
+    this.events = createResultEvents(factory);
+  }
+  async list(q: ResultListQuery = {}): Promise<ResultPage> { return unwrap(await this.listFn(q)); }
+  async get(sessionId: string): Promise<ResultRecord> { return unwrap(await this.getFn({ sessionId })); }
+  /** 확인 표시. 서버가 멱등이라 이미 확인된 결과면 처음 값이 돌아온다. */
+  async ack(sessionId: string): Promise<ResultRecord> { return unwrap(await this.ackFn({ sessionId })); }
+  subscribe(h: ResultEventHandlers): () => void { return this.events(h); }
 }

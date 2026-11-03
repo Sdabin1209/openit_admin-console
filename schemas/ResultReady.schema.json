@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ResultReady.schema.json",
+  "title": "ResultReady",
+  "description": "SSE 이벤트 result_ready의 본문(계약 PUBLIC_API B). subject_ref는 없다. 모르는 필드는 받는다.",
+  "type": "object",
+  "required": [
+    "session_id",
+    "status"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

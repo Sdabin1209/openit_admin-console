@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "session_id": "s-1",
+      "subject_ref": "visit-1",
+      "status": "ENDED_COMPLETE",
+      "started_at": "2026-11-03T00:00:00Z",
+      "ended_at": "2026-11-03T00:10:00Z",
+      "release_id": "rel-1",
+      "question_bank_version": "qb-1",
+      "answers": [
+        {
+          "key": "Q7_1[soju].amount",
+          "value": 2,
+          "status": "ANSWERED",
+          "precision": "exact"
+        }
+      ],
+      "skipped_details": [
+        {
+          "item": "Q3",
+          "reason": "UNKNOWN"
+        }
+      ]
+    }
+  ]
+}

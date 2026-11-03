@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ResultListQuery.schema.json",
+  "title": "ResultListQuery",
+  "description": "link_result_list의 입력: 필터와 쪽 지정. 빈 문자열은 안 건 것으로 본다. limit 기본 50, 최대 200(계약 PUBLIC_API B).",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "updated_after": {
+      "type": "string"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+    },
+    "cursor": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

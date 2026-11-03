@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ResultIdInput.schema.json",
+  "title": "ResultIdInput",
+  "description": "link_result_get과 link_result_ack의 입력.",
+  "type": "object",
+  "required": [
+    "sessionId"
+  ],
+  "properties": {
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}
