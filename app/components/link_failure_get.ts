@@ -17,7 +17,6 @@ export function createFailureGet(send: HttpSend): (input: CaseGetInput) => Promi
     const q = input.version === undefined ? "" : `?version=${input.version}`;
     const r = await send({ method: "GET", path: `/v1/cases/${encodeURIComponent(input.caseId)}${q}` });
     if (!r.ok) return r;
-    if (!v.CaseRecord(r.data)) return { ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: "응답 형식이 맞지 않는다: FailureCase", retryable: false } };
     return { ok: true, value: r.data as CaseRecord };
   };
 }

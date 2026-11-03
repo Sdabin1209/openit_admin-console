@@ -10,6 +10,7 @@ import type { HttpOutcome } from "../types/HttpOutcome.ts";
 // link_http_send가 주입되는 자리. 그 컴포넌트를 import하지 않고 입출력 스키마(HttpRequestSpec -> HttpOutcome)만 안다(규칙 3).
 type HttpSend = (spec: HttpRequestSpec) => Promise<HttpOutcome>;
 
+// 받은 본문은 다시 검증하지 않는다(계약에서 이 영역이 x-consumers인 값, ADR 0010 R7, 이 영역 ADR 0030). 요청과 응답이 같은지 맞춰 보는 검사도 두지 않는다.
 export type Result = { ok: true; value: ResultPage } | { ok: false; error: ErrorInfo };
 
 export function createResultList(send: HttpSend): (input: ResultListQuery) => Promise<Result> {
@@ -21,7 +22,6 @@ export function createResultList(send: HttpSend): (input: ResultListQuery) => Pr
     const qs = q.toString();
     const r = await send({ method: "GET", path: `/v1/results${qs ? "?" + qs : ""}` });
     if (!r.ok) return r;
-    if (!v.ResultPage(r.data)) return { ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: `응답 형식이 맞지 않는다: ResultPage: ${v.issues(v.ResultPage).slice(0, 3).map((e) => `${e.path || "(최상위)"} ${e.message}`).join("; ")}`, retryable: false } };
     return { ok: true, value: r.data as ResultPage };
   };
 }

@@ -12,8 +12,8 @@ import type { HttpOutcome } from "../types/HttpOutcome.ts";
 // link_http_send가 주입되는 자리. 그 컴포넌트를 import하지 않고 입출력 스키마(HttpRequestSpec -> HttpOutcome)만 안다(규칙 3).
 type HttpSend = (spec: HttpRequestSpec) => Promise<HttpOutcome>;
 
+// 받은 본문은 다시 검증하지 않는다(계약에서 이 영역이 x-consumers인 값, ADR 0010 R7, 이 영역 ADR 0030). 요청과 응답이 같은지 맞춰 보는 검사도 두지 않는다.
 export type Result = { ok: true; value: PointerRecord } | { ok: false; error: ErrorInfo };
-const bad = (what: string): Result => ({ ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: `응답 형식이 맞지 않는다: ${what}`, retryable: false } });
 
 export function createActivate(send: HttpSend): (input: ActivateInput) => Promise<Result> {
   return async (input) => {
@@ -22,9 +22,7 @@ export function createActivate(send: HttpSend): (input: ActivateInput) => Promis
     if (!c.ActivateRequest(body)) return { ok: false, error: { kind: "INVALID_RECORD", status: 0, message: `보내려는 ActivateRequest가 계약에 맞지 않아 보내지 않았다: ${(c.ActivateRequest.errors ?? []).slice(0, 3).map((e) => `${e.instancePath || "(최상위)"} ${e.message ?? e.keyword}`).join("; ")}`, retryable: false } };
     const r = await send({ method: "POST", path: "/v1/activate", body });
     if (!r.ok) return r;
-    if (!v.PointerRecord(r.data)) return bad("ActivePointer");
     const p = r.data as PointerRecord;
-    if (p.release_id !== input.releaseId) return bad("응답의 활성 릴리스가 요청과 다르다"); // 요청과 응답의 같음은 스키마 밖 조건
     return { ok: true, value: p };
   };
 }

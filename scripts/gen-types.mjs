@@ -15,7 +15,9 @@ const ROOT = new URL("../", import.meta.url).pathname;
 const SCHEMAS = join(ROOT, "schemas");
 const OUT = join(ROOT, "app", "types");
 // 이 영역이 직접 쓰는 계약 타입(요청 본문, 봉투, 오류). 응답 본문은 읽기용 내부 투영으로 받는다(schemas/README.md).
-export const CONTRACT_TYPES = ["ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "RollbackRequest", "ListEnvelope", "BoundaryError", "OpsFeedbackReviewTrace", "OpsFeedbackDeidentifiedTrace", "PushConfig", "StaffPushPayload"];
+export const CONTRACT_TYPES = ["ApprovalRequest", "ActivateRequest", "CaseReviewRequest", "RollbackRequest", "ListEnvelope", "BoundaryError", "OpsFeedbackReviewTrace", "OpsFeedbackDeidentifiedTrace", "PushConfig", "StaffPushPayload",
+  // 3.4.4: SSE 이벤트 본문(받는 쪽, 다시 검증하지 않는다), 로그인 경로·사용자 정보(platform), 푸시 구독 본문(이 영역이 만든다)
+  "ResultReadyEvent", "HeartbeatEvent", "ResyncEvent", "HumanAuthEndpoints", "HumanUserInfo", "PushSubscriptionRequest"];
 const BANNER = "/* 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/ 또는 고정 태그의 계약 스키마 */\n";
 
 export function internalNames() {

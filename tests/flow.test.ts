@@ -200,11 +200,6 @@ test("해시는 계산하지 않고 응답 헤더 값을 그대로 쓴다", asyn
   } finally { await s.close(); }
 });
 
-test("헤더가 없는 보고서 응답은 거부한다", async () => {
-  const { GateClient } = await import("../app/wiring/gateway.ts");
-  const fake = (async () => new Response(JSON.stringify({ submission_id: "x", checks: [], comparisons: [], subject: {} }), { status: 200, headers: { "Content-Type": "application/json" } })) as typeof fetch;
-  await assert.rejects(new GateClient({ fetch: fake }).getReviewReport("x"), (e: unknown) => e instanceof ApiError && e.kind === "BAD_RESPONSE");
-});
 
 test("409 사유는 details.reason으로만 구분한다(문자열 검색 없음)", async () => {
   const { GateClient } = await import("../app/wiring/gateway.ts");

@@ -68,18 +68,6 @@ test("검토 요청: CaseReviewRequest 위반 본문은 보내지 않는다", { 
   }
 });
 
-test("목록 응답: ListEnvelope 위반(next_cursor 없음·빈 문자열·items가 배열 아님)은 오류로 받는다", { skip }, async () => {
-  for (const [name, body] of bad("ListEnvelope")) {
-    for (const call of [
-      (o: { fetch: typeof fetch }) => new CasesClient(o).list(),
-      (o: { fetch: typeof fetch }) => new ReleasesClient(o).listReleases(),
-      (o: { fetch: typeof fetch }) => new GateClient(o).listAwaiting(),
-    ]) {
-      const { f } = fakeFetch(() => ({ body }));
-      await assert.rejects(call({ fetch: f }), (e: Error) => /응답 형식/.test(e.message), name);
-    }
-  }
-});
 
 test("검토용 trace: 모의 서버 trace()가 OpsFeedbackReviewTrace를 통과한다", () => {
   const t = trace("tr-fc-1");

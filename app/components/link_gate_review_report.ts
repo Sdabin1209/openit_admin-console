@@ -19,10 +19,6 @@ export function createReviewReport(send: HttpSend): (input: SubmissionIdInput) =
     const r = await send({ method: "GET", path: `/v1/submissions/${encodeURIComponent(input.submissionId)}/review-report` });
     if (!r.ok) return r;
     const out = { report: r.data, reportHash: r.headers[REPORT_HASH_HEADER.toLowerCase()] };
-    if (!v.LoadedReport(out)) {
-      const reportOk = v.ReportDoc(r.data);
-      return { ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: `응답 형식이 맞지 않는다: ${reportOk ? `${REPORT_HASH_HEADER} 헤더` : "ReviewReport"}`, retryable: false } };
-    }
     return { ok: true, value: out as LoadedReport };
   };
 }

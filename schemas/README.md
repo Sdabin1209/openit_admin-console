@@ -98,6 +98,5 @@
 | `ResultIdInput` | link_result_get과 link_result_ack의 입력. |
 | `ResultListQuery` | link_result_list의 입력: 필터와 쪽 지정. limit 기본 50, 최대 200. |
 | `ResultPage` | link_result_list의 출력: 한 쪽과 다음 쪽 커서. |
-| `ResultReady` | SSE 이벤트 result_ready의 본문(session_id, status, ended_at). |
 | `ResultRecord` | 문진 결과 한 세션(문진 스키마 SessionResult의 읽기용 투영). 모르는 값과 필드는 받는다. acknowledged_by/at은 확인 뒤 채워진다. |
 | `SheetView` | result_sheet의 출력: 문진표 모양. |

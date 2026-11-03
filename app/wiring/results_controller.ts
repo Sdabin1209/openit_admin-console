@@ -65,10 +65,27 @@ export class ResultsController {
         if (live && everOpened) this.onReady();
         if (live) everOpened = true;
       },
-      onResync: () => this.onReady(),
+      onResync: (since) => void this.resync(since),
     });
   }
   stopLive(): void { this.stop?.(); this.stop = null; this.set({ live: false }); }
+
+  /** resync(PUBLIC_API B절): `GET /v1/results?updated_after=<마지막 heartbeat ts>`로 놓친 변경만 가져와 목록에 합친다. heartbeat를 받은 적이 없으면 처음부터(첫 쪽) 다시 읽는다. */
+  private async resync(since: string | null): Promise<void> {
+    if (since === null || this.state.phase !== "list") return this.onReady();
+    const my = ++this.seq;
+    try {
+      const page = await this.api.list({ updated_after: since, limit: PAGE });
+      if (my !== this.seq) return;
+      const fresh = (page.items as ResultRecord[]).filter((r) => !this.state.status || r.status === this.state.status);
+      const merged = [...fresh, ...this.state.items.filter((i) => !fresh.some((f) => f.session_id === i.session_id))]
+        .sort((a, b) => String(b.started_at ?? "").localeCompare(String(a.started_at ?? "")));
+      this.set({ items: merged });
+    } catch (e) {
+      if (my !== this.seq) return;
+      this.set({ notice: `놓친 결과를 맞추지 못했다: ${this.describe(e).text}` });
+    }
+  }
 
   private onReady(): void {
     if (this.state.phase === "list" || this.state.phase === "list-loading") void this.refreshList();

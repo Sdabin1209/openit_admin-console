@@ -1,0 +1,14 @@
+/* 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/ 또는 고정 태그의 계약 스키마 */
+/**
+ * 3.4.4(검토 B-10): GET /oauth2/userinfo 의 200 본문(platform 사람 인증). groups 는 역할 이름(CONVENTIONS 6절 목록)이며 앞에 '/' 가 붙을 수 있다(그룹 경로 매퍼). 화면은 표시에만 쓰고 권한 판단은 게이트웨이가 한다. 모르는 키는 무시한다.
+ */
+export interface HumanUserInfo {
+  user?: string;
+  email?: string;
+  preferredUsername?: string;
+  /**
+   * 역할 이름(CONVENTIONS 6절 목록). 앞에 '/' 가 붙을 수 있다(그룹 경로 매퍼). 모르는 이름은 무시한다(읽기 관대, CONVENTIONS 1절 3; 검토 P6-R6-7)
+   */
+  groups?: string[];
+  [k: string]: unknown;
+}

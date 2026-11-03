@@ -1,6 +1,6 @@
 /* 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/ 또는 고정 태그의 계약 스키마 */
 /**
- * HTTP.md 공통 목록 봉투 {items, next_cursor}. 만드는 쪽: release-gate(I5 submissions, I4 releases), ops-feedback(I7 cases). 읽는 쪽: admin-console. items 원소의 모양은 정하지 않고(2.6.0) 원소는 호출별 계약 스키마(SubmissionView, ReleaseManifest, FailureCase)로 따로 검증한다. 쿼리: cursor(불투명 문자열), limit(기본 100, 최대 500). 모르는 키는 허용한다(읽기 쪽 관용).
+ * HTTP.md 공통 목록 봉투 {items, next_cursor}. HTTP.md 의 모든 목록 응답(I1·I2·I3·I4·I5·I7)이 이 봉투다(3.4.4 검토 A-11). items 원소의 모양은 정하지 않고(2.6.0) 원소는 호출별 계약 스키마(SubmissionView, ReleaseManifest, FailureCase)로 따로 검증한다. 쿼리: cursor(불투명 문자열), limit(기본 100, 최대 500). 모르는 키는 허용한다(읽기 쪽 관용).
  */
 export interface ListEnvelope {
   /**

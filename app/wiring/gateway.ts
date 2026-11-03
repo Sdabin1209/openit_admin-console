@@ -16,14 +16,15 @@ import { createResultList } from "../components/link_result_list.ts";
 import { createResultGet } from "../components/link_result_get.ts";
 import { createResultAck } from "../components/link_result_ack.ts";
 import { createUserInfo } from "../components/link_userinfo.ts";
-import type { UserInfo } from "../types/UserInfo.ts";
+import type { HumanUserInfo } from "../types/contract/HumanUserInfo.ts";
+import { USERINFO_PATH } from "../components/session_view.ts";
 import { createPushConfig } from "../components/link_push_config.ts";
 import { createPushSubscribe } from "../components/link_push_subscribe.ts";
 import { createPushUnsubscribe } from "../components/link_push_unsubscribe.ts";
 import type { PushConfig } from "../types/contract/PushConfig.ts";
 import type { PushSubscriptionInput } from "../types/PushSubscriptionInput.ts";
 import type { PushEndpointInput } from "../types/PushEndpointInput.ts";
-import { createResultEvents, RESULT_STREAM_PATH, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
+import { createResultEvents, RESULT_STREAM_PATH, STREAM_PROBE_PATH, type EventSourceFactory, type ResultEventHandlers } from "../components/link_result_events.ts";
 import type { ResultListQuery } from "../types/ResultListQuery.ts";
 import type { ResultPage } from "../types/ResultPage.ts";
 import type { ResultRecord } from "../types/ResultRecord.ts";
@@ -58,8 +59,9 @@ export const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: 
 // 이 콘솔은 저작(question-authoring) 경로를 부르지 않는다(130초 값은 쓰지 않는다). 본문을 다 읽을 때까지 적용한다. docs/adr/0024(ADR 0010의 15초를 대체).
 export const RELEASE_GATE_TIMEOUT_MS = 190_000;
 export const OPS_FEEDBACK_TIMEOUT_MS = 70_000;
-// 문진 결과(survey-service) 경로: gateway 직원 경로 상한 56초(CONVENTIONS "시간 상한 사슬")에 10초를 더한 70초. 이 경로의 gateway 설정값은 확인하지 못했다(추정), 측정 안 함. ADR 0026.
-export const RESULTS_TIMEOUT_MS = 70_000;
+// 표에 행이 없는 사람·기기 경로(survey-service 의사 결과 조회·확인·푸시 구독·push-config, 로그인 사용자 확인 /oauth2/userinfo)의 화면 대기: 60초.
+// 근거: CONVENTIONS 3.4.4 시간 상한 사슬 4번째 행(gateway 56초 = 연결 1 + 응답 헤더 55, 서버 마감 50초, 화면 대기 60초 — 프록시 표준 60초, 측정 안 함). 이전 70초는 계약에 없는 값이었다(검토 P6, ADR 0024 개정).
+export const RESULTS_TIMEOUT_MS = 60_000;
 // 인증 오류 알림 선: 어느 클라이언트의 요청이든 401·승인 대기 403이면 화면 전체가 로그인·승인 대기 안내로 바뀌어야 한다(ADR 0029). 구독자는 진입점 하나다.
 type AuthListener = (kind: string) => void;
 const authListeners = new Set<AuthListener>();
@@ -150,7 +152,7 @@ export class ResultsClient {
     // 왜 지연 생성: 브라우저 밖(시험)에는 EventSource가 없다. 같은 출처 경로라 쿠키·기본 인증이 그대로 붙는다.
     const factory: EventSourceFactory = opts.eventSource ?? ((path) => new (globalThis as unknown as { EventSource: new (u: string) => ReturnType<EventSourceFactory> }).EventSource(base + path));
     // 닫힌 SSE의 사유 탐침(fetch로 같은 경로를 한 번): 상태와 Retry-After만 읽고 본문은 받지 않는다.
-    const probe = async () => { const ctl = new AbortController(); try { const r = await (opts.fetch ?? fetch)(base + RESULT_STREAM_PATH, { credentials: "same-origin", cache: "no-store", signal: ctl.signal }); const ra = r.headers.get("retry-after"); return { status: r.status, retryAfterS: ra !== null && /^\d+$/.test(ra) ? Number(ra) : null }; } finally { ctl.abort(); } };
+    const probe = async () => { const ctl = new AbortController(); try { const r = await (opts.fetch ?? fetch)(base + STREAM_PROBE_PATH, { credentials: "same-origin", cache: "no-store", signal: ctl.signal }); const ra = r.headers.get("retry-after"); return { status: r.status, retryAfterS: ra !== null && /^\d+$/.test(ra) ? Number(ra) : null }; } finally { ctl.abort(); } };
     this.events = createResultEvents(factory, { probe, setTimer: (fn, ms) => (opts.timers ?? realTimers).set(fn, ms), clearTimer: (h) => (opts.timers ?? realTimers).clear(h), onUnauthenticated: () => authListeners.forEach((f) => f("UNAUTHENTICATED")) });
   }
   async list(q: ResultListQuery = {}): Promise<ResultPage> { return unwrap(await this.listFn(q)); }
@@ -175,6 +177,6 @@ export class PushClient {
 /** 로그인 사용자 확인(oauth2-proxy userinfo). 기본 대기 상한은 결과 경로와 같다. */
 export class AuthClient {
   private readonly info;
-  constructor(opts: HttpOptions = {}) { this.info = createUserInfo(send(opts, RESULTS_TIMEOUT_MS)); }
-  async userinfo(): Promise<UserInfo> { return unwrap(await this.info()); }
+  constructor(opts: HttpOptions = {}) { this.info = createUserInfo(send(opts, RESULTS_TIMEOUT_MS), USERINFO_PATH); }
+  async userinfo(): Promise<HumanUserInfo> { return unwrap(await this.info()); }
 }

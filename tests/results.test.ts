@@ -141,17 +141,23 @@ test("도착 알림: result_ready를 받으면 목록이 자동 갱신되고, �
   } finally { s.mock.results.closeStreams(); await s.close(); }
 });
 
-test("도착 알림: 깨진 본문과 모르는 이벤트는 무시한다", async () => {
+test("도착 알림: JSON이 아닌 본문은 버리고, 모르는 이벤트는 듣지 않는다. 읽은 본문은 다시 검증하지 않는다(ADR 0030)", async () => {
   const fns = new Map<string, (e: { data?: string }) => void>();
   const es: EventSourceLike = { addEventListener: (t, f) => { fns.set(t, f); }, onopen: null, onerror: null, readyState: 1, close() {} };
   const api = new ResultsClient({ baseUrl: "", eventSource: () => es });
-  let n = 0;
-  api.subscribe({ onReady: () => { n++; }, onLive: () => {}, onResync: () => {} });
+  let n = 0; const since: (string | null)[] = [];
+  api.subscribe({ onReady: () => { n++; }, onLive: () => {}, onResync: (t) => { since.push(t); } });
   fns.get("result_ready")!({ data: "not json" });
-  fns.get("result_ready")!({ data: JSON.stringify({ status: "ENDED_COMPLETE" }) }); // session_id 없음
   assert.equal(n, 0);
-  fns.get("result_ready")!({ data: JSON.stringify({ session_id: "s-1", status: "ENDED_COMPLETE", ended_at: null }) });
+  fns.get("result_ready")!({ data: JSON.stringify({ session_id: "s-1", status: "ENDED_COMPLETE", ended_at: "2026-11-04T00:00:00Z" }) });
   assert.equal(n, 1);
+  assert.equal(fns.has("some_future_event"), false);
+  // resync는 마지막 heartbeat의 ts를 updated_after로 쓰라고 넘긴다(PUBLIC_API B절)
+  fns.get("resync")!({ data: JSON.stringify({ reason: "EVENTS_NOT_RESUMABLE" }) });
+  fns.get("heartbeat")!({ data: JSON.stringify({ ts: "2026-11-04T00:00:15Z" }) });
+  fns.get("heartbeat")!({ data: "깨진 줄" });
+  fns.get("resync")!({ data: JSON.stringify({ reason: "EVENTS_NOT_RESUMABLE" }) });
+  assert.deepEqual(since, [null, "2026-11-04T00:00:15Z"]);
 });
 
 test("403: 목록·상세 모두 '의사(clinician) 권한 필요' 안내가 뜬다", async () => {

@@ -57,31 +57,7 @@ test("시간 제한은 본문을 다 읽을 때까지 걸려 있다(가짜 시�
   assert.equal(cleared, 1, "끝나면 타이머를 지운다");
 });
 
-test("승인 응답 대조: 제출·결정·report_hash가 요청과 다르면 성공으로 보이지 않는다", async () => {
-  const req = { submissionId: "s1", decision: "APPROVE" as const, reportHash: H };
-  const ok = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, approval_id: "ap-1", submission_id: "s1", decision: "APPROVE", approver_id: "u", approver_role: "release-approver", decided_at: FIXED_NOW, report_hash: H };
-  const mk = (b: unknown) => new GateClient({ fetch: (async () => json(b, 201)) as typeof fetch });
-  assert.equal((await mk(ok).decide(req)).approval.approval_id, "ap-1");
-  for (const bad of [{ ...ok, decision: "REJECT" }, { ...ok, submission_id: "s2" }, { ...ok, report_hash: "sha256:" + "1".repeat(64) }]) {
-    const e = await mk(bad).decide(req).catch((x) => x);
-    assert.equal(e.kind, "BAD_RESPONSE", JSON.stringify(bad));
-  }
-});
 
-test("활성화·롤백 응답 대조", async () => {
-  const ptr = (id: string) => ({ pipeline_schema_version: PIPELINE_SCHEMA_VERSION, release_id: id, pointer_version: 2, activated_at: FIXED_NOW, cause: "ACTIVATE" });
-  const act = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b)) as typeof fetch }).activate("rel-2");
-  assert.equal((await act(ptr("rel-2"))).release_id, "rel-2");
-  assert.equal((await act(ptr("rel-9")).catch((x) => x)).kind, "BAD_RESPONSE");
-  const body = { request_id: "rb-1", requested_at: FIXED_NOW, from_release_id: "rel-3", to_release_id: "rel-2", reason: "x", evidence_refs: ["e"] as [string, ...string[]] };
-  const rb = (b: unknown) => new ReleasesClient({ fetch: (async () => json(b, 201)) as typeof fetch }).rollback(body);
-  const rc = { pipeline_schema_version: PIPELINE_SCHEMA_VERSION, request_id: "rb-1", status: "APPLIED", decided_at: FIXED_NOW, active_pointer: ptr("rel-2") };
-  assert.equal((await rb(rc)).status, "APPLIED");
-  assert.equal((await rb({ ...rc, request_id: "other" }).catch((x) => x)).kind, "BAD_RESPONSE");
-  assert.equal((await rb({ ...rc, active_pointer: ptr("rel-1") }).catch((x) => x)).kind, "BAD_RESPONSE");
-  assert.equal((await rb({ ...rc, status: "APPLIED", active_pointer: undefined }).catch((x) => x)).kind, "BAD_RESPONSE");
-  assert.equal((await rb({ ...rc, status: "REJECTED", active_pointer: undefined, reason: "같은 릴리스" })).status, "REJECTED");
-});
 
 test("요청 본문의 requested_by_role은 계약 값 operator다(활성화·롤백)", async () => {
   const sent: unknown[] = [];

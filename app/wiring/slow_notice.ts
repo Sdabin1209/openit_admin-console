@@ -2,7 +2,7 @@
 import type { Timers } from "../components/link_http_send.ts";
 
 // 왜 1초·10초: 화면 응답 지침(Nielsen, Response Times): 1초를 넘으면 진행 표시, 10초를 넘으면 안내 문구.
-// 요청 대기 상한을 190초/70초로 늘린 조건이다(ADR 0024, D125).
+// 요청 대기 상한을 190초/70초(결과·푸시·로그인 확인 경로는 60초)로 정한 조건이다(ADR 0024, D125).
 export const PROGRESS_AFTER_MS = 1_000;
 export const NOTICE_AFTER_MS = 10_000;
 export const PROGRESS_TEXT = "처리 중…";

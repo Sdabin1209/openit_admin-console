@@ -16,6 +16,8 @@ export const BuildImageRequest: V;
 export const BuildImageResult: V;
 export const SetupEnvReport: V;
 export const Exposure: V;
+export const PushSubscriptionRequest: V;
+export const HealthStatus: V;
 export const PushConfig: V;
 export const StaffPushPayload: V;
 export const PIPELINE_SCHEMA_VERSION: string;

@@ -12,8 +12,8 @@ import type { HttpOutcome } from "../types/HttpOutcome.ts";
 // link_http_send가 주입되는 자리. 그 컴포넌트를 import하지 않고 입출력 스키마(HttpRequestSpec -> HttpOutcome)만 안다(규칙 3).
 type HttpSend = (spec: HttpRequestSpec) => Promise<HttpOutcome>;
 
+// 받은 본문은 다시 검증하지 않는다(계약에서 이 영역이 x-consumers인 값, ADR 0010 R7, 이 영역 ADR 0030). 요청과 응답이 같은지 맞춰 보는 검사도 두지 않는다.
 export type Result = { ok: true; value: ApprovalResult } | { ok: false; error: ErrorInfo };
-const bad = (what: string): Result => ({ ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: `응답 형식이 맞지 않는다: ${what}`, retryable: false } });
 
 export function createDecide(send: HttpSend): (input: ApprovalDecision) => Promise<Result> {
   return async (input) => {
@@ -22,11 +22,7 @@ export function createDecide(send: HttpSend): (input: ApprovalDecision) => Promi
     if (!c.ApprovalRequest(body)) return { ok: false, error: { kind: "INVALID_RECORD", status: 0, message: `보내려는 ApprovalRequest가 계약에 맞지 않아 보내지 않았다: ${(c.ApprovalRequest.errors ?? []).slice(0, 3).map((e) => `${e.instancePath || "(최상위)"} ${e.message ?? e.keyword}`).join("; ")}`, retryable: false } };
     const r = await send({ method: "POST", path: "/v1/approvals", body });
     if (!r.ok) return r;
-    if (!v.ApprovalRecord(r.data)) return bad("GateApproval");
     const a = r.data as ApprovalResult["approval"];
-    // 응답 대조: 완료 화면이 사람이 누른 결정과 같은 것을 보이는지 확인한다(다르면 성공으로 보이지 않는다). 요청과 응답의 같음은 스키마 밖 조건이다.
-    if (a.submission_id !== input.submissionId || a.decision !== input.decision) return bad("응답의 제출·결정이 요청과 다르다");
-    if (a.report_hash !== undefined && a.report_hash !== input.reportHash) return bad("응답의 report_hash가 요청과 다르다");
     return { ok: true, value: { approval: a, replay: r.status === 200 } };
   };
 }

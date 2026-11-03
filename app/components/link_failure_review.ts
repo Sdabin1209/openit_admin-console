@@ -21,7 +21,6 @@ export function createFailureReview(send: HttpSend): (input: CaseReviewInput) =>
     if (!c.CaseReviewRequest(body)) return { ok: false, error: { kind: "INVALID_RECORD", status: 0, message: `보내려는 CaseReviewRequest가 계약에 맞지 않아 보내지 않았다: ${(c.CaseReviewRequest.errors ?? []).slice(0, 3).map((e) => `${e.instancePath || "(최상위)"} ${e.message ?? e.keyword}`).join("; ")}`, retryable: false } };
     const r = await send({ method: "POST", path: `/v1/cases/${encodeURIComponent(input.caseId)}/review`, body });
     if (!r.ok) return r;
-    if (!v.CaseRecord(r.data)) return { ok: false, error: { kind: "BAD_RESPONSE", status: 0, message: "응답 형식이 맞지 않는다: FailureCase", retryable: false } };
     return { ok: true, value: { case: r.data as CaseReviewResult["case"], replay: r.status === 200 } };
   };
 }

@@ -20,13 +20,13 @@
 - 코드 위치: 통신 `app/components/link_release_*`, 연결 `app/wiring/ops_controller.ts`.
 
 ## 작업 단위 U83: 문진 결과 (의사용, 소비)
-- 소비하는 계약(boundary-contracts v3.4.3 PUBLIC_API B): `GET /v1/results`, `GET /v1/results/{session_id}`, `POST /v1/results/{session_id}/ack`, 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready`. 문진 스키마 `SessionResult`(읽기용 투영 `ResultRecord`로 받는다, CR-007). 문진표는 여러 개이며 결과의 `question_set_title`·`question_set_id`, 릴리스 매니페스트·제출 subject의 `question_sets` 목록을 보인다(ADR 0027). 게이트웨이가 `clinician` 계정에만 연다. 403이면 "의사(clinician) 권한 필요"를 보인다.
+- 소비하는 계약(boundary-contracts v3.4.6 PUBLIC_API B): `GET /v1/results`, `GET /v1/results/{session_id}`, `POST /v1/results/{session_id}/ack`, 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready`. 문진 스키마 `SessionResult`(읽기용 투영 `ResultRecord`로 받는다, CR-007). 문진표는 여러 개이며 결과의 `question_set_title`·`question_set_id`, 릴리스 매니페스트·제출 subject의 `question_sets` 목록을 보인다(ADR 0027). 게이트웨이가 `clinician` 계정에만 연다. 403이면 "의사(clinician) 권한 필요"를 보인다.
 - 소유 저장소 없음. 결과 내용은 메모리에만 두고 브라우저 저장소·콘솔 로그에 남기지 않는다. 결과에는 환자 발화 원문이 없다(계약).
 - 장애 영향: 문진 서비스가 죽으면 이 탭만 안내가 뜬다. 실시간 연결이 끊겨도 목록은 새로고침으로 본다.
 - 변경 요청: CR-007. 결정 근거: ADR 0026.
 
-- 결과 탭 웹 푸시(boundary-contracts v3.4.3): `GET /v1/staff/push-config`(`PushConfig`), `POST /v1/staff/push-subscriptions`(본문 endpoint·keys·`topics:["results"]`), `POST /v1/staff/push-subscriptions/unsubscribe`, 푸시 본문 `StaffPushPayload`(`RESULT_READY`). 서비스 워커 `sw.js`가 받는다(ADR 0028). 정지 사유 `pause_reason`은 결과 상세에 있을 때 보인다(PUBLIC_API H).
+- 결과 탭 웹 푸시(boundary-contracts v3.4.6): `GET /v1/staff/push-config`(`PushConfig`), `POST /v1/staff/push-subscriptions`(본문 endpoint·keys·`topics:["results"]`), `POST /v1/staff/push-subscriptions/unsubscribe`, 푸시 본문 `StaffPushPayload`(`RESULT_READY`). 서비스 워커 `sw.js`가 받는다(ADR 0028). 정지 사유 `pause_reason`은 결과 상세에 있을 때 보인다(PUBLIC_API H).
 
 - 사람 인증(헤드 ADR 0014, 이 영역 ADR 0029): 게이트웨이가 oauth2-proxy forward_auth로 인증한다. 이 영역이 쓰는 규약은 `/oauth2/start`, `/oauth2/sign_out`, `GET /oauth2/userinfo`, 401, 403 `details.reason=ACCOUNT_PENDING_APPROVAL`, Keycloak 관리 화면 링크(`/auth/admin/openit/console/#/openit/users`)다. `X-Openit-User`·`X-Openit-Roles`는 게이트웨이가 서버로 보내는 헤더라 화면은 읽지 않는다.
 
-- 설정 환경 변수(boundary-contracts v3.4.3 `AdminConsoleEnv`): `ADMIN_HOST`(선택, 기본 `0.0.0.0`). `serve/Caddyfile`의 `bind {$ADMIN_HOST:0.0.0.0}`로 정적 서버의 바인드 주소를 정한다. TLS 사이드카 뒤에서는 `127.0.0.1`. 스모크가 `ADMIN_HOST=127.0.0.1`로 띄운 이미지가 컨테이너 안에서만 닿는지 확인한다.
+- 설정 환경 변수(boundary-contracts v3.4.6 `AdminConsoleEnv`): `ADMIN_HOST`(선택, 기본 `0.0.0.0`). `serve/Caddyfile`의 `bind {$ADMIN_HOST:0.0.0.0}`로 정적 서버의 바인드 주소를 정한다. TLS 사이드카 뒤에서는 `127.0.0.1`. 스모크가 `ADMIN_HOST=127.0.0.1`로 띄운 이미지가 컨테이너 안에서만 닿는지 확인한다.
