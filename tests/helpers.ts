@@ -1,5 +1,5 @@
 import type { AddressInfo } from "node:net";
-import { GateClient } from "../app/wiring/gateway.ts";
+import { GateClient, RELEASE_GATE_TIMEOUT_MS } from "../app/wiring/gateway.ts";
 import { CasesClient } from "../app/wiring/gateway.ts";
 import { CasesController } from "../app/wiring/cases_controller.ts";
 import { Controller } from "../app/wiring/approvals_controller.ts";
@@ -42,7 +42,7 @@ export class Http {
   private readonly send;
   constructor(opts: Partial<HttpPorts> & { baseUrl?: string; timeoutMs?: number } = {}) {
     // 시험은 실제 타이머를 쓰지 않는다: 기본은 만료하지 않는 시계(시간 초과는 시험이 가짜 시계로 일으킨다)
-    this.send = createHttpSend({ baseUrl: opts.baseUrl ?? "", timeoutMs: opts.timeoutMs ?? 15000 }, { fetch: opts.fetch, timers: opts.timers ?? { set: () => 0, clear: () => {} } });
+    this.send = createHttpSend({ baseUrl: opts.baseUrl ?? "", timeoutMs: opts.timeoutMs ?? RELEASE_GATE_TIMEOUT_MS }, { fetch: opts.fetch, timers: opts.timers ?? { set: () => 0, clear: () => {} } });
   }
   async json(method: "GET" | "POST", path: string, body?: unknown) {
     const r = await this.send({ method, path, ...(body === undefined ? {} : { body }) } as never);

@@ -10,7 +10,7 @@
 
 ## 2. 소유하는 것
 
-- 소유: 이 리포지토리의 웹 앱, 게이트 HTTP 클라이언트 모듈(`api/`), 게이트 면의 **모의 서버**(`mock-server/`).
+- 소유: 이 리포지토리의 웹 앱, 게이트 HTTP 클라이언트(`app/components/link_*`, 연결은 `app/wiring/gateway.ts`), 이웃 면의 **모의 서버**(`tests/mock-server/`).
 - 모의 서버: `HTTP.md` I5와 스키마를 읽어 만든다. 승인 대기, 자동 반려, 사람 반려, 승인 완료, 낡은 `report_hash`(409 STALE_REPORT), 권한 오류(403)를 시나리오로 낼 수 있어야 한다.
 - 산출물: 정적 빌드를 담은 이미지(non-root, `/healthz`, 라벨 `io.openit.*` 중 해당하는 것, 고정 포트 금지 스모크).
 
@@ -18,7 +18,7 @@
 
 - **I5 GateService**(`HTTP.md`): `GET /v1/submissions?status=AWAITING_APPROVAL`(`SubmissionView` 목록), `GET /v1/submissions/{id}`, `GET /v1/submissions/{id}/review-report`(`ReviewReport`), `POST /v1/approvals`(본문 `submission_id`, `decision` APPROVE|REJECT, `approver_id`, `approver_role`, 반려 사유 `reason`, `report_hash`).
 - 스키마: `../boundary-contracts/schemas`의 `SubmissionView`, `ReviewReport`, `EvaluationReport`, `GateApproval`, `GateDecision`, `BoundaryError`. 복사본을 리포에 두지 않고 생성·검증 스크립트가 읽어 온다.
-- 소비하는 계약: I5 GateService 일부(`SubmissionView`, `ReviewReport`, `GateApproval`, `BoundaryError`)와 I7 FailureStore(`FailureCase` 목록·검토). 생산하는 계약: 없다(출고 결정은 `GateApproval`을 게이트 API에 보낼 뿐 이 영역이 낳는 계약이 아니다). 기준 계약 버전의 정본은 Dockerfile의 ARG이고, 상세는 `docs/boundary.md`.
+- 소비하는 계약: I5 GateService 일부(`SubmissionView`, `ReviewReport`, `GateApproval`, `BoundaryError`)와 I7 FailureStore(`FailureCase` 목록·검토), I4 릴리스 읽기·운영(`ActivePointer`, `ReleaseManifest`; `POST /v1/activate`는 `ActivateRequest`, `POST /v1/rollback`은 `RollbackRequest`/`RollbackReceipt`). 생산하는 계약: 없다(출고 결정은 `GateApproval`을 게이트 API에 보낼 뿐 이 영역이 낳는 계약이 아니다). 기준 계약 버전의 정본은 Dockerfile의 ARG이고, 상세는 `docs/boundary.md`.
 - 서버 주소는 같은 출처의 `/v1`이다(배포의 게이트웨이가 프록시하고 인증을 붙인다).
 
 ## 4. 상위 수용 기준

@@ -13,7 +13,7 @@ const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => {
   return statSync(p).isDirectory() ? walk(p) : [p];
 });
 const rel = (p: string) => relative(ROOT, p);
-const codeFiles = () => ["app", "mock-server"].filter((d) => existsSync(join(ROOT, d))).flatMap((d) => walk(join(ROOT, d))).map(rel).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
+const codeFiles = () => ["app", "tests/mock-server"].filter((d) => existsSync(join(ROOT, d))).flatMap((d) => walk(join(ROOT, d))).map(rel).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
 const COMPONENTS = "app/components/";
 
 test("1. schemas/, types/, components/, wiring/이 있다", () => {
@@ -38,7 +38,7 @@ test("2. components/의 파일은 다른 components/ 파일을 import하지 않�
 test("3. HTTP(fetch, node:http)는 link_* 컴포넌트 밖에 없다", () => {
   for (const f of codeFiles()) {
     if (basename(f).startsWith("link_") && f.startsWith(COMPONENTS)) continue;
-    if (f.startsWith("mock-server/")) continue; // 시험용 가짜 게이트(이웃의 메모리 구현에 해당). 앱 코드가 아니다.
+    if (f.startsWith("tests/mock-server/")) continue; // 시험용 가짜 게이트(이웃의 메모리 구현에 해당). 앱 코드가 아니다.
     const src = readFileSync(join(ROOT, f), "utf8");
     assert.ok(!/\bfetch\s*\(|from\s+["'](node:)?https?["']|\bXMLHttpRequest\b/.test(src), `${f}에 HTTP가 있다`);
   }
@@ -67,7 +67,7 @@ test("5. types/가 schemas/에서 다시 생성한 결과와 같다", { skip: !c
 test("6. 시험을 뺀 모든 코드 파일이 components/, wiring/, types/, ui/ 또는 진입점 중 하나에 속한다", () => {
   const ENTRY = /^app\/main\.ts$/;
   for (const f of codeFiles()) {
-    if (f.startsWith("mock-server/")) continue; // 위 3번과 같은 이유로 시험 지원 코드
+    if (f.startsWith("tests/mock-server/")) continue; // 위 3번과 같은 이유로 시험 지원 코드
     assert.ok(/^app\/(components|wiring|types|ui)\//.test(f) || ENTRY.test(f), `${f}가 어디에도 속하지 않는다`);
   }
 });

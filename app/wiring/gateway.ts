@@ -38,7 +38,7 @@ export const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: 
 // 화면 요청 대기 상한(D125, boundary-contracts CONVENTIONS.md "시간 상한 사슬"): 화면 > gateway > 서버여야 안쪽이 끝나기 전에 화면이 포기해
 // 같은 요청을 이중으로 처리하지 않는다. 값은 측정이 아니라 gateway 상한(release-gate 180초, ops-feedback 60초)에 10초를 더한 여유다.
 // 승인·활성화·롤백·제출 조회(release-gate 경로)는 측정 최악 승인 128초(D120) 위의 190초. 실패 사례 검토(ops-feedback 경로)는 프록시 표준 60초 위의 70초.
-// 이 콘솔은 저작(question-authoring) 경로를 부르지 않는다(130초 값은 쓰지 않는다). 본문을 다 읽을 때까지 적용한다. docs/adr/0010.
+// 이 콘솔은 저작(question-authoring) 경로를 부르지 않는다(130초 값은 쓰지 않는다). 본문을 다 읽을 때까지 적용한다. docs/adr/0024(ADR 0010의 15초를 대체).
 export const RELEASE_GATE_TIMEOUT_MS = 190_000;
 export const OPS_FEEDBACK_TIMEOUT_MS = 70_000;
 const send = (o: HttpOptions, defaultMs: number) => createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? defaultMs }, { fetch: o.fetch, timers: o.timers ?? realTimers });
