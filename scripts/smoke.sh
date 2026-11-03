@@ -16,11 +16,12 @@ if ! "$DOCKER" info >/dev/null 2>&1; then
 fi
 REPO=admin-console
 REV="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-IMAGE="${REPO}:smoke-${REV}"
+# 왜 $$: 같은 커밋으로 스모크가 동시에 돌면 같은 태그를 덮어쓰고 정리에서 서로의 이미지를 지운다. 실행마다 고유한 태그를 쓰고 정리는 자기 것만 지운다.
+IMAGE="${REPO}:smoke-${REV}-$$"
 NAME="${REPO}-smoke-$$"
 BUILD_LOG="$(mktemp)"
 STATIC_LOG="$(mktemp)"
-cleanup() { "$DOCKER" rm -f "$NAME" >/dev/null 2>&1 || true; rm -f "$BUILD_LOG" "$STATIC_LOG"; }
+cleanup() { "$DOCKER" rm -f "$NAME" >/dev/null 2>&1 || true; "$DOCKER" rmi "$IMAGE" >/dev/null 2>&1 || true; rm -f "$BUILD_LOG" "$STATIC_LOG"; }
 trap cleanup EXIT
 
 echo "== build $IMAGE (영역 빌드 진입점 scripts/build-image.sh)"
