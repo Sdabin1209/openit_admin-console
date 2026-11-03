@@ -64,6 +64,20 @@ echo "== 동작 시험(tests/static-behavior.test.ts, 이미지에 대해)"
 STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >"$STATIC_LOG" 2>&1 || { cat "$STATIC_LOG" >&2; rm -f "$STATIC_LOG"; fail "정적 서버 동작 시험"; }
 grep -E "^ℹ (pass|fail)" "$STATIC_LOG"; rm -f "$STATIC_LOG"
 
+echo "== 바인드 주소(ADMIN_HOST=127.0.0.1이면 컨테이너 밖에서 닿지 않고 안에서만 닿는다)"
+NAME2="${NAME}-loop"
+"$DOCKER" run -d --name "$NAME2" -e ADMIN_HOST=127.0.0.1 -p 127.0.0.1::8080 "$IMAGE" >/dev/null
+trap '"$DOCKER" rm -f "$NAME2" >/dev/null 2>&1 || true; cleanup' EXIT
+PORT2="$("$DOCKER" port "$NAME2" 8080/tcp | head -n1 | sed 's/.*://')"
+inner=""
+for _ in $(seq 1 30); do
+  if "$DOCKER" exec "$NAME2" wget -q -O - http://127.0.0.1:8080/healthz >/dev/null 2>&1; then inner=1; break; fi
+  sleep 0.5
+done
+[ -n "$inner" ] || { NAME="$NAME2"; fail "ADMIN_HOST=127.0.0.1인데 컨테이너 안에서도 닿지 않는다"; }
+if curl -fsS --max-time 3 "http://127.0.0.1:${PORT2}/healthz" >/dev/null 2>&1; then NAME="$NAME2"; fail "ADMIN_HOST=127.0.0.1인데 컨테이너 밖에서 닿는다"; fi
+"$DOCKER" rm -f "$NAME2" >/dev/null 2>&1
+
 echo "== labels"
 LABELS="$("$DOCKER" inspect -f '{{json .Config.Labels}}' "$IMAGE")"
 for k in io.openit.service io.openit.revision io.openit.contracts.boundary io.openit.contracts.survey-schema io.openit.model-runtime; do
