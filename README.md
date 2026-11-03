@@ -86,8 +86,22 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 확인 못 한 것: 실제 release-gate·ops-feedback과의 연동, 실제 브라우저(레이아웃, 접근성, 키보드, CSP 아래 번들 실행), CI 이미지 빌드와 digest 게시(D24). 이상은 docs/STATUS.md의 "남은 일".
 
-## 5. 이 영역의 열린 항목
+## 5. 시험 상태
 
+| 명령 | 결과 | rc | 날짜 |
+| --- | --- | --- | --- |
+| `npm test` | 213개 중 통과 206, 실패 0, 건너뜀 7(정적 서버 시험 7개는 `STATIC_URL`이 있을 때만 돈다: 스모크가 이미지에 대해 돌린다) | 0 | 2026-11-04 |
+| `npx tsc --noEmit` | 오류 없음 | 0 | 2026-11-04 |
+| `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험 7개, 라벨, non-root, 종료 신호 | 아래 커밋 해시의 스모크 태그 참고(보고에 rc 기재) | 2026-11-04 |
+
+기준: 계약 boundary-contracts v3.4.6(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본). 계약 시험은 이웃 리포의 고정 태그 내용을 git에서 읽는다. 이 영역은 DB가 없고 백엔드 서버 코드가 없는 브라우저 앱과 Caddy 정적 서버라서 PG 시험은 해당 없음.
+
+### 계약 항목 가운데 해당 없음으로 판단한 것
+- Exposure `egress`: 이 영역은 정적 파일 서버와 브라우저 앱이다. 서버 쪽에서 영역 밖을 부르는 호출이 없다(브라우저가 페이지 출처의 `/v1`을 부른다). 그래서 `deploy-exposure.json`에 `egress`가 없다(선택 필드, 없으면 빈 목록).
+- 이미지 라벨 `io.openit.jobs`: 이 영역에 잡이 없다. `JobsDeclaration`은 잡을 1개 이상 요구하므로 라벨을 달지 않는다.
+- 계약 클라이언트의 `egress_proxy=egress_proxy_from(environ)`: 계약 클라이언트는 Python 서비스·잡용이다. 이 영역은 TypeScript 브라우저 앱이라 계약 클라이언트를 만들지 않는다.
+
+### 열린 항목
 열린 항목의 대장은 헤드가 관리한다(`head/docs/OPEN_GAPS.md`). 이 영역을 가리키는 항목의 현재 상태는 그 문서가 정본이므로 여기에 복사하지 않는다.
 
 이 영역 문서에 열려 있는 것: 변경 요청 CR-002, CR-003, CR-004의 처리 상태는 각 문서와 헤드의 응답을 본다. 계약 v2 반영이 필요한 시험은 4절과 `docs/STATUS.md`.

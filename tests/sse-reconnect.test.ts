@@ -71,11 +71,14 @@ test("탐침은 구독이 아니라 알림 목록 읽기(GET /v1/staff/alerts?st
 test("resync: 마지막 heartbeat의 ts를 updated_after로 보내 놓친 결과만 목록에 합친다", async () => {
   const s = await startMock();
   try {
-    const c = new ResultsController(new ResultsClient({ baseUrl: s.base }));
+    const urls: string[] = [];
+    const spy = (async (u: string, init?: RequestInit) => { urls.push(String(u)); return fetch(u, init); }) as typeof fetch;
+    const c = new ResultsController(new ResultsClient({ baseUrl: s.base, fetch: spy }));
     await c.openList();
     assert.equal(c.state.items.length, 4);
     s.mock.results.add(sessionResult(30));
     await (c as unknown as { resync(t: string | null): Promise<void> }).resync("2026-11-20T00:00:00Z");
+    assert.ok(urls.some((u) => u.includes("/v1/results?") && u.includes("updated_after=2026-11-20T00%3A00%3A00Z")), urls.join(" "));
     assert.ok(c.state.items.some((i) => i.session_id === "s-30"));
     assert.equal(new Set(c.state.items.map((i) => i.session_id)).size, c.state.items.length, "중복 없음");
   } finally { await s.close(); }
