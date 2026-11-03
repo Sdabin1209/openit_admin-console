@@ -57,3 +57,8 @@ test("시간 사슬: 게이트웨이 response_header 상한(선언) < 화면의 
   assert.deepEqual(screens, [190000, 70000, 70000]); // release-gate, ops-feedback, 문진 결과(ADR 0026)
   for (const r of exposure.routes) for (const screen of screens) assert.ok(r.timeouts_ms.response_header < screen, `${r.timeouts_ms.response_header} < ${screen}`);
 });
+
+// 왜 authenticated: 화면 파일은 데이터가 없고, 가입 승인 대기 계정(역할 없음)에게도 "승인 대기" 화면이 열려야 한다(ADR 0029, 헤드 ADR 0014). 역할 판정은 /v1 데이터 경로가 한다.
+test("화면 정적 파일은 로그인한 어떤 계정에게든 열린다(auth.kind authenticated, 역할 목록 없음)", () => {
+  for (const r of exposure.routes) assert.deepEqual(r.auth, { kind: "authenticated" });
+});
