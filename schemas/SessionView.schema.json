@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SessionView.schema.json",
+  "title": "SessionView",
+  "description": "session_view의 출력: 상단에 보일 로그인 사용자 이름, 역할 목록, admin 여부(계정 승인 링크를 보일지), 링크 주소.",
+  "type": "object",
+  "required": [
+    "label",
+    "roles",
+    "isAdmin",
+    "adminUrl",
+    "logoutUrl"
+  ],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "isAdmin": {
+      "type": "boolean"
+    },
+    "adminUrl": {
+      "type": "string"
+    },
+    "logoutUrl": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

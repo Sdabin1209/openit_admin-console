@@ -1,5 +1,5 @@
 // 진입점: 화면 부품(wiring/ui)과 컨트롤러를 만들어 주소(route_parse)에 따라 잇는다. 업무 규칙은 없다.
-import { CasesClient, GateClient, ReleasesClient, ResultsClient, PushClient, realTimers } from "./wiring/gateway.ts";
+import { CasesClient, GateClient, ReleasesClient, ResultsClient, PushClient, AuthClient, onAuthError, realTimers } from "./wiring/gateway.ts";
 import { CasesController } from "./wiring/cases_controller.ts";
 import { renderCases } from "./ui/cases_view.ts";
 import { OpsController } from "./wiring/ops_controller.ts";
@@ -10,6 +10,8 @@ import { ResultsController } from "./wiring/results_controller.ts";
 import { renderResults } from "./ui/results_view.ts";
 import { PushController } from "./wiring/push_controller.ts";
 import { browserPushPorts } from "./wiring/browser_push.ts";
+import { AuthController } from "./wiring/auth_controller.ts";
+import { renderAuthNotice, renderWho } from "./ui/auth_view.ts";
 import { routeParse } from "./components/route_parse.ts";
 
 const root = document.getElementById("app")!;
@@ -22,6 +24,10 @@ const results = new ResultsController(new ResultsClient({ baseUrl: "" }), realTi
 
 const push = new PushController(new PushClient({ baseUrl: "" }), browserPushPorts());
 
+const auth = new AuthController(new AuthClient({ baseUrl: "" }));
+onAuthError((k) => auth.onApiError(k)); // 어느 요청이든 401·승인 대기면 로그인·승인 대기 안내로 바뀐다
+const who = document.getElementById("who")!;
+
 type Screen = "approvals" | "cases" | "ops" | "results";
 let screen: Screen = "approvals";
 let last = "";
@@ -29,6 +35,7 @@ let needFocus = false; // 화면이 바뀐 직후 한 번, 제목으로 포커�
 const TITLES: Record<Screen, string> = { approvals: "출고 승인", cases: "실패 사례 검토", ops: "릴리스 운영", results: "문진 결과" };
 
 function signature(): string {
+  if (auth.state.phase === "login-needed" || auth.state.phase === "pending") return ["auth", auth.state.phase, auth.state.rev].join("|");
   if (screen === "approvals") {
     const s = approvals.state;
     return ["a", s.phase, s.submissionId, s.items.length, s.notice?.text, s.sliceKind, s.sort, s.error, s.loaded?.reportHash, approvals.slowStage].join("|");
@@ -43,6 +50,7 @@ function draw(): void {
   const sig = signature();
   if (sig === last) return;
   last = sig;
+  if (renderAuthNotice(root, auth, location.pathname + location.search + location.hash)) return;
   if (screen === "approvals") render(root, approvals);
   else if (screen === "results") renderResults(root, results, push);
   else if (screen === "ops") renderOps(root, ops);
@@ -57,6 +65,8 @@ cases.subscribe(() => { if (screen === "cases") draw(); });
 ops.subscribe(() => { if (screen === "ops") draw(); });
 push.subscribe(() => { if (screen === "results") draw(); });
 results.subscribe(() => { if (screen === "results") draw(); drawNav(); });
+
+auth.subscribe(() => { renderWho(who, auth); draw(); });
 
 function drawNav(): void {
   document.title = `운영 콘솔 - ${TITLES[screen]}`;
@@ -96,5 +106,6 @@ function route(): void {
   else void (r.view === "detail" ? approvals.openReport(r.id as string) : approvals.openList());
 }
 window.addEventListener("hashchange", route);
+void auth.load();
 results.startLive(); // 탭 배지와 목록 자동 갱신(SSE result_ready)
 route();

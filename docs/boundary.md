@@ -26,3 +26,5 @@
 - 변경 요청: CR-007. 결정 근거: ADR 0026.
 
 - 결과 탭 웹 푸시(boundary-contracts v3.4.0): `GET /v1/staff/push-config`(`PushConfig`), `POST /v1/staff/push-subscriptions`(본문 endpoint·keys·`topics:["results"]`), `POST /v1/staff/push-subscriptions/unsubscribe`, 푸시 본문 `StaffPushPayload`(`RESULT_READY`). 서비스 워커 `sw.js`가 받는다(ADR 0028). 정지 사유 `pause_reason`은 결과 상세에 있을 때 보인다(PUBLIC_API H).
+
+- 사람 인증(헤드 ADR 0014, 이 영역 ADR 0029): 게이트웨이가 oauth2-proxy forward_auth로 인증한다. 이 영역이 쓰는 규약은 `/oauth2/start`, `/oauth2/sign_out`, `GET /oauth2/userinfo`, 401, 403 `details.reason=ACCOUNT_PENDING_APPROVAL`, Keycloak 관리 화면 링크(`/auth/admin/openit/console/#/openit/users`)다. `X-Openit-User`·`X-Openit-Roles`는 게이트웨이가 서버로 보내는 헤더라 화면은 읽지 않는다.

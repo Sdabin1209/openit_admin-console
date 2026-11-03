@@ -32,6 +32,9 @@ export function toError(status: number, body: unknown): ErrorInfo {
   if (TRANSPORT_LIMIT[status]) return { kind: "INVALID_RECORD", status, message: `${TRANSPORT_LIMIT[status]}(HTTP ${status}). 입력을 줄여 다시 보내라.`, retryable: false };
   const b = (body && typeof body === "object" ? body : {}) as Partial<BoundaryError> & Record<string, unknown>;
   const message = typeof b.message === "string" ? b.message : `HTTP ${status}`;
+  // 401: 로그인하지 않았다(oauth2-proxy forward_auth). 403 + details.reason: 가입은 했으나 역할이 아직 없다(ADR 0014 결정 4, 게이트웨이가 사유를 준다). 사유는 문자열 검색이 아니라 details.reason으로만 구분한다.
+  if (status === 401) return { kind: "UNAUTHENTICATED", status, message: "로그인이 필요하다", retryable: false };
+  if (status === 403 && b.details && typeof b.details === "object" && (b.details as Record<string, unknown>).reason === "ACCOUNT_PENDING_APPROVAL") return { kind: "ACCOUNT_PENDING", status, message: "가입 승인 대기 중", retryable: false };
   if (status === 409) {
     // 409의 사유는 details.reason으로만 구분한다(HTTP.md D69). 문자열 검색은 하지 않는다.
     const reason = (b.details && typeof b.details === "object" ? (b.details as Record<string, unknown>).reason : undefined);

@@ -59,6 +59,8 @@
 | link_push_subscribe | `components/link_push_subscribe.ts` | `PushSubscriptionInput` | (성공 여부) | `POST /v1/staff/push-subscriptions` (본문 endpoint, keys, `topics:["results"]`) |
 | link_push_unsubscribe | `components/link_push_unsubscribe.ts` | `PushEndpointInput` | (성공 여부) | `POST /v1/staff/push-subscriptions/unsubscribe` (204) |
 | push_notice | `components/push_notice.ts` | `StaffPushPayload`(계약) | `PushNotice` | 푸시 본문 -> 알림 문구·tag(`result-`+세션)·클릭 목적지 |
+| link_userinfo | `components/link_userinfo.ts` | (없음) | `UserInfo` | oauth2-proxy `GET /oauth2/userinfo` |
+| session_view | `components/session_view.ts` | `UserInfo` | `SessionView` | 이름·역할·admin 여부와 로그인·로그아웃·계정 승인 링크 주소 |
 | link_result_ack | `components/link_result_ack.ts` | `ResultIdInput` | `ResultRecord` | 문진 서비스 `POST /v1/results/{id}/ack` (본문 `{}`, 서버 멱등) |
 | link_result_events | `components/link_result_events.ts` | 구독 핸들러(SSE는 요청-응답이 아니라 스키마 하나로 쓰지 않는다) | `ResultReady` 이벤트 | 직원 SSE `GET /v1/staff/alerts/stream`의 `result_ready` |
 | result_sheet | `components/result_sheet.ts` | `ResultRecord` | `SheetView` | 결과를 문진표 모양(문항·칸·값, 빈칸 사유, 확인 표시)으로 바꾼다. 판단하지 않는다 |

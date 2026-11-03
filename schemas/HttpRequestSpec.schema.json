@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "HttpRequestSpec.schema.json",
   "title": "HttpRequestSpec",
-  "description": "link_http_send의 입력. 같은 출처의 /v1 경로만 부른다(게이트 HTTP 면 밖은 부르지 않는다, 브리프 6절). GET에는 본문이 없다.",
+  "description": "link_http_send의 입력. 같은 출처의 /v1 경로와 로그인 사용자 확인 /oauth2/userinfo(oauth2-proxy 표준, ADR 0029)만 부른다(게이트 HTTP 면 밖은 부르지 않는다, 브리프 6절). GET에는 본문이 없다.",
   "type": "object",
   "required": [
     "method",
@@ -17,7 +17,7 @@
     },
     "path": {
       "type": "string",
-      "pattern": "^/v1/\\S*$"
+      "pattern": "^(/v1/\\S*|/oauth2/userinfo)$"
     },
     "body": {}
   },

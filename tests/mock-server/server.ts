@@ -19,7 +19,7 @@ function sha256Hash(v: unknown): string {
 }
 
 export interface MockOptions { staticDir?: string; gatewayUser?: string; now: () => string }
-export interface MockHandle { cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; results: ReturnType<typeof createResultsMock>; server: Server; approvals: GateApproval[]; postCount: () => number; slowGate: { hold: () => void; release: () => void }; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
+export interface MockHandle { auth: { mode: (m: "ok" | "anon" | "pending") => void; user: (groups: string[]) => void }; cases: ReturnType<typeof createCasesMock>; releases: ReturnType<typeof createReleasesMock>; results: ReturnType<typeof createResultsMock>; server: Server; approvals: GateApproval[]; postCount: () => number; slowGate: { hold: () => void; release: () => void }; reset: () => void; setReport: (id: string, r: ReviewReport) => void; currentHash: (id: string) => string | null }
 
 const V = PIPELINE_SCHEMA_VERSION;
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css" };
@@ -32,6 +32,8 @@ export function createMock(opts: MockOptions): MockHandle {
   let scenarios = new Map<string, Scenario>();
   const approvals: GateApproval[] = [];
   let posts = 0;
+  let authMode: "ok" | "anon" | "pending" = "ok";
+  let userinfo = { user: "u-1", email: "kim@hospital.kr", groups: ["clinician", "reviewer"] };
   // slow 시나리오의 지연: 시간이 아니라 시험이 쥔 문. hold()하면 slow 제출의 결정 요청이 release()될 때까지 처리 중으로 남는다(시간에 기대지 않는다, U421).
   let gate: Promise<void> = Promise.resolve();
   let openGate: () => void = () => {};
@@ -47,7 +49,7 @@ export function createMock(opts: MockOptions): MockHandle {
     posts = 0;
     cases.reset();
     releases.reset();
-    results.reset();
+    results.reset(); authMode = "ok"; userinfo = { user: "u-1", email: "kim@hospital.kr", groups: ["clinician", "reviewer"] };
   };
   reset();
 
@@ -117,6 +119,13 @@ export function createMock(opts: MockOptions): MockHandle {
       const url = new URL(req.url ?? "/", "http://x");
       const p = url.pathname;
       if (p === "/healthz" || p === "/readyz") return send(res, 200, { status: "ok" });
+      // 게이트웨이(oauth2-proxy forward_auth) 흉내: 로그인 안 함 -> 401, 역할 없는 계정 -> /v1 403 ACCOUNT_PENDING_APPROVAL. userinfo는 oauth2-proxy 표준 응답(email, user, groups).
+      if (p === "/oauth2/userinfo") {
+        if (authMode === "anon") return err(res, 401, "PERMISSION_DENIED", "로그인이 필요하다");
+        return send(res, 200, { user: userinfo.user, email: userinfo.email, groups: authMode === "pending" ? [] : userinfo.groups });
+      }
+      if (p.startsWith("/v1/") && authMode === "anon") return err(res, 401, "PERMISSION_DENIED", "로그인이 필요하다");
+      if (p.startsWith("/v1/") && authMode === "pending") return err(res, 403, "PERMISSION_DENIED", "가입 승인 대기 중", { reason: "ACCOUNT_PENDING_APPROVAL" });
       if (req.method === "GET" && p === "/v1/submissions") {
         const status = url.searchParams.get("status");
         const limit = Math.min(500, Number(url.searchParams.get("limit") ?? 100) || 100);
@@ -153,5 +162,6 @@ export function createMock(opts: MockOptions): MockHandle {
       return err(res, 503, "UNAVAILABLE", "모의 서버 내부 오류");
     }
   });
-  return { cases, releases, results, server, approvals, postCount: () => posts, slowGate, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
+  const auth = { mode: (m: "ok" | "anon" | "pending") => { authMode = m; }, user: (groups: string[]) => { userinfo = { ...userinfo, groups }; } };
+  return { auth, cases, releases, results, server, approvals, postCount: () => posts, slowGate, reset, setReport: (id, r) => { overrides.set(id, r); }, currentHash: (id) => { const s = scenarios.get(id); return s ? sha256Hash(reportOf(s)) : null; } };
 }

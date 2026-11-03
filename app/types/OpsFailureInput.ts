@@ -10,6 +10,8 @@ export interface OpsFailureInput {
  */
 export interface ErrorInfo {
   kind:
+    | "UNAUTHENTICATED"
+    | "ACCOUNT_PENDING"
     | "STALE_REPORT"
     | "ALREADY_DECIDED"
     | "NOT_FOUND"

@@ -28,3 +28,4 @@ pre { overflow: auto; border: 1px solid var(--line); padding: 8px; max-height: 3
   body { max-width: none; padding: 0; }
   .grid th, .grid td { border-color: #000; }
 }
+#who { display: inline-block; margin-left: 24px; font-size: .9em; } #who a { margin-left: 8px; }

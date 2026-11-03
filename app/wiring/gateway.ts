@@ -15,6 +15,8 @@ import { createFailureReview } from "../components/link_failure_review.ts";
 import { createResultList } from "../components/link_result_list.ts";
 import { createResultGet } from "../components/link_result_get.ts";
 import { createResultAck } from "../components/link_result_ack.ts";
+import { createUserInfo } from "../components/link_userinfo.ts";
+import type { UserInfo } from "../types/UserInfo.ts";
 import { createPushConfig } from "../components/link_push_config.ts";
 import { createPushSubscribe } from "../components/link_push_subscribe.ts";
 import { createPushUnsubscribe } from "../components/link_push_unsubscribe.ts";
@@ -58,7 +60,18 @@ export const RELEASE_GATE_TIMEOUT_MS = 190_000;
 export const OPS_FEEDBACK_TIMEOUT_MS = 70_000;
 // 문진 결과(survey-service) 경로: gateway 직원 경로 상한 56초(CONVENTIONS "시간 상한 사슬")에 10초를 더한 70초. 이 경로의 gateway 설정값은 확인하지 못했다(추정), 측정 안 함. ADR 0026.
 export const RESULTS_TIMEOUT_MS = 70_000;
-const send = (o: HttpOptions, defaultMs: number) => createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? defaultMs }, { fetch: o.fetch, timers: o.timers ?? realTimers });
+// 인증 오류 알림 선: 어느 클라이언트의 요청이든 401·승인 대기 403이면 화면 전체가 로그인·승인 대기 안내로 바뀌어야 한다(ADR 0029). 구독자는 진입점 하나다.
+type AuthListener = (kind: string) => void;
+const authListeners = new Set<AuthListener>();
+export function onAuthError(fn: AuthListener): () => void { authListeners.add(fn); return () => authListeners.delete(fn); }
+const send = (o: HttpOptions, defaultMs: number) => {
+  const inner = createHttpSend({ baseUrl: o.baseUrl ?? "", timeoutMs: o.timeoutMs ?? defaultMs }, { fetch: o.fetch, timers: o.timers ?? realTimers });
+  return async (spec: Parameters<typeof inner>[0]) => {
+    const r = await inner(spec);
+    if (!r.ok && (r.error.kind === "UNAUTHENTICATED" || r.error.kind === "ACCOUNT_PENDING")) authListeners.forEach((f) => f(r.error.kind));
+    return r;
+  };
+};
 
 export class GateClient {
   private readonly list; private readonly report; private readonly decideFn;
@@ -155,4 +168,11 @@ export class PushClient {
   async config(): Promise<PushConfig> { return unwrap(await this.cfg()); }
   async subscribe(input: PushSubscriptionInput): Promise<void> { const r = await this.sub(input); if (!r.ok) unwrap(r); }
   async unsubscribe(input: PushEndpointInput): Promise<void> { const r = await this.unsub(input); if (!r.ok) unwrap(r); }
+}
+
+/** 로그인 사용자 확인(oauth2-proxy userinfo). 기본 대기 상한은 결과 경로와 같다. */
+export class AuthClient {
+  private readonly info;
+  constructor(opts: HttpOptions = {}) { this.info = createUserInfo(send(opts, RESULTS_TIMEOUT_MS)); }
+  async userinfo(): Promise<UserInfo> { return unwrap(await this.info()); }
 }

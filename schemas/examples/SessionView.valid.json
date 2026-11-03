@@ -1,0 +1,9 @@
+{
+  "label": "a@b.kr",
+  "roles": [
+    "admin"
+  ],
+  "isAdmin": true,
+  "adminUrl": "/auth/admin/openit/console/#/openit/users",
+  "logoutUrl": "/oauth2/sign_out?rd=x"
+}
