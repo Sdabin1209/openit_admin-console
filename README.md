@@ -101,6 +101,8 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 - 이미지 라벨 `io.openit.jobs`: 이 영역에 잡이 없다. `JobsDeclaration`은 잡을 1개 이상 요구하므로 라벨을 달지 않는다.
 - 계약 클라이언트의 `egress_proxy=egress_proxy_from(environ)`: 계약 클라이언트는 Python 서비스·잡용이다. 이 영역은 TypeScript 브라우저 앱이라 계약 클라이언트를 만들지 않는다.
 
+- `/metrics`: 정적 화면 서버라 `/metrics`를 두지 않는다. 감시(platform)는 `/readyz` 탐침으로 본다(계약 RUNTIME R10.11 보충).
+
 ### 열린 항목
 열린 항목의 대장은 헤드가 관리한다(`head/docs/OPEN_GAPS.md`). 이 영역을 가리키는 항목의 현재 상태는 그 문서가 정본이므로 여기에 복사하지 않는다.
 
