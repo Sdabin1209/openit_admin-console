@@ -15,12 +15,12 @@ function list(st: ResultsState, c: ResultsController): HTMLElement {
       h("span", { class: "muted", id: "result-live", role: "status" }, st.live ? "실시간 연결됨: 새 결과가 오면 자동으로 갱신된다" : "실시간 연결 없음: 새로고침으로 확인하라")),
     st.notice && h("p", { class: "notice error", role: "alert" }, st.notice),
     st.items.length === 0 ? h("p", { class: "muted" }, "결과가 없다.") : h("table", { class: "grid" },
-      h("thead", {}, h("tr", {}, ...["세션", "환자 참조", "상태", "시작", "끝", "확인"].map((t) => h("th", { scope: "col" }, t)))),
+      h("thead", {}, h("tr", {}, ...["세션", "환자 참조", "문진표", "상태", "시작", "끝", "확인"].map((t) => h("th", { scope: "col" }, t)))),
       h("tbody", {}, ...st.items.map((r) => {
         const s = resultSheet(r);
         return h("tr", { "data-session": r.session_id },
           h("td", {}, h("a", { href: `#/results/${encodeURIComponent(r.session_id)}` }, r.session_id)),
-          h("td", {}, r.subject_ref ?? "—"), h("td", {}, s.complete ? s.statusText : h("strong", {}, s.statusText)),
+          h("td", {}, r.subject_ref ?? "—"), h("td", {}, s.setText), h("td", {}, s.complete ? s.statusText : h("strong", {}, s.statusText)),
           h("td", {}, fmtTime(r.started_at)), h("td", {}, fmtTime(r.ended_at)), h("td", {}, s.ack.acknowledged ? "확인함" : "—"));
       }))),
     st.nextCursor && h("p", {}, h("button", { type: "button", id: "result-more", onclick: () => void c.loadMore() }, "더 보기")));
@@ -38,6 +38,7 @@ function detail(st: ResultsState, c: ResultsController): HTMLElement {
       h("dt", {}, "상태"), h("dd", { id: "result-status-text" }, s.statusText),
       h("dt", {}, "환자 참조"), h("dd", {}, r.subject_ref ?? "—"),
       h("dt", {}, "시작"), h("dd", {}, fmtTime(r.started_at)), h("dt", {}, "끝"), h("dd", {}, fmtTime(r.ended_at)),
+      h("dt", {}, "문진표"), h("dd", { id: "result-question-set" }, s.setText),
       h("dt", {}, "릴리스 / 문항 은행"), h("dd", {}, `${r.release_id ?? "—"} / ${r.question_bank_version ?? "—"}`),
       h("dt", {}, "의사 확인"), h("dd", { id: "result-ack-text" }, s.ack.text)),
     !s.complete && h("p", { class: "notice warn", role: "note", id: "result-partial" }, "이 결과는 완료되지 않았다. 아래는 그때까지 저장된 부분 결과이며, 빈 문항이 미응답의 전부를 뜻하지 않는다."),

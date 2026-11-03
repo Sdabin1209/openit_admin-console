@@ -37,6 +37,7 @@ export const OpsNotice: V;
 export const OpsRequest: V;
 export const OpsRequestInput: V;
 export const PointerRecord: V;
+export const QuestionSetRef: V;
 export const ReleaseCandidates: V;
 export const ReleaseCandidatesInput: V;
 export const ReleaseList: V;

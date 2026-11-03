@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "sessionId",
+    "setText",
     "statusText",
     "complete",
     "groups",
@@ -16,6 +17,9 @@
     "sessionId": {
       "type": "string",
       "minLength": 1
+    },
+    "setText": {
+      "type": "string"
     },
     "statusText": {
       "type": "string"

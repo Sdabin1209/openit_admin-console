@@ -1,5 +1,6 @@
 {
   "sessionId": "s-1",
+  "setText": "기본 문진표 (버전 qb-1)",
   "statusText": "완료",
   "complete": true,
   "groups": [

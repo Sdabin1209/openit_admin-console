@@ -21,6 +21,12 @@ function splitKey(key: string): [string, string] {
   return i < 0 ? [key, ""] : [key.slice(0, i), key.slice(i)];
 }
 
+function setText(r: ResultRecord): string {
+  const name = r.question_set_title || r.question_set_id;
+  if (!name) return "—";
+  return r.question_bank_version ? `${name} (버전 ${r.question_bank_version})` : name;
+}
+
 export function resultSheet(input: ResultRecord): SheetView {
   v.assertValid(v.ResultRecord, input, "result_sheet");
   const groups: SheetView["groups"] = [];
@@ -34,6 +40,8 @@ export function resultSheet(input: ResultRecord): SheetView {
   const by = input.acknowledged_by ?? null;
   const out: SheetView = {
     sessionId: input.session_id,
+    // 왜 제목 우선·ID 대체: 사람이 알아보는 것은 제목이다. 둘 다 없으면(옛 결과) 대시. 버전은 문항 은행 버전(question_bank_version)이다.
+    setText: setText(input),
     statusText: STATUS[input.status] ?? input.status,
     complete: input.status === "ENDED_COMPLETE",
     groups, blanks,

@@ -69,6 +69,26 @@
         }
       ]
     },
+    "question_set_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "question_set_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "answers": {
       "type": "array",
       "items": {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "ReleaseRow.schema.json",
   "title": "ReleaseRow",
-  "description": "릴리스 목록의 한 줄(ReleaseManifest의 읽기용 투영).",
+  "description": "릴리스 목록의 한 줄(ReleaseManifest의 읽기용 투영). 문진표는 question_sets 목록이다(계약 3.3.0).",
   "type": "object",
   "required": [
     "release_id",
@@ -20,14 +20,17 @@
     "gate_decision_id": {
       "type": "string"
     },
-    "question_set": {
-      "$ref": "ArtifactRef.schema.json"
-    },
     "lora_a": {
       "$ref": "ArtifactRef.schema.json"
     },
     "lora_b": {
       "$ref": "ArtifactRef.schema.json"
+    },
+    "question_sets": {
+      "type": "array",
+      "items": {
+        "$ref": "QuestionSetRef.schema.json"
+      }
     }
   }
 }

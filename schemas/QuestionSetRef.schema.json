@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "QuestionSetRef.schema.json",
+  "title": "QuestionSetRef",
+  "description": "매니페스트 question_sets의 한 항목(계약 QuestionSetRef의 읽기용 투영). 화면은 제목·ID·버전을 보이고, 제목이 없으면 ID를 쓴다. 모르는 필드는 받는다.",
+  "type": "object",
+  "required": [
+    "id",
+    "version"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string"
+    }
+  }
+}

@@ -11,7 +11,7 @@ export function sessionResult(n: number, o: Partial<Rec> = {}): Rec {
   const day = String(10 + n).padStart(2, "0");
   return {
     session_id: `s-${n}`, subject_ref: `visit-${n}`, status: "ENDED_COMPLETE", started_at: `2026-11-${day}T00:00:00Z`, ended_at: `2026-11-${day}T00:10:00Z`,
-    release_id: "rel-0001", question_bank_version: "qb-1",
+    release_id: "rel-0001", question_bank_version: "qb-1", question_set_id: "qs-main", question_set_title: "기본 문진표",
     answers: [
       { key: "Q1", value: "두통", status: "ANSWERED", precision: "exact" },
       { key: "Q7_1[soju].amount", value: 2, status: "CORRECTION", precision: "approximate" },

@@ -193,3 +193,16 @@ test("모의 서버 출력이 문진 스키마 SessionResult를 통과한다(확
     for (const it of page.items) assert.ok(v(it), JSON.stringify(v.errors?.slice(0, 3)));
   } finally { await s.close(); }
 });
+
+test("문진표(계약 3.3.0): 상세와 목록에 문진표 제목과 버전, 제목이 없으면 ID, 옛 결과는 대시", async () => {
+  const s = await startMock();
+  try {
+    const root = q("#app")!; const c = mk(s.base); c.subscribe(() => renderResults(root, c));
+    await c.openDetail("s-1");
+    assert.equal(q("#result-question-set")!.textContent, "기본 문진표 (버전 qb-1)");
+    assert.equal(resultSheet(sessionResult(9, { question_set_title: null })).setText, "qs-main (버전 qb-1)");
+    assert.equal(resultSheet(sessionResult(9, { question_set_id: null, question_set_title: null })).setText, "—");
+    await c.openList("");
+    assert.ok(q('tr[data-session="s-1"]')!.textContent!.includes("기본 문진표 (버전 qb-1)"));
+  } finally { await s.close(); }
+});

@@ -6,6 +6,8 @@
   "ended_at": "2026-11-03T00:10:00Z",
   "release_id": "rel-1",
   "question_bank_version": "qb-1",
+  "question_set_id": "qs-main",
+  "question_set_title": "기본 문진표",
   "answers": [
     {
       "key": "Q7_1[soju].amount",

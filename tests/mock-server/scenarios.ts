@@ -10,7 +10,7 @@ export const SAFETY_METRIC = "value_recall";
 
 const H0 = "sha256:" + "0".repeat(64);
 const ref = (id: string, version: string) => ({ id, version, content_hash: H0 });
-const SUBJECT = { question_set: ref("qs-main", "3"), lora_a: ref("lora-a", "1.2.0"), lora_b: ref("lora-b", "1.0.1") };
+const SUBJECT = { question_sets: [ref("qs-main", "3"), ref("qs-alcohol", "2")], lora_a: ref("lora-a", "1.2.0"), lora_b: ref("lora-b", "1.0.1") };
 
 function cmp(role: string, name: string, group: string, c: number, cn: number, b: number | null, bn: number | null,
   hib: boolean, worse: boolean | null, slice?: [string, string]): Comparison {

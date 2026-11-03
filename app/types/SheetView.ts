@@ -4,6 +4,7 @@
  */
 export interface SheetView {
   sessionId: string;
+  setText: string;
   statusText: string;
   complete: boolean;
   groups: {

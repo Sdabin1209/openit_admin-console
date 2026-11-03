@@ -38,11 +38,15 @@ function cell(c: Cell): HTMLElement {
   return h("td", { class: `num ${c.kind}` }, c.text);
 }
 
-function subjectText(s: SubmissionView["subject"]): string {
+// 왜 목록으로 보이나: 문진표는 여러 개가 함께 나갈 수 있다(계약 3.3.0 subject.question_sets, 옛 단수 question_set은 없다). 제출 subject에는 제목이 없어 ID@버전으로 보인다.
+export function subjectText(s: SubmissionView["subject"]): string {
   const parts: string[] = [];
-  for (const [label, k] of [["문항", "question_set"], ["LoRA-A", "lora_a"], ["LoRA-B", "lora_b"]] as const) {
-    const r = (s as Record<string, unknown>)[k] as { id?: string; version?: string } | undefined;
-    if (r && typeof r === "object" && "id" in r) parts.push(`${label} ${r.id}@${r.version}`);
+  const r = s as Record<string, unknown>;
+  const sets = Array.isArray(r.question_sets) ? (r.question_sets as { id?: string; version?: string }[]) : [];
+  if (sets.length) parts.push(`문진표 ${sets.map((q) => `${q.id}@${q.version}`).join(", ")}`);
+  for (const [label, k] of [["LoRA-A", "lora_a"], ["LoRA-B", "lora_b"]] as const) {
+    const x = r[k] as { id?: string; version?: string } | undefined;
+    if (x && typeof x === "object" && "id" in x) parts.push(`${label} ${x.id}@${x.version}`);
   }
   return parts.join(" / ") || "—";
 }
@@ -89,6 +93,7 @@ function reportView(st: State, c: Controller, rep: ReviewReport): HTMLElement {
     h("p", {}, h("a", { href: "#/" }, "← 목록")),
     h("h2", {}, `승인 요청 보고서 ${rep.submission_id}`),
     h("p", { class: "muted" }, `생성 ${fmtTime(rep.generated_at)} · 현재 활성 릴리스 ${rep.active_release_id ?? "없음"} · 보고서 해시 ${st.loaded!.reportHash.slice(0, 19)}…` /* 19 = 'sha256:'+12자, 눈 대조용 앞부분(docs/adr/0010). 전송 값은 전체 */),
+    h("p", { id: "report-subject" }, `제출 대상: ${subjectText(rep.subject)}`),
     st.notice && h("p", { class: `notice ${st.notice.kind}`, role: "alert" }, st.notice.text),
     h("p", { class: "muted" }, "이 화면은 합격·불합격을 판단하지 않는다. 임계치가 없고 '나빠짐'은 활성 릴리스와 비교한 참고 표시다. 판단은 승인자가 한다."),
     h("p", {}, `지표 ${rep.comparisons.length}개 중 나빠짐 표시 ${view.worseCount}개`),

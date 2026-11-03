@@ -14,7 +14,7 @@ type Err = (res: ServerResponse, status: number, code: string, message: string, 
 function manifest(n: number): ReleaseSummary & Record<string, unknown> {
   return {
     pipeline_schema_version: V, release_id: `rel-000${n}`, created_at: `2026-10-0${n * 2}T00:00:00Z`, gate_decision_id: `gd-000${n}`,
-    question_set: { id: "qs-main", version: "3", content_hash: H0 }, lora_a: { id: "lora-a", version: `1.${n}.0`, content_hash: H0 }, lora_b: { id: "lora-b", version: "1.0.1", content_hash: H0 },
+    question_sets: [{ id: "qs-main", version: "3", content_hash: H0, title: "기본 문진표" }, { id: "qs-alcohol", version: "2", content_hash: H0, title: "음주 문진표" }], lora_a: { id: "lora-a", version: `1.${n}.0`, content_hash: H0 }, lora_b: { id: "lora-b", version: "1.0.1", content_hash: H0 },
     runtime_contract_version: 1, action_rules_version: ACTION_RULES_VERSION, model_runtime_version: "0.1.0", content_hash: H0,
     adapters: Object.fromEntries(["LORA_A", "LORA_B"].map((r) => [r, { adapter_hash: H0, serving_config: { protection_policy_version: "protect-1" }, serving_config_hash: H0,
       system_prompt: { path: "system_prompt.txt", sha256: "sha256:3def1bd06bba07ed86b77771064fc0dc969cc80f2997f159ee80b3de5b228b93" } }])),

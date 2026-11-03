@@ -7,13 +7,15 @@ type ReleaseSummary = ReleaseRow;
 
 const CAUSE_LABEL: Record<string, string> = { ACTIVATE: "활성화", ROLLBACK: "롤백" };
 const refText = (r?: { id: string; version: string }): string => (r ? `${r.id}@${r.version}` : "—");
+// 왜 제목 우선: 사람은 ID보다 제목으로 문진표를 알아본다. 제목이 없으면 ID(계약 QuestionSetRef.title은 필수지만 읽을 때는 관대하게, ADR 0016).
+const setsText = (rs?: { id: string; version: string; title?: string }[]): string => (rs && rs.length ? rs.map((q) => `${q.title || q.id} (${q.id}@${q.version})`).join(", ") : "—");
 
 function releaseTable(rows: ReleaseSummary[], activeId: string | null, action: ((r: ReleaseSummary) => HTMLElement | null) | null): HTMLElement {
   return h("table", { class: "grid" },
-    h("thead", {}, h("tr", {}, ...["릴리스 ID", "만든 시각", "게이트 결정 ID", "문항", "LoRA-A", "LoRA-B", "상태", ...(action ? [""] : [])].map((t) => h("th", { scope: "col" }, t)))),
+    h("thead", {}, h("tr", {}, ...["릴리스 ID", "만든 시각", "게이트 결정 ID", "문진표", "LoRA-A", "LoRA-B", "상태", ...(action ? [""] : [])].map((t) => h("th", { scope: "col" }, t)))),
     h("tbody", {}, ...rows.map((r) => h("tr", { "data-release": r.release_id },
       h("td", {}, r.release_id), h("td", {}, fmtTime(r.created_at)), h("td", {}, r.gate_decision_id),
-      h("td", {}, refText(r.question_set)), h("td", {}, refText(r.lora_a)), h("td", {}, refText(r.lora_b)),
+      h("td", {}, setsText(r.question_sets)), h("td", {}, refText(r.lora_a)), h("td", {}, refText(r.lora_b)),
       h("td", {}, r.release_id === activeId ? h("strong", {}, "활성") : "—"),
       ...(action ? [h("td", {}, action(r))] : [])))));
 }

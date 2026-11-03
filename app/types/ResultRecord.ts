@@ -10,6 +10,8 @@ export interface ResultRecord {
   ended_at?: string | null;
   release_id?: string | null;
   question_bank_version?: string | null;
+  question_set_id?: string | null;
+  question_set_title?: string | null;
   answers: {
     key: string;
     status: string;
