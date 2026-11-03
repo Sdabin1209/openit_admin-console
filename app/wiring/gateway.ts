@@ -10,6 +10,7 @@ import { createRollback } from "../components/link_release_rollback.ts";
 import { createFailureList } from "../components/link_failure_list.ts";
 import { createFailureGet } from "../components/link_failure_get.ts";
 import { createFailureTrace } from "../components/link_failure_trace.ts";
+import { createFailureMaskedTrace } from "../components/link_failure_masked_trace.ts";
 import { createFailureReview } from "../components/link_failure_review.ts";
 import type { ApprovalDecision } from "../types/ApprovalDecision.ts";
 import type { ApprovalResult } from "../types/ApprovalResult.ts";
@@ -25,6 +26,7 @@ import type { CaseListQuery } from "../types/CaseListQuery.ts";
 import type { CaseReviewDraft } from "../types/CaseReviewDraft.ts";
 import type { CaseReviewResult } from "../types/CaseReviewResult.ts";
 import type { OpsFeedbackReviewTrace } from "../types/contract/OpsFeedbackReviewTrace.ts";
+import type { OpsFeedbackDeidentifiedTrace } from "../types/contract/OpsFeedbackDeidentifiedTrace.ts";
 import { unwrap } from "./api_error.ts";
 
 export { REPORT_HASH_HEADER };
@@ -84,10 +86,10 @@ export class ReleasesClient {
 }
 
 export class CasesClient {
-  private readonly listFn; private readonly getFn; private readonly traceFn; private readonly reviewFn;
+  private readonly listFn; private readonly getFn; private readonly traceFn; private readonly maskedFn; private readonly reviewFn;
   constructor(opts: HttpOptions = {}) {
     const s = send(opts, OPS_FEEDBACK_TIMEOUT_MS);
-    this.listFn = createFailureList(s); this.getFn = createFailureGet(s); this.traceFn = createFailureTrace(s); this.reviewFn = createFailureReview(s);
+    this.listFn = createFailureList(s); this.getFn = createFailureGet(s); this.traceFn = createFailureTrace(s); this.maskedFn = createFailureMaskedTrace(s); this.reviewFn = createFailureReview(s);
   }
   async list(f: CaseListQuery = {}): Promise<CaseRecord[]> {
     return unwrap(await this.listFn(f)).cases;
@@ -95,6 +97,11 @@ export class CasesClient {
   async get(id: string, version?: number): Promise<CaseRecord> {
     return unwrap(await this.getFn({ caseId: id, ...(version === undefined ? {} : { version }) }));
   }
+  /** 마스킹된 trace. 편집창 채우기 전용(원문 발화가 reviewed_input으로 새지 않게, ADR 0025). */
+  async getMaskedTrace(ref: string): Promise<OpsFeedbackDeidentifiedTrace> {
+    return unwrap(await this.maskedFn({ ref }));
+  }
+  /** 검토용 trace(발화 두 칸 원문). 화면 표시 전용. */
   async getTrace(ref: string): Promise<OpsFeedbackReviewTrace> {
     return unwrap(await this.traceFn({ ref }));
   }

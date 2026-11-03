@@ -51,6 +51,7 @@
 | link_failure_list | `components/link_failure_list.ts` | `CaseListQuery` | `CaseList` | I7 `GET /v1/cases` (모든 쪽) |
 | link_failure_get | `components/link_failure_get.ts` | `CaseGetInput` | `CaseRecord` | I7 `GET /v1/cases/{id}` |
 | link_failure_trace | `components/link_failure_trace.ts` | `TraceRefInput` | 계약 `OpsFeedbackReviewTrace` | I7 `GET /v1/deidentified-traces/{ref}` |
+| link_failure_masked_trace | `components/link_failure_masked_trace.ts` | `TraceRefInput` | 계약 `OpsFeedbackDeidentifiedTrace` | I7 `GET /v1/deidentified-traces/{ref}`. 편집창 채우기 전용(마스킹본, ADR 0025) |
 | link_failure_review | `components/link_failure_review.ts` | `CaseReviewInput` | `CaseReviewResult` | I7 `POST /v1/cases/{id}/review` (계약 `CaseReviewRequest`) |
 
 ## 3. 컴포넌트가 아닌 것

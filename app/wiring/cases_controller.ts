@@ -9,6 +9,7 @@ import { caseReviewDraft } from "../components/case_review_draft.ts";
 import { caseTracePrefill } from "../components/case_trace_prefill.ts";
 import type { CaseRecord } from "../types/CaseRecord.ts";
 import type { CaseReviewResult } from "../types/CaseReviewResult.ts";
+import type { OpsFeedbackDeidentifiedTrace } from "../types/contract/OpsFeedbackDeidentifiedTrace.ts";
 import type { OpsFeedbackReviewTrace } from "../types/contract/OpsFeedbackReviewTrace.ts";
 
 type ExpectedKind = "LORA_A" | "LORA_B";
@@ -31,6 +32,8 @@ export interface CaseState {
   cases: FailureCase[];
   current: FailureCase | null;
   trace: ReviewTrace | null;
+  /** 편집창 채우기 전용 마스킹본. 원문이 든 trace는 편집창에 쓰지 않는다(ADR 0025). */
+  maskedTrace: OpsFeedbackDeidentifiedTrace | null;
   traceError: string | null;
   form: CaseForm;
   errors: string[]; // 전송 전 검증 오류
@@ -43,7 +46,7 @@ const emptyForm = (): CaseForm => ({ status: "CONFIRMED", kind: "", inputText: "
 
 export class CasesController {
   state: CaseState = {
-    phase: "list-loading", filter: "PENDING", cases: [], current: null, trace: null, traceError: null,
+    phase: "list-loading", filter: "PENDING", cases: [], current: null, trace: null, maskedTrace: null, traceError: null,
     form: emptyForm(), errors: [], notice: null, result: null, error: null,
   };
   private listeners = new Set<() => void>();
@@ -86,12 +89,16 @@ export class CasesController {
 
   async openCase(id: string, version?: number): Promise<void> {
     const my = ++this.seq;
-    this.set({ phase: "case-loading", current: null, trace: null, traceError: null, form: emptyForm(), errors: [], notice: null, result: null, error: null });
+    this.set({ phase: "case-loading", current: null, trace: null, maskedTrace: null, traceError: null, form: emptyForm(), errors: [], notice: null, result: null, error: null });
     try {
       const c = await this.api.get(id, version);
       if (my !== this.seq) return;
       const form: CaseForm = { ...emptyForm(), kind: c.expected_kind === "LORA_A" || c.expected_kind === "LORA_B" ? c.expected_kind : "" };
       this.set({ phase: "case", current: c, form });
+      try {
+        const maskedTrace = await this.api.getMaskedTrace(c.deidentified_trace_ref);
+        if (my === this.seq) this.set({ maskedTrace });
+      } catch { /* 채우기 버튼만 막힌다. 표시용 trace는 아래에서 따로 읽는다 */ }
       try {
         const trace = await this.api.getTrace(c.deidentified_trace_ref);
         if (my === this.seq) this.set({ trace });
@@ -113,11 +120,11 @@ export class CasesController {
     this.set({ form: { ...this.state.form, ...p }, errors: [], notice: null });
   }
 
-  /** 비식별 trace의 해당 입력을 편집창에 채운다. 검토자가 개인정보 없는 문장으로 고쳐 써야 한다. */
+  /** 마스킹된 trace(review-traces가 아니다)의 해당 입력을 편집창에 채운다. 검토자가 개인정보 없는 문장으로 고쳐 써야 한다. */
   prefillFromTrace(): void {
-    const { form, trace } = this.state;
-    if (!trace || !form.kind) return;
-    const r = caseTracePrefill({ trace, kind: form.kind });
+    const { form, maskedTrace } = this.state;
+    if (!maskedTrace || !form.kind) return;
+    const r = caseTracePrefill({ trace: maskedTrace, kind: form.kind });
     if (r.inputText !== null) this.setFormAndRender({ inputText: r.inputText });
   }
 

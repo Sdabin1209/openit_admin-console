@@ -220,3 +220,17 @@ test("review-traces: reviewer가 아니면 403이고 '검토 권한 필요' 안�
     assert.equal(c.state.phase, "case", "사례 화면은 열린 채 trace만 막힌다");
   } finally { await s.close(); }
 });
+
+test("편집창 채우기는 마스킹본만 쓴다: 초기값에 원문 발화가 없고 [MASKED]가 있다(ADR 0025)", async () => {
+  const s = await startMock();
+  try {
+    const c = s.cases();
+    await c.openCase("fc-4");
+    assert.ok(JSON.stringify(c.state.trace).includes(MOCK_UTTERANCE), "표시용 trace에는 원문이 있다");
+    assert.equal(c.state.form.kind, "LORA_A");
+    c.prefillFromTrace();
+    assert.ok(c.state.form.inputText.includes("[MASKED]"));
+    assert.ok(!c.state.form.inputText.includes(MOCK_UTTERANCE), "원문 발화가 편집창에 들어가면 안 된다");
+    assert.ok(!JSON.stringify(c.state.maskedTrace).includes(MOCK_UTTERANCE));
+  } finally { await s.close(); }
+});

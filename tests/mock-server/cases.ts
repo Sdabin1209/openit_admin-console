@@ -36,14 +36,14 @@ export function initialCases(): Map<string, FailureCase[]> {
 // 비식별 뒤 값 자리(key, value 등)는 [MASKED]다. 이 모양은 ops-feedback 서버의 실제 출력이 아니라 계약 예시를 따른 모의다.
 // 검토용 trace는 발화 두 칸만 원문이다(3.2.0). 모의 값이며 실제 환자 발화가 아니다.
 export const MOCK_UTTERANCE = "머리가 계속 아파요(모의 발화)";
-export function trace(ref: string): Record<string, unknown> | null {
+export function trace(ref: string, masked = false): Record<string, unknown> | null {
   if (!ref.startsWith("tr-fc-")) return null;
   const sid = "p-" + "18a3512ebb50d67046b64712466b1562";
   return {
     session_id: sid, turn_id: "p-" + "825eaad83e41f19bb747ace04c02897d", contract_version: 1,
-    frontend_message: { session_id: sid, kind: "UTTERANCE", utterance: MOCK_UTTERANCE },
+    frontend_message: { session_id: sid, kind: "UTTERANCE", utterance: masked ? "[MASKED]" : MOCK_UTTERANCE },
     intervention_decision: null, orchestrator_input: null,
-    extract_input: { ...VALID_LORA_A_INPUT, user_utterance: MOCK_UTTERANCE },
+    extract_input: { ...VALID_LORA_A_INPUT, user_utterance: masked ? "[MASKED]" : MOCK_UTTERANCE },
     extract_output: { action: "NEXT", next_item: "Q1.D04", reason: "[MASKED]", targets: [], note: "[MASKED]",
       values: [{ key: "[MASKED]", value: "[MASKED]", precision: "[MASKED]", status: "[MASKED]", save: true }] },
     extract_attempts: 1, extract_status: "OK", extract_protections: {}, validation_ok: true, validation_violations: [],
@@ -102,6 +102,11 @@ export function createCasesMock(now: () => string): CasesMock {
         const c = ver ? vs.find((x) => x.version === Number(ver)) : vs[vs.length - 1];
         if (!c) return err(res, 404, "NOT_FOUND", "그 버전이 없다"), true;
         return send(res, 200, c), true;
+      }
+      mm = /^\/v1\/deidentified-traces\/([^/]+)$/.exec(p);
+      if (req.method === "GET" && mm) {
+        const t = trace(decodeURIComponent(mm[1]), true);
+        return t ? send(res, 200, t) : err(res, 404, "NOT_FOUND", "trace가 없다"), true;
       }
       mm = /^\/v1\/review-traces\/([^/]+)$/.exec(p);
       if (req.method === "GET" && mm) {

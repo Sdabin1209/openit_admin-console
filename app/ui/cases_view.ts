@@ -94,7 +94,7 @@ function caseDetail(st: CaseState, c: CasesController, k: FailureCase): HTMLElem
         h("p", {}, h("label", { for: "kind" }, "종류 "), kindSel),
         h("p", {}, h("label", { for: "input-text" }, "고쳐 쓴 입력(reviewed_input, JSON, 선택) — 개인정보 없는 문장으로"), h("br"),
           h("textarea", { id: "input-text", "aria-describedby": "pii-warning", rows: "10", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ inputText: (e.target as HTMLTextAreaElement).value }) }, f.inputText), h("br"),
-          h("button", { type: "button", id: "prefill", disabled: busy || !st.trace || !f.kind, onclick: () => c.prefillFromTrace() }, "trace의 입력으로 채우기(마스킹된 값, 반드시 고쳐 쓸 것)")),
+          h("button", { type: "button", id: "prefill", disabled: busy || !st.maskedTrace || !f.kind, onclick: () => c.prefillFromTrace() }, "trace의 입력으로 채우기(마스킹된 값, 반드시 고쳐 쓸 것)")),
         h("p", {}, h("label", { for: "expected-text" }, f.kind === "LORA_B" ? "정답(expected, 응답 문장 그대로, 선택)" : "정답(expected, JSON, 선택)"), h("br"),
           h("textarea", { id: "expected-text", "aria-describedby": "pii-warning", rows: "6", cols: "80", spellcheck: "false", disabled: busy, oninput: (e) => c.setForm({ expectedText: (e.target as HTMLTextAreaElement).value }) }, f.expectedText))),
       h("p", {}, h("button", { type: "button", id: "submit-review", disabled: busy, onclick: () => void c.submit() }, busy ? "전송 중…" : "검토 기록"))));
