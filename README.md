@@ -94,7 +94,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 | `npx tsc --noEmit` | 오류 없음 | 0 | 2026-11-04 |
 | `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험 7개, 라벨, non-root, 종료 신호 | 0 (`admin-console:smoke-b29e46d`) | 2026-11-04 |
 
-기준: 계약 boundary-contracts v3.4.12(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본). 계약 시험은 이웃 리포의 고정 태그 내용을 git에서 읽는다. 이 영역은 DB가 없고 백엔드 서버 코드가 없는 브라우저 앱과 Caddy 정적 서버라서 PG 시험은 해당 없음.
+기준: 계약 boundary-contracts v3.4.13(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본). 계약 시험은 이웃 리포의 고정 태그 내용을 git에서 읽는다. 이 영역은 DB가 없고 백엔드 서버 코드가 없는 브라우저 앱과 Caddy 정적 서버라서 PG 시험은 해당 없음.
 
 ### 계약 항목 가운데 해당 없음으로 판단한 것
 - Exposure `egress`: 이 영역은 정적 파일 서버와 브라우저 앱이다. 서버 쪽에서 영역 밖을 부르는 호출이 없다(브라우저가 페이지 출처의 `/v1`을 부른다). 그래서 `deploy-exposure.json`에 `egress`가 없다(선택 필드, 없으면 빈 목록).
