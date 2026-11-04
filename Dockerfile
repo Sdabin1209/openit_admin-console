@@ -26,4 +26,9 @@ COPY --from=build /src/dist /srv
 ENV XDG_CONFIG_HOME=/tmp XDG_DATA_HOME=/tmp
 USER 65532:65532
 EXPOSE 8080
+# 왜 HEALTHCHECK: 영역 이미지는 자기 상태 확인을 가진다(CONVENTIONS 13절 3.4.17). deploy 가 compose 에 대신 적지 않게 한다.
+# 왜 wget: caddy:alpine 에 busybox wget 이 있고 curl 은 없다(새 패키지를 넣지 않는다). 주소는 서버가 붙은 ADMIN_HOST(기본 0.0.0.0 -> 이 컨테이너 안 loopback 과 같은 곳, 비어 있으면 127.0.0.1)이고 포트는 Caddyfile 의 8080 이다. IPv6 리터럴 ADMIN_HOST 는 대괄호가 필요해 이 확인이 닿지 않는다(AdminConsoleEnv 의 예는 IPv4).
+# 값(15s/3s/5s/3회)은 측정하지 않은 시작값이다. 15s 는 이 워크스페이스의 다른 영역 이미지와 같고, 시작 5초는 Caddy 가 설정을 읽는 시간에 대한 가정이다(측정 안 함).
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null "http://${ADMIN_HOST:-127.0.0.1}:8080/healthz" || exit 1
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

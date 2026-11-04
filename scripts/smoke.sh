@@ -64,6 +64,32 @@ echo "== 동작 시험(tests/static-behavior.test.ts, 이미지에 대해)"
 STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >"$STATIC_LOG" 2>&1 || { cat "$STATIC_LOG" >&2; rm -f "$STATIC_LOG"; fail "정적 서버 동작 시험"; }
 grep -E "^ℹ (pass|fail)" "$STATIC_LOG"; rm -f "$STATIC_LOG"
 
+echo "== HEALTHCHECK (이미지 안의 상태 확인: healthy 와 unhealthy 둘 다)"
+# 시험을 빠르게 하려고 간격만 docker run 플래그로 줄인다(이미지의 명령은 그대로 쓴다).
+health() { "$DOCKER" inspect -f '{{.State.Health.Status}}' "$1" 2>/dev/null || echo none; }
+wait_health() {   # $1=컨테이너 $2=기다릴 상태. starting 이 끝날 때까지만 본다(상한 30초는 매달림 감시일 뿐 판정이 아니다)
+  for _ in $(seq 1 60); do [ "$(health "$1")" = "$2" ] && return 0; [ "$(health "$1")" = starting ] || break; sleep 0.5; done
+  [ "$(health "$1")" = "$2" ]
+}
+HC_FAST="--health-interval=1s --health-timeout=3s --health-start-period=0s --health-retries=1"
+NAME_H="${NAME}-health"; NAME_U="${NAME}-unhealthy"; MUT="$(mktemp)"
+trap '"$DOCKER" rm -f "$NAME_H" "$NAME_U" >/dev/null 2>&1 || true; rm -f "$MUT"; cleanup' EXIT
+# healthy: 이미지 기본 구성(ADMIN_HOST 기본과 127.0.0.1 둘 다)
+"$DOCKER" run -d --name "$NAME_H" $HC_FAST "$IMAGE" >/dev/null
+wait_health "$NAME_H" healthy || { NAME="$NAME_H"; fail "HEALTHCHECK가 healthy가 되지 않았다(기본 구성): $(health "$NAME_H")"; }
+"$DOCKER" rm -f "$NAME_H" >/dev/null
+"$DOCKER" run -d --name "$NAME_H" -e ADMIN_HOST=127.0.0.1 $HC_FAST "$IMAGE" >/dev/null
+wait_health "$NAME_H" healthy || { NAME="$NAME_H"; fail "HEALTHCHECK가 healthy가 되지 않았다(ADMIN_HOST=127.0.0.1): $(health "$NAME_H")"; }
+"$DOCKER" rm -f "$NAME_H" >/dev/null
+# 변이: /healthz 를 처리하지 않는 Caddyfile 을 얹으면 서버는 떠 있어도 unhealthy 여야 한다(상태 확인이 /healthz 를 실제로 본다는 증거)
+sed 's#@health path /healthz /readyz#@health path /nohealth /noready#' serve/Caddyfile >"$MUT"; chmod 644 "$MUT"
+cmp -s "$MUT" serve/Caddyfile && fail "변이 Caddyfile이 원본과 같다(치환 실패)"
+"$DOCKER" run -d --name "$NAME_U" -v "$MUT":/etc/caddy/Caddyfile:ro $HC_FAST "$IMAGE" >/dev/null
+for _ in $(seq 1 60); do [ "$(health "$NAME_U")" = unhealthy ] && break; sleep 0.5; done
+[ "$(health "$NAME_U")" = unhealthy ] || { NAME="$NAME_U"; fail "변이(/healthz 없음)인데 unhealthy가 아니다: $(health "$NAME_U")"; }
+"$DOCKER" rm -f "$NAME_U" >/dev/null; rm -f "$MUT"
+echo "HEALTHCHECK ok"
+
 echo "== 바인드 주소(ADMIN_HOST=127.0.0.1이면 컨테이너 밖에서 닿지 않고 안에서만 닿는다)"
 NAME2="${NAME}-loop"
 "$DOCKER" run -d --name "$NAME2" -e ADMIN_HOST=127.0.0.1 -p 127.0.0.1::8080 "$IMAGE" >/dev/null
