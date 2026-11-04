@@ -3,6 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { dockerEnv } from "./docker-env.mjs";
 
 // 왜 생성된 검증기: 요청·결과는 영역 경계 입력/출력이라 계약 스키마로만 검사한다(손 검사 금지, ADR 0017). npm ci 없이 돌도록 생성물은 자급식이다(gen-schemas.mjs).
 const v = createRequire(import.meta.url)("../app/types/contract-validators.cjs");
@@ -14,7 +15,7 @@ const DOCKER = process.env.DOCKER || "docker";
 function fail(msg, code = 1) { console.error(`build-image: 실패: ${msg}`); process.exit(code); }
 function errs(fn) { return (fn.errors ?? []).slice(0, 5).map((e) => `${e.instancePath || "(최상위)"} ${e.message ?? e.keyword}`).join("; "); }
 function docker(args, { stdoutToStderr = false } = {}) {
-  const r = spawnSync(DOCKER, args, { encoding: "utf8", stdio: stdoutToStderr ? ["ignore", 2, 2] : ["ignore", "pipe", 2] });
+  const r = spawnSync(DOCKER, args, { encoding: "utf8", env: dockerEnv(), stdio: stdoutToStderr ? ["ignore", 2, 2] : ["ignore", "pipe", 2] });
   if (r.error) fail(`${DOCKER}를 실행하지 못했다: ${r.error.message}`, 2);
   return r;
 }

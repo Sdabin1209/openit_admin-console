@@ -4,6 +4,8 @@
 # 표준 docker 명령만 쓴다. 실행 파일 이름은 DOCKER 환경 변수로만 바꿀 수 있다(기본 docker).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# 왜: 전역 ~/.docker 의 자격 도우미에 기대지 않는다(scripts/docker-env.mjs 의 설명)
+eval "$(node scripts/docker-env.mjs --sh)"
 
 DOCKER="${DOCKER:-docker}"
 if ! command -v "$DOCKER" >/dev/null 2>&1; then
