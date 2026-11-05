@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# deploy 와 같은 실행 조건으로 띄운다(읽기 전용 루트, /tmp tmpfs, cap_drop ALL, no-new-privileges, 쓸 수 있는 경로는 deploy compose 와 같게): 2026-11-06 E2E 기동에서야 드러난 쓰기 경로 결함을 스모크에서 잡는다
 # 이미지 스모크: 빌드 → 실행 → /healthz, /readyz, 화면 파일, 라벨, non-root 확인.
 # 고정 포트를 쓰지 않는다: 호스트 포트는 Docker가 배정한다(-p 127.0.0.1::8080). SMOKE_PORT를 주면 그 포트를 쓴다.
 # 표준 docker 명령만 쓴다. 실행 파일 이름은 DOCKER 환경 변수로만 바꿀 수 있다(기본 docker).
@@ -41,7 +42,7 @@ echo "$RESULT" | tail -n1 | head -c 400; echo
 PUBLISH="127.0.0.1::8080"
 [ -n "${SMOKE_PORT:-}" ] && PUBLISH="127.0.0.1:${SMOKE_PORT}:8080"
 echo "== run"
-"$DOCKER" run -d --name "$NAME" -p "$PUBLISH" "$IMAGE" >/dev/null
+"$DOCKER" run -d --name "$NAME" --read-only --tmpfs /tmp --cap-drop ALL --cap-add NET_BIND_SERVICE --security-opt no-new-privileges:true -p "$PUBLISH" "$IMAGE" >/dev/null
 PORT="$("$DOCKER" port "$NAME" 8080/tcp | head -n1 | sed 's/.*://')"
 echo "host port: $PORT"
 

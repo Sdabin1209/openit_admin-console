@@ -1,4 +1,4 @@
-// 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/, 계약 v3.4.19
+// 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/, 계약 v3.4.20
 "use strict";
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __commonJS = (cb, mod) => function __require() {
