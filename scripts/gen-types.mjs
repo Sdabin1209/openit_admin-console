@@ -1,3 +1,4 @@
+import { bundleStandalone, createAjv } from "./standalone.mjs";
 // schemas/(영역 내부 타입)와 고정 태그의 계약 스키마에서 app/types/를 생성한다. 손으로 고치지 않는다(DESIGN.md 3·6절).
 //  - app/types/<이름>.ts            내부 타입 (json-schema-to-typescript)
 //  - app/types/contract/<이름>.ts   이 영역이 쓰는 계약 타입 (같은 도구, 고정 태그의 스키마)
@@ -32,7 +33,7 @@ export function contractSchemas() {
 }
 
 export function loadAjv() {
-  const ajv = new Ajv({ strict: false, code: { source: true, esm: false }, allErrors: true });
+  const ajv = createAjv({ strict: false, code: { source: true, esm: false }, allErrors: true });
   for (const [f, t] of Object.entries(contractSchemas())) ajv.addSchema(JSON.parse(t), f);
   for (const n of internalNames()) ajv.addSchema(JSON.parse(readFileSync(join(SCHEMAS, `${n}.schema.json`), "utf8")), `${n}.schema.json`);
   return ajv;
@@ -53,11 +54,9 @@ export async function generate() {
   const ajv = loadAjv();
   const names = internalNames();
   const code = standaloneCode(ajv, Object.fromEntries(names.map((n) => [n, `${n}.schema.json`])));
-  const RUNTIME = 'require("ajv/dist/runtime/ucs2length").default';
-  const inline = "(function ucs2length(str){const len=str.length;let length=0,pos=0,value;while(pos<len){length++;value=str.charCodeAt(pos++);if(value>=0xd800&&value<=0xdbff&&pos<len){value=str.charCodeAt(pos);if((value&0xfc00)===0xdc00)pos++;}}return length;})";
   // 왜 도우미를 생성물에 두나: 컴포넌트끼리 import할 수 없어(규칙 3) 검증 오류를 읽는 코드를 컴포넌트마다 복사하게 된다. 생성물은 공유해도 되는 types/ 쪽이다.
   const helpers = `\nexports.issues = function issues(fn) { return (fn.errors || []).map((e) => ({ path: e.instancePath, message: e.message || e.keyword, keyword: e.keyword })); };\nexports.assertValid = function assertValid(fn, data, what) { if (!fn(data)) throw new TypeError(what + " 입력/출력이 스키마에 맞지 않는다: " + exports.issues(fn).slice(0, 3).map((i) => (i.path || "(최상위)") + " " + i.message).join("; ")); return data; };\n`;
-  files["validators.cjs"] = `// 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/, 계약 ${contract.tag}\n` + code.split(RUNTIME).join(inline) + helpers;
+  files["validators.cjs"] = `// 생성물: scripts/gen-types.mjs (직접 고치지 않는다). 원본: schemas/, 계약 ${contract.tag}\n` + bundleStandalone(code) + helpers;
   files["validators.d.cts"] = "// 생성물: scripts/gen-types.mjs\ninterface ErrorObject { instancePath: string; schemaPath: string; message?: string; keyword: string }\nexport interface V { (data: unknown): boolean; errors?: ErrorObject[] | null }\n" + names.map((n) => `export const ${n}: V;`).join("\n") + "\nexport function issues(fn: V): { path: string; message: string; keyword: string }[];\nexport function assertValid<T>(fn: V, data: T, what: string): T;\n";
   return files;
 }

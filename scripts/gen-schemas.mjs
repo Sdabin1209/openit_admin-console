@@ -1,3 +1,4 @@
+import { bundleStandalone, createAjv } from "./standalone.mjs";
 // 계약 패키지 스키마(../boundary-contracts의 **고정 태그** 내용, 읽기 전용, 이웃 작업 트리는 읽지 않는다: scripts/contract-src.mjs)에서 LoRA-A/B 입력·출력 검증기를 생성한다.
 // 브라우저 CSP(script-src 'self')에서 eval 없이 쓰려고 Ajv standalone 코드를 만든다.
 // 사용: node scripts/gen-schemas.mjs [--check]   (--check: 생성물이 최신인지만 검사)
@@ -26,7 +27,7 @@ const SUPPORT = ["_common"];
 
 export function generate(src = contract) {
   const version = /^version\s*=\s*"([^"]+)"/m.exec(src.read("pyproject.toml"))?.[1] ?? "unknown";
-  const ajv = new Ajv({ strict: false, code: { source: true, esm: false }, allErrors: true });
+  const ajv = createAjv({ strict: false, code: { source: true, esm: false }, allErrors: true });
   const sources = {};
   for (const n of [...NAMES, ...SUPPORT]) {
     const text = src.read(`schemas/${n}.schema.json`);
@@ -43,10 +44,7 @@ export function generate(src = contract) {
   const header = `// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts ${version}\n// source-sha256: ${JSON.stringify(sources)}\n`;
   // 왜 인라인: 생성 코드가 require("ajv/dist/runtime/ucs2length")를 부르면 빌드 진입점이 npm ci(네트워크) 없이는 검증기를 못 쓴다.
   // 같은 함수(ajv 8.20.0, MIT, 12줄)를 생성물 안에 두어 node만으로 돌게 한다. 브라우저 번들에도 같은 함수가 들어간다.
-  const RUNTIME = 'require("ajv/dist/runtime/ucs2length").default';
-  if (!code.includes(RUNTIME)) throw new Error("생성 코드에서 ucs2length 호출을 찾지 못했다(ajv 버전이 바뀌었는지 확인)");
-  const inline = "(function ucs2length(str){const len=str.length;let length=0,pos=0,value;while(pos<len){length++;value=str.charCodeAt(pos++);if(value>=0xd800&&value<=0xdbff&&pos<len){value=str.charCodeAt(pos);if((value&0xfc00)===0xdc00)pos++;}}return length;})";
-  return header + code.split(RUNTIME).join(inline) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\nexports.CONTRACT_VERSION = ${JSON.stringify("v" + version)};\nexports.ACTION_RULES_VERSION = ${JSON.stringify(rules)};\n`;
+  return header + bundleStandalone(code) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\nexports.CONTRACT_VERSION = ${JSON.stringify("v" + version)};\nexports.ACTION_RULES_VERSION = ${JSON.stringify(rules)};\n`;
 }
 
 if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").href) {

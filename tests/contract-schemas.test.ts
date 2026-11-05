@@ -123,3 +123,11 @@ test("turn engine 의존·표지·라벨이 코드에 남아 있지 않다(계�
   walk(new URL("../", import.meta.url));
   assert.deepEqual(hits, []);
 });
+
+test("생성기에서 표준 date-time 형식을 실제로 검사한다", async () => {
+  const { loadAjv } = await import("../scripts/gen-types.mjs");
+  const timestamp = loadAjv().getSchema("_common.schema.json#/$defs/Timestamp")!;
+  assert.equal(timestamp("2026-11-06T00:00:00Z"), true);
+  assert.equal(timestamp("2026-02-30T00:00:00Z"), false);
+  assert.equal(timestamp("not-a-timestamp"), false);
+});

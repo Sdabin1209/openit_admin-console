@@ -4,5 +4,8 @@
  */
 export interface ActivateRequest {
   release_id: string;
-  requested_by_role: "operator";
+  /**
+   * Optional audit claim; authorization comes from the authenticated token.
+   */
+  requested_by_role?: "operator";
 }

@@ -5,7 +5,10 @@
 export interface ApprovalRequest {
   submission_id: string;
   decision: "APPROVE" | "REJECT";
-  approver_role: "release-approver";
+  /**
+   * Optional audit claim; authenticated token determines the role.
+   */
+  approver_role?: "release-approver";
   /**
    * 반려에는 필수
    */
