@@ -9,3 +9,6 @@ export class ContractSource {
   list(dir: string): string[];
 }
 export const contract: ContractSource;
+export function resolveRepo(tag: string, o?: { name?: string; env?: string; remote?: string }): string;
+export const SURVEY_SCHEMA_TAG: string;
+export function surveySchemaJson(name: string): any;

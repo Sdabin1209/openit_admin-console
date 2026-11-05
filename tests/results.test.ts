@@ -1,3 +1,4 @@
+import { surveySchemaJson } from "../scripts/contract-src.mjs";
 // 규칙 U83 문진 결과 화면(의사용): 목록·상세·빈칸 사유·확인 표시·도착 알림(SSE result_ready)·403 안내. 기준은 계약 PUBLIC_API B(boundary-contracts v3.2.0).
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
@@ -189,8 +190,8 @@ test("실시간 연결이 403으로 거절되면 live=false이고 화면은 그�
   } finally { await s.close(); }
 });
 
-test("모의 서버 출력이 문진 스키마 SessionResult를 통과한다(확인 표시 필드 제외)", { skip: !existsSync(new URL("../../survey-service/schema/schemas/SessionResult.json", import.meta.url)) && "문진 스키마 폴더가 없다(읽기 전용 이웃)" }, async () => {
-  const schema = JSON.parse(readFileSync(new URL("../../survey-service/schema/schemas/SessionResult.json", import.meta.url), "utf8"));
+test("모의 서버 출력이 문진 스키마 SessionResult를 통과한다(확인 표시 필드 제외)", async () => {
+  const schema = surveySchemaJson("SessionResult");   // 고정 태그(scripts/contract-src.mjs SURVEY_SCHEMA_TAG)
   const v = new Ajv({ strict: false, allErrors: true }).compile(schema);
   const s = await startMock();
   try {
