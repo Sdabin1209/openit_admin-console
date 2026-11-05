@@ -10,7 +10,7 @@ export const ApprovalFailure: V;
 export const ApprovalFailureInput: V;
 export const ApprovalRecord: V;
 export const ApprovalResult: V;
-export const ArtifactRef: V;
+export const ArtifactRefRow: V;
 export const CaseFailure: V;
 export const CaseFailureInput: V;
 export const CaseGetInput: V;

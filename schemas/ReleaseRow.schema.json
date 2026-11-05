@@ -21,10 +21,10 @@
       "type": "string"
     },
     "lora_a": {
-      "$ref": "ArtifactRef.schema.json"
+      "$ref": "ArtifactRefRow.schema.json"
     },
     "lora_b": {
-      "$ref": "ArtifactRef.schema.json"
+      "$ref": "ArtifactRefRow.schema.json"
     },
     "question_sets": {
       "type": "array",

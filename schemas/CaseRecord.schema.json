@@ -61,7 +61,7 @@
       "type": "object"
     },
     "question_set": {
-      "$ref": "ArtifactRef.schema.json"
+      "$ref": "ArtifactRefRow.schema.json"
     },
     "ext": {
       "type": "object"

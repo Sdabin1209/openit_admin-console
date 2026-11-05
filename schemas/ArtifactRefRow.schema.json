@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "ArtifactRef.schema.json",
-  "title": "ArtifactRef",
+  "$id": "ArtifactRefRow.schema.json",
+  "title": "ArtifactRefRow",
   "description": "산출물 참조(문항 세트·LoRA). 화면은 id와 version만 보이고 모르는 필드는 보존한다.",
   "type": "object",
   "required": [

@@ -24,13 +24,13 @@ export interface CaseRecord {
   expected?: {} | string;
   expected_kind?: string;
   reviewed_input?: {};
-  question_set?: ArtifactRef;
+  question_set?: ArtifactRefRow;
   ext?: {};
 }
 /**
  * 산출물 참조(문항 세트·LoRA). 화면은 id와 version만 보이고 모르는 필드는 보존한다.
  */
-export interface ArtifactRef {
+export interface ArtifactRefRow {
   id: string;
   version: string;
   content_hash: string;

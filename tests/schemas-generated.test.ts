@@ -18,7 +18,7 @@ test("스키마 JSON 복사본을 리포에 두지 않았다", { skip: !contract
   const contractNames = new Set(contract.list("schemas").map((f) => f.replace(/\.schema\.json$/, "")));
   const walk = (d: URL, out: string[] = []): string[] => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (["node_modules", ".git", "dist"].includes(e.name)) continue;
+      if (["node_modules", ".git", "dist", "build"].includes(e.name)) continue;   // build/ 는 git 제외 산출물(검증용 clone 등)이라 리포 내용이 아니다
       if (e.isDirectory()) walk(new URL(e.name + "/", d), out);
       else if (/\.schema\.json$/.test(e.name) || /^(ActionExtractionInput|ActionExtraction|ResponseRequest|ResponseText|TurnTrace)\.json$/.test(e.name)) {
         if (!d.pathname.endsWith("/schemas/") || contractNames.has(e.name.replace(/\.schema\.json$/, ""))) out.push(d.pathname + e.name);

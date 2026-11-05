@@ -49,7 +49,7 @@
 | `ApprovalFailureInput` | approval_failure의 입력: 어느 일을 하다(load 불러오기, decide 결정 전송) 난 오류. |
 | `ApprovalRecord` | 서버가 기록한 결정(GateApproval의 읽기용 투영). |
 | `ApprovalResult` | link_gate_decide의 출력. replay는 서버가 같은 결정을 이미 갖고 있어 200으로 답한 경우. |
-| `ArtifactRef` | 산출물 참조(문항 세트·LoRA). 화면은 id와 version만 보이고 모르는 필드는 보존한다. |
+| `ArtifactRefRow` | 산출물 참조(문항 세트·LoRA). 화면은 id와 version만 보이고 모르는 필드는 보존한다. |
 | `CaseFailure` | case_failure의 출력. back_to_case는 사례 화면에 알림을 보이고 머문다, fail은 오류 화면(또는 trace 오류 문구). |
 | `CaseFailureInput` | case_failure의 입력. |
 | `CaseGetInput` | link_failure_get의 입력. version이 없으면 최신. |
