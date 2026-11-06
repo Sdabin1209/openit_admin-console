@@ -26,6 +26,10 @@ if (a[0] === "build") {
   if (process.env.FAKE_BUILD_FAIL) { console.error("build failed"); process.exit(1); }
   console.log("stdout noise from build"); // 진행 출력이 표준 출력으로 나와도 진입점이 막는다
   fs.writeFileSync(d + "/state", JSON.stringify({ rev: arg("REVISION"), bc: arg("BOUNDARY_CONTRACTS"), labels: labelArgs() }));
+} else if (a[0] === "run" && a.includes("id")) {   // 이미지 실행 사용자(주입 선언 정직성 확인, 계약 ContainerInputs.process)
+  console.log(a[a.length - 1] === "-u" ? (process.env.FAKE_UID ?? "65532") : "65532");
+} else if (a[0] === "rmi") {
+  fs.appendFileSync(d + "/rmi", a.join(" ") + "\\n");
 } else if (a[0] === "image") {
   const st = JSON.parse(fs.readFileSync(d + "/state", "utf8"));
   if (a.join(" ").includes("Labels")) {

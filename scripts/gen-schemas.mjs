@@ -18,6 +18,8 @@ const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "
   "SetupEnvReport",
   // 노출 선언(deploy-exposure.json, 라벨 io.openit.exposure)을 빌드 진입점과 시험이 검사한다(계약 Exposure, U47).
   "Exposure",
+  // 주입 선언(deploy-inputs.json, 라벨 io.openit.inputs)을 빌드 진입점이 검사한다(계약 ContainerInputs 3.5.0).
+  "ContainerInputs",
   // 결과 탭 웹 푸시(계약 3.4.0, U92): 푸시 설정 응답과 서비스 워커가 받는 푸시 본문.
   "PushConfig", "StaffPushPayload",
   // 3.4.4: 이 영역이 만드는 푸시 구독 본문은 보내기 전에 검증한다(CONVENTIONS 3절 생산자 출력 검증). HealthStatus는 이미지의 /healthz·/readyz 본문 시험이 쓴다.

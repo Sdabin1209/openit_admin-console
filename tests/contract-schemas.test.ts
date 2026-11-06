@@ -96,6 +96,9 @@ test("Dockerfile 라벨이 ImageLabels를 통과한다(기본값 none/unknown/un
   const final = df.slice(df.lastIndexOf("\nFROM "));
   const args: Record<string, string> = { ...Object.fromEntries([...final.matchAll(/^ARG (\w+)=(\S+)$/gm)].map((m) => [m[1], m[2]])), REVISION: "0123abc" /* 빌드 인자로 받는 값 */ };
   const labels = Object.fromEntries([...final.matchAll(/(io\.openit\.[\w.-]+)="([^"]*)"/g)].map((m) => [m[1], m[2].replace(/\$\{(\w+)\}/g, (_, k) => args[k] ?? `<${k}?>`)]));
+  // 진입점(scripts/build-image.mjs)이 --label 로 다는 선언 라벨: 노출·주입(계약 ContainerInputs 3.5.0 필수). Dockerfile 만으로는 계약 이미지가 아니다
+  labels["io.openit.exposure"] = JSON.stringify(JSON.parse(readFileSync(new URL("../deploy-exposure.json", import.meta.url), "utf8")));
+  labels["io.openit.inputs"] = JSON.stringify(JSON.parse(readFileSync(new URL("../deploy-inputs.json", import.meta.url), "utf8")));
   assert.ok(v.ImageLabels(labels), JSON.stringify([labels, v.ImageLabels.errors]));
   assert.ok(!/ARG \w+=(none|unknown|unset)\b/.test(final), "ARG 기본값에 none/unknown/unset이 있다");
 });

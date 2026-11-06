@@ -41,14 +41,25 @@ try { exposure = JSON.parse(readFileSync(`${src}/deploy-exposure.json`, "utf8"))
 if (!v.Exposure(exposure)) fail(`deploy-exposure.json이 계약 Exposure에 맞지 않는다: ${errs(v.Exposure)}`, 2);
 const exposureLabel = JSON.stringify(exposure);
 
+// 주입 선언(계약 ContainerInputs 3.5.0, 라벨 io.openit.inputs): 리포 안 deploy-inputs.json이 정본이다. 배치 영역은 이 선언과 정확히 같게 주입한다.
+let inputs;
+try { inputs = JSON.parse(readFileSync(`${src}/deploy-inputs.json`, "utf8")); } catch (e) { fail(`deploy-inputs.json을 읽지 못했다: ${e.message}`, 2); }
+if (inputs.image !== "admin-console" || !v.ContainerInputs(inputs)) fail(`deploy-inputs.json이 계약 ContainerInputs에 맞지 않는다: ${errs(v.ContainerInputs)}`, 2);
+const inputsLabel = JSON.stringify(inputs);
+
 console.error(`build-image: ${req.image_tag} 빌드 (revision ${req.revision}, 계약 ${ACTUAL_BOUNDARY})`);
 // 왜 --provenance=false: BuildKit이 빌드마다 붙이는 출처 증명(attestation)이 이미지 ID를 매번 바꾼다. 끄면 같은 입력이 같은 image_id를 낸다(계약: 멱등, 2회 빌드로 확인).
 const b = docker(["build", "--provenance=false", "-t", req.image_tag,
   "--build-arg", `REVISION=${req.revision}`, "--build-arg", `BOUNDARY_CONTRACTS=${ACTUAL_BOUNDARY}`, "--build-arg", "SURVEY_SCHEMA=n/a",
   // 왜 --label: 노출 표는 JSON이고 Dockerfile ARG로 받으면 따옴표 이스케이프가 어긋나기 쉽다. 값은 한 곳(deploy-exposure.json)에서만 온다.
-  "--label", `io.openit.exposure=${exposureLabel}`,
+  "--label", `io.openit.exposure=${exposureLabel}`, "--label", `io.openit.inputs=${inputsLabel}`,
   src], { stdoutToStderr: true });
 if (b.status !== 0) fail(`docker build가 실패했다(종료 ${b.status})`);
+// 주입 선언 정직성: 이미지 실행 사용자(숫자 uid:gid)가 선언의 process 와 같아야 한다(다르면 이미지를 지우고 실패)
+const uid = docker(["run", "--rm", "--network", "none", "--entrypoint", "id", req.image_tag, "-u"]), gid = docker(["run", "--rm", "--network", "none", "--entrypoint", "id", req.image_tag, "-g"]);
+const runAs = [Number(uid.stdout?.trim()), Number(gid.stdout?.trim())];
+const wrong = [...Object.entries(inputs.roles), ...Object.entries(inputs.jobs)].filter(([, st]) => st.process.uid !== runAs[0] || st.process.gid !== runAs[1]).map(([k]) => k);
+if (uid.status !== 0 || gid.status !== 0 || wrong.length) { docker(["rmi", "-f", req.image_tag]); fail(`주입 선언의 process 가 이미지 실행 사용자 ${runAs.join(":")} 와 다르다: ${wrong.join(", ") || "실행 사용자를 읽지 못함"}`); }
 
 // 라벨은 요청 값을 되풀이하지 않고 이미지에서 읽는다(docker inspect). 계약: labels는 이미지에 실제로 붙은 io.openit.* 라벨.
 const li = docker(["image", "inspect", req.image_tag, "--format", "{{json .Config.Labels}}"]);
