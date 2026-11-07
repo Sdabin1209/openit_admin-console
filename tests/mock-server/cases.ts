@@ -47,7 +47,7 @@ export function trace(ref: string, masked = false): Record<string, unknown> | nu
     extract_output: { action: "NEXT", next_item: "Q1.D04", reason: "[MASKED]", targets: [], note: "[MASKED]",
       values: [{ key: "[MASKED]", value: "[MASKED]", precision: "[MASKED]", status: "[MASKED]", save: true }] },
     extract_attempts: 1, extract_status: "OK", extract_protections: {}, validation_ok: true, validation_violations: [],
-    response_input: VALID_LORA_B_INPUT,
+    response_input: { ...VALID_LORA_B_INPUT, next: {} },
     response_output: "[MASKED]",
     response_outcome: ref.endsWith("fc-5") ? "fallback" : "ok",
     response_protections: {},

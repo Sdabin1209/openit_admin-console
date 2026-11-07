@@ -4,9 +4,18 @@
  */
 export interface RollbackRequest {
   pipeline_schema_version: string;
+  /**
+   * 근거: 길이 상한 128 은 설계 상한(CONVENTIONS 2절, 측정 안 함)
+   */
   request_id: string;
   requested_at: string;
+  /**
+   * 근거: 길이 상한 128 은 설계 상한(CONVENTIONS 2절, 측정 안 함)
+   */
   from_release_id: string;
+  /**
+   * 근거: 길이 상한 128 은 설계 상한(CONVENTIONS 2절, 측정 안 함)
+   */
   to_release_id: string;
   reason: string;
   /**

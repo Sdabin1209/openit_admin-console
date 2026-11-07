@@ -17,7 +17,7 @@ RUN node scripts/build.mjs
 # 왜 Caddy: 직접 만든 정적 서버 대신 표준 file_server를 쓴다(ADR 0018). 게이트웨이도 Caddy라 같은 도구다. 태그 고정(2-alpine이 아니라 정확한 버전).
 FROM ${CADDY_IMAGE}
 ARG REVISION=n/a
-ARG BOUNDARY_CONTRACTS=v3.6.5
+ARG BOUNDARY_CONTRACTS=v4.0.0
 # 문진 스키마는 계약 2.0부터 소비하지 않는다(모델 입출력은 boundary-contracts). ImageLabels(2.2.0): 쓰지 않으면 n/a.
 ARG SURVEY_SCHEMA=n/a
 LABEL io.openit.service="admin-console" \
@@ -32,8 +32,8 @@ ENV XDG_CONFIG_HOME=/tmp XDG_DATA_HOME=/tmp
 USER 65532:65532
 EXPOSE 8080
 # 왜 HEALTHCHECK: 영역 이미지는 자기 상태 확인을 가진다(CONVENTIONS 13절 3.4.17). deploy 가 compose 에 대신 적지 않게 한다.
-# 왜 wget: caddy:alpine 에 busybox wget 이 있고 curl 은 없다(새 패키지를 넣지 않는다). 주소는 서버가 붙은 ADMIN_HOST(기본 0.0.0.0 -> 이 컨테이너 안 loopback 과 같은 곳, 비어 있으면 127.0.0.1)이고 포트는 Caddyfile 의 8080 이다. IPv6 리터럴 ADMIN_HOST 는 대괄호가 필요해 이 확인이 닿지 않는다(AdminConsoleEnv 의 예는 IPv4).
+# 왜 wget: caddy:alpine 에 busybox wget 이 있고 curl 은 없다(새 패키지를 넣지 않는다). 주소는 서버가 붙은 ADMIN_HOST(기본 0.0.0.0 -> 이 컨테이너 안 loopback 과 같은 곳, 비어 있으면 127.0.0.1)이고 포트는 Caddyfile 의 8080 이다. IPv6 리터럴은 건강 확인 명령이 대괄호로 감싼다.
 # 값(15s/3s/5s/3회)은 측정하지 않은 시작값이다. 15s 는 이 워크스페이스의 다른 영역 이미지와 같고, 시작 5초는 Caddy 가 설정을 읽는 시간에 대한 가정이다(측정 안 함).
-HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null "http://${ADMIN_HOST:-127.0.0.1}:8080/healthz" || exit 1
+COPY serve/healthcheck.sh /usr/local/bin/frontend-healthcheck
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 CMD ["/usr/local/bin/frontend-healthcheck"]
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

@@ -27,8 +27,9 @@ test("Dockerfile: 이미지가 자기 /healthz 를 보는 HEALTHCHECK 를 가진
   assert.ok(h, "HEALTHCHECK 없음");
   assert.match(h, /--interval=\d+s/);
   assert.match(h, /--timeout=\d+s/);
-  assert.match(h, /CMD wget .*:8080\/healthz/);                       // caddy:alpine 에는 curl 이 없다
-  assert.match(h, /\$\{ADMIN_HOST:-127\.0\.0\.1\}/);                   // 서버가 붙은 주소를 따른다
+  assert.match(h, /CMD \["\/usr\/local\/bin\/frontend-healthcheck"\]/);
+  assert.match(read("serve/healthcheck.sh"), /:8080\/healthz/);                       // caddy:alpine 에는 curl 이 없다
+  assert.match(read("serve/healthcheck.sh"), /\$\{ADMIN_HOST:-0\.0\.0\.0\}/);                   // 서버가 붙은 주소를 따른다
   assert.match(read("serve/Caddyfile"), /@health path \/healthz/);     // 확인 대상 경로가 서버에 있다
   assert.match(read("scripts/smoke.sh"), /unhealthy/);                // 변이(상태 확인이 실제로 /healthz 를 보는가)는 스모크가 이미지로 확인한다
 });

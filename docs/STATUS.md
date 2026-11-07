@@ -94,3 +94,11 @@
 
 ## 작업 단위 U427 (노출 선언 시한)
 - `deploy-exposure.json`의 `timeouts_ms`를 `{dial: 1000, response_header: 10000}`으로(deploy 시간 사슬). 이 서버(Caddy file_server)는 상류 호출·자체 시한이 없고 응답 머리글이 로컬 파일 읽기나 고정 응답에서만 나온다. 합산할 시한이 0개이므로 response_header 상한보다 짧다는 비교는 설정 값(Caddyfile에 상류 지시어·timeouts 없음)으로 `tests/exposure.test.ts`가 고정한다. 파일 읽기 자체는 설정된 한도가 없어 수치로 상한을 보이지는 못한다(측정 안 함). model-runtime은 쓰지 않는다(라벨 n/a).
+
+## 계약 4.0.0 반영 (2026-11-07)
+
+- 계약 고정 v4.0.0, 문진 스키마 고정 survey-schema-v4.1.2. 타입·CSP용 검증기를 정본에서 재생성했다.
+- 문자열의 not-only allOf 조건을 타입 생성기가 객체로 오해하지 않도록 타입 투영에서 제외했다. 런타임 검증기는 원본 조건을 그대로 적용한다.
+- 모의 릴리스의 ServingConfig 필수 필드와 비식별 trace의 자유 객체 제거 규칙을 맞췄다.
+- ADMIN_HOST의 IPv6 바인드도 건강 확인 URL에서 올바른 괄호로 표현한다.
+- 검증: typecheck 통과, 단위 시험 215 통과·skip 0, 실제 이미지 빌드와 smoke 통과(healthy/unhealthy·바인드·라벨·비root·종료 신호 포함). 전체 프로젝트 E2E는 실행하지 않았다.

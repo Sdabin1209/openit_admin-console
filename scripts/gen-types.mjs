@@ -39,6 +39,19 @@ export function loadAjv() {
   return ajv;
 }
 
+// TypeScript cannot express negative value constraints. Keep those in the
+// runtime validator; a not-only allOf branch must not invent an object type.
+function typeProjection(value) {
+  if (Array.isArray(value)) return value.map(typeProjection);
+  if (!value || typeof value !== "object") return value;
+  const out = Object.fromEntries(Object.entries(value).map(([key, child]) => [key, typeProjection(child)]));
+  if (out.allOf) {
+    out.allOf = out.allOf.filter((branch) => !(Object.keys(branch).length === 1 && branch.not));
+    if (!out.allOf.length) delete out.allOf;
+  }
+  return out;
+}
+
 export async function generate() {
   const files = {};
   const tmp = mkdtempSync(join(tmpdir(), "admin-types-"));
@@ -46,8 +59,8 @@ export async function generate() {
     for (const [f, t] of Object.entries(contractSchemas())) writeFileSync(join(tmp, f), t);
     for (const n of internalNames()) writeFileSync(join(tmp, `${n}.schema.json`), readFileSync(join(SCHEMAS, `${n}.schema.json`), "utf8"));
     const opt = { cwd: tmp + "/", bannerComment: "", additionalProperties: false, style: { singleQuote: false }, format: true, unknownAny: true };
-    for (const n of internalNames()) files[`${n}.ts`] = BANNER + (await compile(JSON.parse(readFileSync(join(SCHEMAS, `${n}.schema.json`), "utf8")), n, opt));
-    for (const n of CONTRACT_TYPES) files[`contract/${n}.ts`] = BANNER + (await compile(JSON.parse(contract.read(`schemas/${n}.schema.json`)), n, opt));
+    for (const n of internalNames()) files[`${n}.ts`] = BANNER + (await compile(typeProjection(JSON.parse(readFileSync(join(SCHEMAS, `${n}.schema.json`), "utf8"))), n, opt));
+    for (const n of CONTRACT_TYPES) files[`contract/${n}.ts`] = BANNER + (await compile(typeProjection(JSON.parse(contract.read(`schemas/${n}.schema.json`))), n, opt));
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
