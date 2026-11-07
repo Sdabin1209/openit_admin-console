@@ -64,7 +64,7 @@ CODE="$(curl -s --path-as-is --max-time 3 -o /dev/null -w '%{http_code}' "http:/
 [ "$CODE" = "404" ] || fail "경로 이탈 응답 $CODE"
 
 echo "== 동작 시험(tests/static-behavior.test.ts, 이미지에 대해)"
-STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/static-behavior.test.ts >"$STATIC_LOG" 2>&1 || { cat "$STATIC_LOG" >&2; rm -f "$STATIC_LOG"; fail "정적 서버 동작 시험"; }
+STATIC_URL="http://127.0.0.1:${PORT}" node --test tests/image/static-behavior.test.ts >"$STATIC_LOG" 2>&1 || { cat "$STATIC_LOG" >&2; rm -f "$STATIC_LOG"; fail "정적 서버 동작 시험"; }
 grep -E "^ℹ (pass|fail)" "$STATIC_LOG"; rm -f "$STATIC_LOG"
 
 echo "== HEALTHCHECK (이미지 안의 상태 확인: healthy 와 unhealthy 둘 다)"
