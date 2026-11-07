@@ -1,4 +1,4 @@
-// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts 4.0.0
+// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts 4.0.2
 // source-sha256: {"ActionExtractionInput":"bf335889af787512747cabb9451d096fbac951d9736c205056acd40cfa416ac5","ActionExtraction":"a1cc41a6f8bee293c5992f42ead0d109648dec4997d68a2b96a5ddda505862de","ResponseRequest":"8a64a0ff200b62218c4ea892886f61359b23bce89dd750809ded0945b4ae101f","ResponseText":"2e7401956748da282f3b812b7f132fff3eacfe846a4c62a2d3f7adced7880e9b","ApprovalRequest":"a438c099a921b489f835b2e9ca8ce2b18bbb9dd68ed974b4b05f9e93683afad1","ActivateRequest":"8623ac0d8e672ff32ca7663514b6d1a84ec6edd98911bc4f6a830ce5bb9dca50","RollbackRequest":"23599ffd4220568be6da141aaa516429b63bbf1fd038541484106754b01e76f2","CaseReviewRequest":"e2d373cf586c0648a4c8484ff1bb9e445c5fc320269db9e2024511a9f9a2862a","ListEnvelope":"d57e8aff79c1291dcf7f2ed7c41d4999403295ceeac05ba89acdbda0aef5a8b7","OpsFeedbackReviewTrace":"05ab900facde820bba31405309f5709a26ce80dfcde956d11b0d9981949d42a2","OpsFeedbackDeidentifiedTrace":"b3fa6b4f60a603cba14afee73404269810830b41625ae70f1beaa5318c26e51d","ImageLabels":"baa7d57b1b463e6693a84133331781fab3995e83f2eb38a4fbb2a11cf6870001","BuildImageRequest":"9fdb73cde25956279f32678d9ff0fdb519972a660c6abddd47b97d4f4abfb229","BuildImageResult":"786e91edb30af3d952824dd91c8b3b2b389665dc4f4589ce4805710c51021bfa","SetupEnvReport":"a250b282a66e6d29f4a4d2146236437a2b21843fceb236e50d47f90918d6ac80","Exposure":"77b50794ccd0897b1d2adbdb35a69259d8aa393fc9bdd0c7f44f0c987b6b8322","ContainerInputs":"558f6e5fc6563f806f3c0dc5346a0ea2cd8beab00c420fe87ead3c5742fa33ca","PushConfig":"dbd539e036aa849e0241f0fa955b1ec1c3d125a1a9560d181826366a679cce7c","StaffPushPayload":"4a6969a2216754eb91ebece26225eaff4abcef43421bb85904d8c6befccc8739","PushSubscriptionRequest":"719d46bc8d264e2f24219293437a2d1cabf2c356d2c1cdfd4b9a459bdf0f9d04","HealthStatus":"8c8690a876820ee13ac42e0d33f526080c7b1a3519cd48cd1631d5e9c41edca9","_common":"c9fd46576f09c6e578a38206c8e4aa9c74fea603334bc987918fd1241d9da0d1"}
 "use strict";
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -47440,5 +47440,5 @@ function validate588(data, { instancePath = "", parentData, parentDataProperty, 
 validate588.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": false };
 
 exports.PIPELINE_SCHEMA_VERSION = "4.0";
-exports.CONTRACT_VERSION = "v4.0.0";
+exports.CONTRACT_VERSION = "v4.0.2";
 exports.ACTION_RULES_VERSION = "2";
