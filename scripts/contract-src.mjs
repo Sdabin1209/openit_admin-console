@@ -27,7 +27,7 @@ export function resolveRepo(tag, { name = "boundary-contracts", env = "OPENIT_BO
 }
 
 // 이 영역이 소비하는 문진 스키마(결과 화면의 SessionResult 등)의 고정 판. 시험은 옆 폴더 작업 트리가 아니라 이 태그에서 읽는다
-export const SURVEY_SCHEMA_TAG = "survey-schema-v4.1.2";
+export const SURVEY_SCHEMA_TAG = "survey-schema-v4.1.4";
 export function surveySchemaJson(name) {
   const repo = resolveRepo(SURVEY_SCHEMA_TAG, { name: "survey-service", env: "OPENIT_SURVEY_SERVICE_REPO", remote: "git@github.com:Sdabin1209/openit_survey-service.git" });
   return JSON.parse(execFileSync("git", ["-C", repo, "show", `${SURVEY_SCHEMA_TAG}:schema/schemas/${name}.json`], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }));

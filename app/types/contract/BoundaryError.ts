@@ -17,7 +17,20 @@ export type BoundaryError = {
     | "UNAVAILABLE";
   message: string;
   retryable: boolean;
-  details?: {};
+  details?: {
+    /**
+     * 세분 사유. 기계가 분기하는 코드 값의 정본 목록은 CONVENTIONS 10절(예: OUTPUT_INVALID, EGRESS_DENIED, TURN_IN_PROGRESS, STALE_REPORT, ALREADY_DECIDED, QUESTION_SET_REQUIRED, UNKNOWN_QUESTION_SET, NO_OPEN_ALERT, INTERVAL, RETRY_LIMIT, ACCOUNT_PENDING_APPROVAL, NO_ACTIVE_RELEASE). 코드가 아닌 사람용 설명이 올 수도 있으며 읽는 쪽은 모르는 값을 무시한다(4.0.4)
+     */
+    reason?: string;
+    /**
+     * 클라이언트가 옮겨 적은 원래 HTTP 상태 코드(CONVENTIONS 9절, 2.4.2)
+     */
+    http_status?: number;
+    /**
+     * 재시도 포함 시도 횟수(HTTP.md, 4.0.4)
+     */
+    attempts?: number;
+  };
   /**
    * 영역이 계약을 바꾸지 않고 덧붙이는 부가 정보. 키는 영역 이름(예: 'model-lab')이고 값은 그 영역이 정한다. 다른 영역은 이해하지 못해도 보존하고 전달해야 하며, 판단에 쓰지 않는다. 여러 영역이 필요로 하게 되면 정식 필드로 올린다.
    */
