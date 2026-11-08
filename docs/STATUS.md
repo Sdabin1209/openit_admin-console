@@ -104,3 +104,7 @@
 - 검증: typecheck 통과, 단위 시험 215 통과·skip 0, 실제 이미지 빌드와 smoke 통과(healthy/unhealthy·바인드·라벨·비root·종료 신호 포함). 전체 프로젝트 E2E는 실행하지 않았다.
 
 계약 의미 보완 후 최종 고정은 v4.0.2이다. 생성물 재생성·최신성 검사, typecheck, 단위 215 통과(skip 0), 새 판의 실제 이미지 빌드/스모크를 다시 확인했다.
+
+## 점검 sweep-1222 (2026-11-08)
+
+- 현재 고정은 계약 v4.0.5(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본), 문진 스키마 survey-schema-v4.1.4(`scripts/contract-src.mjs`). 위 v4.0.0·v4.0.2 서술은 당시 기록이다. README 5절·`docs/boundary.md`의 낡은 v3.4.17 표기를 고쳤다.
