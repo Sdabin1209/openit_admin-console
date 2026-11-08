@@ -3,21 +3,55 @@
 // 읽기 전용: git show / ls-tree만 쓴다.
 // 리포 위치(pip 의 git+ssh…@태그 설치와 같은 원칙: 판은 고정 태그 하나): 1. 환경 변수 OPENIT_BOUNDARY_CONTRACTS_REPO 2. 옆 폴더에 그 태그가 있으면 옆 폴더
 // 3. 원격 리포에서 그 태그만 git 제외 캐시(build/deps/boundary-contracts.git)로 받는다. 받지 못하면 오류다(조용히 건너뛰지 않는다).
+// 옆 폴더는 워크스페이스(본 리포의 위 폴더, git worktree 에서도 같다)에서 찾는다.
+// 원격 받기는 시간 상한(REMOTE_TIMEOUT_MS)이 있고 ssh 는 묻지 않는다(BatchMode): 접근이 안 되면 멈추지 않고 고칠 방법을 말하며 실패한다.
 import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 import { readFileSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 
 const REMOTE = "git@github.com:Sdabin1209/openit_boundary-contracts.git";
 const hasTag = (dir, tag) => { try { execFileSync("git", ["-C", dir, "rev-parse", "--verify", "--quiet", `${tag}^{commit}`], { stdio: "ignore" }); return true; } catch { return false; } };
-export function resolveRepo(tag, { name = "boundary-contracts", env = "OPENIT_BOUNDARY_CONTRACTS_REPO", remote = REMOTE } = {}) {
+// 왜 30초: 측정하지 않은 값이다. --depth 1 로 한 태그만 받으므로 정상 접속이면 수 초 안에 끝난다고 보고, 접속이 안 될 때 시험 전체가 수 분 멈추지 않게 하는 실패 상한이다(D125: 목표가 아니라 상한).
+export const REMOTE_TIMEOUT_MS = 30_000;
+// 왜 git-common-dir: 리포가 git worktree(build/wt-*)에 있으면 위 폴더가 워크스페이스가 아니다. 본 리포 위치는 worktree 와 상관없이 같은 값이므로
+// 그 위 폴더를 워크스페이스로 본다(deploy/scripts/lib.sh 와 같은 방식). 폴더 깊이를 세지 않는다. 일반 clone 이면 repo 의 바로 위 폴더와 같다.
+const REPO_ROOT = new URL("../", import.meta.url).pathname;
+export function workspaceDirs(repoRoot = REPO_ROOT) {
+  const dirs = [resolve(repoRoot, "..")];
+  try {
+    const common = execFileSync("git", ["-C", repoRoot, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    const ws = resolve(common, "..", "..");
+    if (!dirs.includes(ws)) dirs.push(ws);
+  } catch { /* git 이 없거나 리포가 아니면 바로 위 폴더만 본다 */ }
+  return dirs;
+}
+function findSibling(name, tag, repoRoot = REPO_ROOT) {
+  for (const ws of workspaceDirs(repoRoot)) {
+    const sib = resolve(ws, name);
+    if (existsSync(sib) && hasTag(sib, tag)) return sib;
+  }
+  return null;
+}
+export function resolveRepo(tag, { name = "boundary-contracts", env = "OPENIT_BOUNDARY_CONTRACTS_REPO", remote = REMOTE, timeoutMs = REMOTE_TIMEOUT_MS } = {}) {
   if (process.env[env]) return process.env[env];
-  const sib = new URL(`../../${name}/`, import.meta.url).pathname;
-  if (existsSync(sib) && hasTag(sib, tag)) return sib;
+  const sib = findSibling(name, tag);
+  if (sib) return sib;
   const cache = new URL(`../build/deps/${name}.git`, import.meta.url).pathname;
   if (hasTag(cache + "-" + tag, tag)) return cache + "-" + tag;
   // 동시에 도는 시험 여럿이 같은 캐시를 받을 수 있다: 임시 폴더에 받은 뒤 rename 으로 한 번에 놓는다(원자적). 먼저 놓인 것이 있으면 그것을 쓴다
   mkdirSync(new URL("../build/deps/", import.meta.url).pathname, { recursive: true });
   const tmp = mkdtempSync(new URL("../build/deps/", import.meta.url).pathname + name + ".tmp-");
-  execFileSync("git", ["clone", "-q", "--bare", "--depth", "1", "--branch", tag, remote, tmp + "/r.git"], { stdio: ["ignore", "ignore", "pipe"] });
+  try {
+    execFileSync("git", ["clone", "-q", "--bare", "--depth", "1", "--branch", tag, remote, tmp + "/r.git"], {
+      stdio: ["ignore", "ignore", "pipe"], timeout: timeoutMs, encoding: "utf8",
+      env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_SSH_COMMAND: process.env.GIT_SSH_COMMAND ?? `ssh -o BatchMode=yes -o ConnectTimeout=${Math.max(1, Math.ceil(timeoutMs / 3000))}` },
+    });
+  } catch (e) {
+    rmSync(tmp, { recursive: true, force: true });
+    const why = e.code === "ETIMEDOUT" ? `${timeoutMs}ms 안에 끝나지 않았다` : String(e.stderr || e.message).trim().split("\n").slice(-2).join(" / ");
+    throw new Error(`계약 리포 ${name} 의 태그 ${tag} 를 찾지 못했다: 워크스페이스 옆 폴더에 없고 원격(${remote}) 받기도 실패했다(${why}). `
+      + `고치는 법: 환경 변수 ${env} 에 그 태그를 가진 ${name} 리포 경로를 주거나, 워크스페이스에 ${name} 을 clone 하거나, 원격 접근(ssh 키)을 준비한다.`);
+  }
   execFileSync("git", ["-C", tmp + "/r.git", "tag", "-f", tag, "HEAD"], { stdio: "ignore" });
   const dst = cache + "-" + tag;
   try { renameSync(tmp + "/r.git", dst); } catch { /* 다른 프로세스가 먼저 놓았다 */ }

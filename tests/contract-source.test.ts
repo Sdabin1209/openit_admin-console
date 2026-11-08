@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ContractSource, contract, pinnedTag } from "../scripts/contract-src.mjs";
+import { ContractSource, contract, pinnedTag, resolveRepo, workspaceDirs } from "../scripts/contract-src.mjs";
 import { generate } from "../scripts/gen-schemas.mjs";
 
 const git = (repo: string, ...a: string[]) => execFileSync("git", ["-C", repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", ...a], { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8" });
@@ -45,4 +45,26 @@ test("생성 검증기는 이웃이 고정 태그보다 앞서 있어도 같다"
     git(repo, "add", "-A"); git(repo, "commit", "-q", "-m", "ahead");
     assert.equal(generate(new ContractSource({ repo, tag: contract.tag })), generate(contract));
   } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test("옆 폴더에도 원격에도 없으면 시간 안에 (timeoutMs 상한) 실패하고 고치는 법(환경 변수 이름)을 말한다", () => {
+  // 왜 연결 불가 주소: 실제 원격에 기대지 않고 '접근 안 됨'을 재현한다. 고치기 전에는 원인을 말하지 않는 오류였고(원격 받기 무제한) 시험 전체가 수 분 멈췄다.
+  assert.throws(
+    () => resolveRepo("v0.0.0-nonexistent", { name: "no-such-neighbor-repo", env: "OPENIT_NO_SUCH_REPO_FOR_TEST", remote: "ssh://127.0.0.1:1/none.git", timeoutMs: 5000 }),
+    (e: Error) => /OPENIT_NO_SUCH_REPO_FOR_TEST/.test(e.message) && /v0\.0\.0-nonexistent/.test(e.message) && /no-such-neighbor-repo/.test(e.message),
+  );
+});
+
+test("git worktree(build/wt-*) 안의 리포도 본 리포의 워크스페이스에서 이웃을 찾는다", () => {
+  // 왜 임시 워크스페이스: 실제 폴더 배치에 기대지 않고 '워크스페이스/리포 + 워크스페이스/리포/build/wt-x' 모양을 그대로 만든다(U1: 고치기 전엔 worktree 에서 옆 폴더를 못 찾았다).
+  const ws = mkdtempSync(join(tmpdir(), "ws-"));
+  try {
+    const main = join(ws, "area"); mkdirSync(main);
+    git(main, "init", "-q"); writeFileSync(join(main, "f"), "x"); git(main, "add", "f"); git(main, "commit", "-qm", "i");
+    const wt = join(main, "build", "wt-x");
+    git(main, "worktree", "add", "-q", wt);
+    const real = (p: string) => execFileSync("realpath", [p], { encoding: "utf8" }).trim();
+    assert.ok(workspaceDirs(wt).map(real).includes(real(ws)), "worktree 에서 워크스페이스를 구한다");
+    assert.ok(workspaceDirs(main).map(real).includes(real(ws)), "일반 리포에서도 같다");
+  } finally { rmSync(ws, { recursive: true, force: true }); }
 });
