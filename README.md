@@ -75,7 +75,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 ## 4. 현재 상태
 
 확인된 것
-- docs/STATUS.md 기준: 작업 단위 1 시험 25개, 작업 단위 2 포함 총 42개, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
+- docs/STATUS.md 기준: 작업 단위 1·2의 시험, 타입 검사, 이미지·스모크(`npm run smoke`)가 통과한 것으로 기록되어 있다. 스모크는 이 세션에서 다시 돌리지 않았다.
 - 시험 수는 문서에 적지 않고 `npm test` 실행 결과로 센다(통과·실패·건너뜀). `npm run typecheck`, `npm run smoke`도 실행해서 확인한다. 구조 검사 `tests/test_structure.test.ts`가 시험에 들어 있다.
 - 계약 기준은 boundary-contracts 태그다. 정본은 Dockerfile의 ARG이고, 생성 검증기 헤더는 `scripts/gen-schemas.mjs`가 만든다.
 
@@ -90,9 +90,9 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 
 | 명령 | 결과 | rc | 날짜 |
 | --- | --- | --- | --- |
-| `npm test` | 217개 중 통과 217, 실패 0, 건너뜀 0(2026-11-08, 환경 변수 없이 git worktree 에서 실행) | 0 | 2026-11-08 |
+| `npm test` | 통과(실패·건너뜀 없음, 환경 변수 없이 git worktree 에서 실행) | 0 | 2026-11-08 |
 | `npx tsc --noEmit` | 오류 없음 | 0 | 2026-11-08 |
-| `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험 7개, 라벨, non-root, 종료 신호 | 0 (`admin-console:smoke-dd67455-22584`) | 2026-11-08 |
+| `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험, 라벨, non-root, 종료 신호 | 0 (`admin-console:smoke-dd67455-22584`) | 2026-11-08 |
 
 기준: 계약 boundary-contracts v4.0.5(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본). 계약 시험은 이웃 리포의 고정 태그 내용을 git에서 읽는다. 이 영역은 DB가 없고 백엔드 서버 코드가 없는 브라우저 앱과 Caddy 정적 서버라서 PG 시험은 해당 없음.
 

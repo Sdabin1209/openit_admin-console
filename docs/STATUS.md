@@ -3,7 +3,7 @@
 ## 한 일 (작업 단위 1)
 - 설계서 `docs/design.md`, 경계 문서, 변경 요청 CR-001/002.
 - `api/` 게이트 클라이언트와 JCS 해시, `mock-server/`, 승인 화면(목록 → 보고서 → 확인창 → 승인/반려).
-- 시험 25개(D69 반영: 해시 구현 삭제, 헤더 해시, details.reason, 승인자 입력 제거)(`npm test`), 타입 검사(`npm run typecheck`), 이미지와 스모크(`npm run smoke`).
+- 시험(D69 반영: 해시 구현 삭제, 헤더 해시, details.reason, 승인자 입력 제거)(`npm test`), 타입 검사(`npm run typecheck`), 이미지와 스모크(`npm run smoke`).
 
 ## 남은 일
 - 실제 release-gate와의 연동 시험(헤더 해시, details.reason, X-Openit-User, 목록 동작).
@@ -20,7 +20,7 @@
 - 막힌 것: CR-003의 헤드 결정(검토자 기록 위치, 생성물 커밋 정책, 게이트웨이 경로).
 
 ## 작업 단위 3 (계약 v2.0.2 정렬)
-- 실패 2건의 원인(원문 확인): (1) `generated/survey-validators.cjs가 원본 스키마와 같다`는 `ENOENT: ... survey-service/schema/schemas/UtteranceParserInput.json` — v2에서 문진 스키마의 파서·생성기 입출력이 삭제되고 모델 입출력은 boundary-contracts 2.0.0의 `ActionExtraction*`/`Response*`로 옮겨졌다. (2) `모의 FailureStore 출력이 FailureCase 스키마를 통과한다`는 `/expected_kind must be equal to one of the allowed values ["LORA_A","LORA_B"]` — 모의 서버가 v1 값 PARSER/GENERATOR를 냈다. 둘 다 v1.3.3 기준이 남은 한 원인이다.
+- 실패한 두 시험의 원인(원문 확인): (1) `generated/survey-validators.cjs가 원본 스키마와 같다`는 `ENOENT: ... survey-service/schema/schemas/UtteranceParserInput.json` — v2에서 문진 스키마의 파서·생성기 입출력이 삭제되고 모델 입출력은 boundary-contracts 2.0.0의 `ActionExtraction*`/`Response*`로 옮겨졌다. (2) `모의 FailureStore 출력이 FailureCase 스키마를 통과한다`는 `/expected_kind must be equal to one of the allowed values ["LORA_A","LORA_B"]` — 모의 서버가 v1 값 PARSER/GENERATOR를 냈다. 둘 다 v1.3.3 기준이 남은 한 원인이다.
 - 한 일: `scripts/gen-schemas.mjs`가 `../boundary-contracts/schemas`(ActionExtractionInput, ActionExtraction, ResponseRequest, ResponseText)를 읽도록 바꾸고 `generated/contract-validators.cjs`(이름 변경)를 재생성. `expected_kind` LORA_A/LORA_B, LORA_B의 정답은 문자열(화면은 문장 그대로 입력). 알 수 없는 kind는 '알 수 없음' 표시. trace 구조 정보를 v2 TurnTrace 필드(extract_*, response_*)로 교체. 모의 서버 v2 모양과 pipeline_schema_version 2.0. Dockerfile ARG v2.0.2. 문서(boundary, design, README), `docs/runbook.md`.
 - 남은 일: 실제 ops-feedback v2 서버와 연동 시험, 실제 브라우저 확인, CI digest(D24). 게이트 쪽 `ReviewReport` 화면이 v2 지표(LORA_A/LORA_B)를 읽는지는 모의 기준으로만 확인했다.
 - 막힌 것: CR-003(생성물 커밋 정책) 헤드 결정 대기.
@@ -33,7 +33,7 @@
 
 ## 작업 단위 5 (릴리스 운영 화면, D85)
 - 한 일: `#/ops` 화면(`app/ops-controller.ts`, `app/ops-view.ts`, 메뉴 '릴리스 운영'), 클라이언트 `api/releases.ts`(활성 포인터·릴리스 목록·activate·rollback), 모의 서버 `mock-server/releases.ts`(operator 아니면 403, 이미 활성이거나 포인터가 바뀌면 409, PASS 아님 412, rollback 멱등). 화면은 본문에 행위자·역할을 보내지 않는다.
-- 시험: `npm test` 66개 통과, 건너뜀 0, 실패 0(새 20개: 흐름 10, DOM 6, 계약 스키마 4). 흐름은 활성화→이력 갱신, 롤백, 멱등, 403, 409, 412, 네트워크. 스키마는 `../boundary-contracts/schemas`로 `ActivePointer`, `ReleaseManifest`, `RollbackReceipt`, `BoundaryError`를 검증. `npm run typecheck` 통과. `npm run smoke` 통과.
+- 시험: `npm test` 통과, 건너뜀·실패 없음(새 시험: 흐름, DOM, 계약 스키마). 흐름은 활성화→이력 갱신, 롤백, 멱등, 403, 409, 412, 네트워크. 스키마는 `../boundary-contracts/schemas`로 `ActivePointer`, `ReleaseManifest`, `RollbackReceipt`, `BoundaryError`를 검증. `npm run typecheck` 통과. `npm run smoke` 통과.
 - 확인 못 한 것: 실제 release-gate와 연동(`requested_by_role` 없는 본문을 받는지, 409/412의 실제 조건, 릴리스 목록에 PASS 아닌 것이 있는지), 실제 브라우저, 게이트웨이 경로(열려 있는지는 deploy 문서가 정본, 요구는 CR-004).
 - 막힌 것: CR-004(게이트웨이 경로 네 개와 operator 역할, `ActivePointer`의 행위자·이력, `requested_by_role` 필수 여부).
 
@@ -45,12 +45,12 @@
 
 ## 작업 단위 7 (지시서 1·2, 브랜치 wo2)
 - 한 일: AC-01 실패 사례 목록이 `next_cursor`를 끝까지 따라감(쪽 크기 500, 최대 20쪽, ADR 0010 방식). AC-02 개발 모드 승인자 경로 제거(`ADMIN_DEV_APPROVER_ID`, `/config.json`, 본문 `approver_id`), 모의 서버는 계약대로 헤더 없으면 401(ADR 0012). AC-03 이웃 사실 복사 삭제. CR-006에 경계 형식 스키마 초안 5종(`docs/change-requests/schemas/`, `validate.py`로 검증).
-- 시험: `npm test` 85개 통과, 실패 0, 건너뜀 0(이 PC 한 환경). 이 시험은 고친 쪽이 쓴 것이므로 독립 근거는 계약 HTTP.md I5·공통 목록 규칙의 문장이다.
+- 시험: `npm test` 통과, 실패·건너뜀 없음(이 PC 한 환경). 이 시험은 고친 쪽이 쓴 것이므로 독립 근거는 계약 HTTP.md I5·공통 목록 규칙의 문장이다.
 - 하지 않은 것: AC-04·05·07(지시 범위 밖), 코드가 CR-006 스키마를 쓰도록 바꾸기(헤드가 계약에 올린 뒤).
 
 ## 작업 단위 U3 (계약 v2.2.1 핀, 손 검증을 계약 스키마로)
 - 한 일: Dockerfile 계약 v2.2.1, ARG `REVISION` 기본값 `n/a`. `gen-schemas`가 `ApprovalRequest`, `ActivateRequest`, `CaseReviewRequest`, `ListEnvelope`, `OpsFeedbackDeidentifiedTrace`, `ImageLabels`와 `PIPELINE_SCHEMA_VERSION`(계약 `schemas_api.py`에서)을 생성. `api/contract.ts`가 요청은 보내기 전에, 목록 봉투와 trace는 받은 뒤 검사(손 검사 `need(Array.isArray...)`, `decision` 검사 제거). 코드의 `"2.0"` 리터럴 제거(모의 서버, 롤백 본문). 모의 `trace()`를 계약 예시 모양으로(전에는 스키마 위반 20건). ADR 0017. turn-engine·model-runtime 의존 없음.
-- 시험: `tests/contract-schemas.test.ts` 9개 추가(계약 `examples`/`examples_invalid`가 기대값). `npm test` 109개 통과.
+- 시험: `tests/contract-schemas.test.ts` 9개 추가(계약 `examples`/`examples_invalid`가 기대값). `npm test` 통과.
 - 남은 일: 실제 ops-feedback 서버 trace가 계약을 지키는지, 실제 release-gate가 `ListEnvelope`를 지키는지(모의 기준으로만 확인). 문진 스키마 패키지는 쓰지 않는다.
 
 ## 작업 단위 4a (정적 서버를 Caddy file_server로, D111)
@@ -68,7 +68,7 @@
 - 남은 일: deploy `build-images.sh`가 이 진입점을 부르도록 바뀌는 것(deploy 몫).
 
 ## 작업 단위 U42 후속 (이웃 작업 트리에 기대지 않는 시험)
-- 문제: 시험과 `gen-schemas`가 `../boundary-contracts`의 작업 트리를 읽어, 계약이 앞서 나가면 아무것도 안 바꾼 영역 시험이 깨졌다(main에서 `계약 버전 상수`, `generated ... 원본 스키마와 같다` 2건 실패를 a80df4a에서 재현).
+- 문제: 시험과 `gen-schemas`가 `../boundary-contracts`의 작업 트리를 읽어, 계약이 앞서 나가면 아무것도 안 바꾼 영역 시험이 깨졌다(main에서 `계약 버전 상수`, `generated ... 원본 스키마와 같다` 두 시험의 실패를 a80df4a에서 재현).
 - 고침: `scripts/contract-src.mjs`가 Dockerfile ARG의 고정 태그 내용을 `git show`로 읽는다. 생성기와 모든 계약 읽는 시험이 이것을 쓴다. 시험 `tests/contract-source.test.ts`(이웃이 태그보다 앞서고 수정 중이어도 같은 결과). 핀 v2.5.0 + 이웃 v2.5.1 상태에서 전체 시험 통과를 확인했다.
 
 ## 작업 단위 U43 (환경 준비 보고 + 계약 v2.6.0)
@@ -88,7 +88,7 @@
 ## 작업 단위 U400 (영역 구조 개편, D117)
 - 한 일: 업무를 단계로 나눠 컴포넌트 24개(업무 12, 통신 12)로 분해(`docs/components.md`), `schemas/` 55개 + 통과·거부 예시, `app/types/` 생성(json-schema-to-typescript 15.0.4 고정, `scripts/gen-types.mjs`), 코드를 `app/components/`·`app/wiring/`·`app/ui/`로 이동하고 `api/`를 없앴다. 모의 서버는 `tests/mock-server/`로(시험 지원 코드). 계약 고정을 v3.1.1로 올렸다(Dockerfile ARG, 검증기 재생성). 이유와 대안은 [ADR 0022](adr/0022-영역-구조-개편-컴포넌트-스키마-타입-생성.md).
 - 동작: 와이어 형식·HTTP 요청/응답·화면 문구는 바꾸지 않았다. 롤백 본문을 계약 `RollbackRequest`로 보내기 전에 검사하는 것이 추가됐다(보내는 값이 계약에 맞는지 확인할 뿐 값은 같다). 옛 `getSubmission`(어디서도 쓰지 않음)은 지웠다.
-- 시험: `npm test` 162 중 통과 155, 실패 0, 건너뜀 7(전과 같은 7). 구조 검사 통과, `npm run smoke` 통과.
+- 시험: `npm test` 통과, 실패 없음, 건너뜀은 전과 같다. 구조 검사 통과, `npm run smoke` 통과.
 - 스키마 밖 조건 5건(`schemas/README.md`). 통신 기반 라이브러리 `link`(Python)는 이 영역에 해당 없음.
 - 남은 일: 실제 브라우저·이웃 연동은 전과 같이 확인 못 했다.
 
@@ -101,9 +101,9 @@
 - 문자열의 not-only allOf 조건을 타입 생성기가 객체로 오해하지 않도록 타입 투영에서 제외했다. 런타임 검증기는 원본 조건을 그대로 적용한다.
 - 모의 릴리스의 ServingConfig 필수 필드와 비식별 trace의 자유 객체 제거 규칙을 맞췄다.
 - ADMIN_HOST의 IPv6 바인드도 건강 확인 URL에서 올바른 괄호로 표현한다.
-- 검증: typecheck 통과, 단위 시험 215 통과·skip 0, 실제 이미지 빌드와 smoke 통과(healthy/unhealthy·바인드·라벨·비root·종료 신호 포함). 전체 프로젝트 E2E는 실행하지 않았다.
+- 검증: typecheck 통과, 단위 시험 통과·skip 없음, 실제 이미지 빌드와 smoke 통과(healthy/unhealthy·바인드·라벨·비root·종료 신호 포함). 전체 프로젝트 E2E는 실행하지 않았다.
 
-계약 의미 보완 후 최종 고정은 v4.0.2이다. 생성물 재생성·최신성 검사, typecheck, 단위 215 통과(skip 0), 새 판의 실제 이미지 빌드/스모크를 다시 확인했다.
+계약 의미 보완 후 최종 고정은 v4.0.2이다. 생성물 재생성·최신성 검사, typecheck, 단위 시험 통과(skip 없음), 새 판의 실제 이미지 빌드/스모크를 다시 확인했다.
 
 ## 점검 sweep-1222 (2026-11-08)
 

@@ -60,6 +60,7 @@ export function createResultEvents(open: EventSourceFactory, rc?: ReconnectPorts
     es.addEventListener("result_ready", (e) => {
       let data: unknown;
       try { data = JSON.parse(e.data ?? ""); } catch { return; }
+      // 왜 검증 없이 캐스트: 게이트웨이가 낸 값은 받는 쪽이 다시 검증하지 않는다(ADR 0010 R7, 이 영역 ADR 0030). 본문이 계약 ResultReadyEvent 를 따르는지는 보내는 쪽 책임이고, 계약 예시로 처리되는지는 tests/results.test.ts 가 본다.
       if (data && typeof data === "object") h.onReady(data as ResultReadyEvent);
     });
     es.addEventListener("heartbeat", (e) => {

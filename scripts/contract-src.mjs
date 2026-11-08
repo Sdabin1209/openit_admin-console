@@ -7,6 +7,7 @@
 // 원격 받기는 시간 상한(REMOTE_TIMEOUT_MS)이 있고 ssh 는 묻지 않는다(BatchMode): 접근이 안 되면 멈추지 않고 고칠 방법을 말하며 실패한다.
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { readFileSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 
 const REMOTE = "git@github.com:Sdabin1209/openit_boundary-contracts.git";
@@ -14,8 +15,10 @@ const hasTag = (dir, tag) => { try { execFileSync("git", ["-C", dir, "rev-parse"
 // 왜 30초: 측정하지 않은 값이다. --depth 1 로 한 태그만 받으므로 정상 접속이면 수 초 안에 끝난다고 보고, 접속이 안 될 때 시험 전체가 수 분 멈추지 않게 하는 실패 상한이다(D125: 목표가 아니라 상한).
 export const REMOTE_TIMEOUT_MS = 30_000;
 // 왜 git-common-dir: 리포가 git worktree(build/wt-*)에 있으면 위 폴더가 워크스페이스가 아니다. 본 리포 위치는 worktree 와 상관없이 같은 값이므로
-// 그 위 폴더를 워크스페이스로 본다(deploy/scripts/lib.sh 와 같은 방식). 폴더 깊이를 세지 않는다. 일반 clone 이면 repo 의 바로 위 폴더와 같다.
-const REPO_ROOT = new URL("../", import.meta.url).pathname;
+// 그 위 폴더를 워크스페이스로 본다폴더 깊이를 세지 않는다. 일반 clone 이면 repo 의 바로 위 폴더와 같다.
+// 왜 fileURLToPath: URL.pathname 은 공백·한글을 %20 같은 퍼센트 인코딩으로 남겨 그런 경로의 리포에서 폴더를 못 찾는다.
+export const repoRootFrom = (moduleUrl) => fileURLToPath(new URL("../", moduleUrl));
+const REPO_ROOT = repoRootFrom(import.meta.url);
 export function workspaceDirs(repoRoot = REPO_ROOT) {
   const dirs = [resolve(repoRoot, "..")];
   try {
@@ -36,11 +39,11 @@ export function resolveRepo(tag, { name = "boundary-contracts", env = "OPENIT_BO
   if (process.env[env]) return process.env[env];
   const sib = findSibling(name, tag);
   if (sib) return sib;
-  const cache = new URL(`../build/deps/${name}.git`, import.meta.url).pathname;
+  const cache = resolve(REPO_ROOT, `build/deps/${name}.git`);
   if (hasTag(cache + "-" + tag, tag)) return cache + "-" + tag;
   // 동시에 도는 시험 여럿이 같은 캐시를 받을 수 있다: 임시 폴더에 받은 뒤 rename 으로 한 번에 놓는다(원자적). 먼저 놓인 것이 있으면 그것을 쓴다
-  mkdirSync(new URL("../build/deps/", import.meta.url).pathname, { recursive: true });
-  const tmp = mkdtempSync(new URL("../build/deps/", import.meta.url).pathname + name + ".tmp-");
+  mkdirSync(resolve(REPO_ROOT, "build/deps"), { recursive: true });
+  const tmp = mkdtempSync(resolve(REPO_ROOT, "build/deps") + "/" + name + ".tmp-");
   try {
     execFileSync("git", ["clone", "-q", "--bare", "--depth", "1", "--branch", tag, remote, tmp + "/r.git"], {
       stdio: ["ignore", "ignore", "pipe"], timeout: timeoutMs, encoding: "utf8",

@@ -4,8 +4,9 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { pathToFileURL } from "node:url";
 import { join } from "node:path";
-import { ContractSource, contract, pinnedTag, resolveRepo, workspaceDirs } from "../scripts/contract-src.mjs";
+import { ContractSource, contract, pinnedTag, resolveRepo, workspaceDirs, repoRootFrom } from "../scripts/contract-src.mjs";
 import { generate } from "../scripts/gen-schemas.mjs";
 
 const git = (repo: string, ...a: string[]) => execFileSync("git", ["-C", repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", ...a], { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8" });
@@ -73,4 +74,10 @@ test("git worktree(build/wt-*) 안의 리포도 본 리포의 워크스페이스
     assert.ok(workspaceDirs(wt).map(real).includes(real(ws)), "worktree 에서 워크스페이스를 구한다");
     assert.ok(workspaceDirs(main).map(real).includes(real(ws)), "일반 리포에서도 같다");
   } finally { rmSync(ws, { recursive: true, force: true }); }
+});
+
+test("공백·한글이 든 경로에서도 리포 위치를 퍼센트 인코딩 없이 구한다", () => {
+  // 왜 URL.pathname 이 아닌가: 퍼센트 인코딩된 경로는 존재하지 않는 폴더가 된다.
+  const url = pathToFileURL("/tmp/워크스페이스 공백/area/scripts/contract-src.mjs");
+  assert.equal(repoRootFrom(url), "/tmp/워크스페이스 공백/area/");
 });

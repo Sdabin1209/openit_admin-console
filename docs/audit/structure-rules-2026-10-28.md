@@ -13,7 +13,7 @@
 
 P1(독립성을 깨고 실제 결합을 만드는 것)은 찾지 못했다. 이 영역은 이웃 코드를 import하지 않고 이웃 환경 변수·포트를 쓰지 않으며, 영역 간 호출은 같은 출처의 `/v1` HTTP뿐이다. 근거는 4절(D)의 검색 목록.
 
-돌려 본 것(이 세션, 이 PC): `node scripts/gen-schemas.mjs --check` -> "generated 최신"(종료 0). `npm test` -> 81개 중 통과 81, 실패 0, 건너뜀 0. `npm run typecheck` -> 오류 없음. 계약 패키지의 적합성 시험(`../boundary-contracts/conformance`)은 Python 클라이언트·서버용이라 이 Node 영역에서 돌리지 못했다(점검하지 못한 것 참조).
+돌려 본 것(이 세션, 이 PC): `node scripts/gen-schemas.mjs --check` -> "generated 최신"(종료 0). `npm test` -> 통과, 실패·건너뜀 없음. `npm run typecheck` -> 오류 없음. 계약 패키지의 적합성 시험(`../boundary-contracts/conformance`)은 Python 클라이언트·서버용이라 이 Node 영역에서 돌리지 못했다(점검하지 못한 것 참조).
 
 ## 1. A. 컴포넌트 목록
 
@@ -81,7 +81,7 @@ P1(독립성을 깨고 실제 결합을 만드는 것)은 찾지 못했다. 이 
 허용 범위 안(알려진 단서 2의 확인):
 - `scripts/gen-schemas.mjs:9`는 `../../boundary-contracts/`(워크스페이스 규칙이 허용한 읽기 전용 참조)의 `schemas/*.schema.json` 4개와 `pyproject.toml`(버전 문자열, `gen-schemas.mjs:14`)을 읽는다. `pyproject.toml`은 `schemas/` 밖이지만 같은 허용 폴더 안이다. 쓰기는 이 리포의 `generated/`뿐.
 - 생성물과 계약 버전: 헤더가 `원본: boundary-contracts 2.1.1`과 소스별 sha256을 기록한다(`generated/contract-validators.cjs` 1~2줄). `--check`가 지금 통과하고, Dockerfile `ARG BOUNDARY_CONTRACTS=v2.1.1`(Dockerfile:16)과 v2.1.1 태그의 `schemas/`가 현재 작업 트리와 같다. 어긋남 없음(이 시점). 그러나 헤더 버전과 Dockerfile ARG를 묶는 기계 검사는 없다(`grep -n "Dockerfile\|BOUNDARY" tests/schemas-generated.test.ts` 결과 없음). 이는 AC-14에 적는다.
-- 시험 4개가 `../../boundary-contracts/schemas`와 `examples`를 읽는다(`tests/mock-conformance.test.ts:10,25`, `tests/ops-conformance.test.ts:10,23`, `tests/schemas-generated.test.ts:6`, `tests/v2-report-ui.test.ts:95`). 허용 범위 안이며, 이웃이 없을 때의 동작은 README 3절에 적혀 있다.
+- 시험 파일 4개가 `../../boundary-contracts/schemas`와 `examples`를 읽는다(`tests/mock-conformance.test.ts:10,25`, `tests/ops-conformance.test.ts:10,23`, `tests/schemas-generated.test.ts:6`, `tests/v2-report-ui.test.ts:95`). 허용 범위 안이며, 이웃이 없을 때의 동작은 README 3절에 적혀 있다.
 
 ### AC-03 (R1, P2) 허용되지 않은 이웃 폴더를 읽고, 그 상태를 이 영역 문서에 복사했다
 - 위치: `docs/change-requests/CR-004-release-ops-gateway.md:3-6`, `docs/runbook.md:43`, `README.md:78`, `mock-server/scenarios.ts:33`

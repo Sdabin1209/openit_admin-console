@@ -1,4 +1,4 @@
-import { surveySchemaJson } from "../scripts/contract-src.mjs";
+import { surveySchemaJson, contract } from "../scripts/contract-src.mjs";
 // 규칙 U83 문진 결과 화면(의사용): 목록·상세·빈칸 사유·확인 표시·도착 알림(SSE result_ready)·403 안내. 기준은 계약 PUBLIC_API B(boundary-contracts v3.2.0).
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
@@ -212,4 +212,18 @@ test("문진표(계약 3.3.0): 상세와 목록에 문진표 제목과 버전, �
     await c.openList("");
     assert.ok(q('tr[data-session="s-1"]')!.textContent!.includes("기본 문진표 (버전 qb-1)"));
   } finally { await s.close(); }
+});
+
+test("도착 알림: 계약 ResultReadyEvent 예시를 받으면 값 그대로 핸들러에 넘긴다(검증은 보내는 쪽 몫, R7)", () => {
+  const names = contract.list("examples").filter((f) => f.startsWith("ResultReadyEvent.") && f.endsWith(".json"));
+  assert.ok(names.length > 0, "계약에 ResultReadyEvent 예시가 있어야 한다");
+  for (const f of names) {
+    const example = contract.json(`examples/${f}`);
+    const fns = new Map<string, (e: { data?: string }) => void>();
+    const es: EventSourceLike = { addEventListener: (t, fn) => { fns.set(t, fn); }, onopen: null, onerror: null, readyState: 1, close() {} };
+    const got: unknown[] = [];
+    new ResultsClient({ baseUrl: "", eventSource: () => es }).subscribe({ onReady: (e) => { got.push(e); }, onLive: () => {}, onResync: () => {} });
+    fns.get("result_ready")!({ data: JSON.stringify(example) });
+    assert.deepEqual(got, [example], `${f}`);
+  }
 });
