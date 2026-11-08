@@ -93,3 +93,19 @@ test("요청 ID 생성기와 시계를 주입하면 롤백 요청 본문이 결�
     assert.equal(c.state.receipt?.rollback?.decided_at, FIXED_NOW, "모의 서버도 고정 시계");
   } finally { await s.close(); }
 });
+
+test("롤백 request_id(접두사 + 기본 UUID 생성기)는 randomUUID 가 있든 없든 계약 Id 에 맞는다", async () => {
+  // 왜: 계약 5.0.0 이 request_id 를 _common Id 로 통일했다. 패턴은 계약에서 읽는다(사본을 두지 않는다).
+  const { contract } = await import("../scripts/contract-src.mjs");
+  const Ajv = (await import("ajv/dist/2020.js")).default;
+  const { defaultUuid } = await import("../app/wiring/ops_controller.ts");
+  const idSchema = contract.json("schemas/_common.schema.json").$defs.Id;
+  const check = new Ajv({ strict: false }).compile(idSchema);
+  const saved = Object.getOwnPropertyDescriptor(globalThis, "crypto")!;
+  try {
+    for (const c of [globalThis.crypto, { getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto) }]) {
+      Object.defineProperty(globalThis, "crypto", { value: c, configurable: true });
+      for (let i = 0; i < 20; i++) assert.ok(check(`rb-${defaultUuid()}`), `rb-${defaultUuid()}`);
+    }
+  } finally { Object.defineProperty(globalThis, "crypto", saved); }
+});

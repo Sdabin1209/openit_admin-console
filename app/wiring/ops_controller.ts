@@ -51,7 +51,7 @@ export function describeOpsError(e: unknown): OpsNotice {
 
 /** 요청 ID의 무작위 부분. 시험은 생성기를 주입해 고정한다. */
 export type UuidFn = () => string;
-const defaultUuid: UuidFn = () => {
+export const defaultUuid: UuidFn = () => {
   const c = (globalThis as { crypto?: Crypto }).crypto;
   if (c?.randomUUID) return c.randomUUID();
   // randomUUID는 보안 컨텍스트(HTTPS)에서만 있다. getRandomValues는 어디서나 있으므로 UUID v4를 직접 만든다(Math.random 안 씀).

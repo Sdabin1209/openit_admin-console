@@ -109,3 +109,10 @@
 
 - 현재 고정은 계약 v4.0.5(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본), 문진 스키마 survey-schema-v4.1.4(`scripts/contract-src.mjs`). 위 v4.0.0·v4.0.2 서술은 당시 기록이다. README 5절·`docs/boundary.md`의 낡은 v3.4.17 표기를 고쳤다.
 - U1 수정: `scripts/contract-src.mjs`가 이웃 계약·문진 리포를 `git rev-parse --git-common-dir`로 구한 워크스페이스에서 찾는다(worktree 에서도 맞다). 원격 받기는 30초 상한·ssh BatchMode·GIT_TERMINAL_PROMPT=0이고, 실패하면 고치는 법(환경 변수 이름)을 말한다. 고치기 전에는 worktree 에서 원격 clone 으로 넘어가 `npm test`가 549초 멈췄다(rc 124).
+
+## 계약 5.0.0 반영 (2026-11-08, 브랜치 contract-5)
+
+- `Dockerfile`의 `ARG BOUNDARY_CONTRACTS`를 v5.0.0으로 올리고 `gen:types`·`gen:schemas`로 생성물을 다시 만들었다. `RollbackRequest.requested_by_role`이 `GateExt`를 `$ref`하므로 `scripts/gen-schemas.mjs`의 참조 해소 목록(`SUPPORT`)에 `GateExt`를 더했다. 문진 스키마 태그(`scripts/contract-src.mjs`의 `SURVEY_SCHEMA_TAG`)는 새 태그 알림 후 맞춘다.
+- 롤백 `request_id`(접두사 + UUID)가 계약 `Id`에 맞는지 `tests/audit.test.ts`가 계약에서 읽은 패턴으로 본다(`crypto.randomUUID` 있을 때와 없을 때 둘 다).
+- `route_parse`의 빈·디코딩 실패 ID 분기는 `schemas/README.md` 스키마 밖 조건 6번에 근거를 적었다.
+- 4.x 저장 데이터: 이 영역은 저장소가 없는 브라우저 앱이라 해당 없음.

@@ -25,7 +25,8 @@ const NAMES = ["ActionExtractionInput", "ActionExtraction", "ResponseRequest", "
   // 3.4.4: 이 영역이 만드는 푸시 구독 본문은 보내기 전에 검증한다(CONVENTIONS 3절 생산자 출력 검증). HealthStatus는 이미지의 /healthz·/readyz 본문 시험이 쓴다.
   "PushSubscriptionRequest", "HealthStatus"];
 // 왜: ApprovalRequest·ActivateRequest가 $ref로 가리키는 공통 정의. 검증기로 내보내지 않고 참조 해소용으로만 넣는다.
-const SUPPORT = ["_common"];
+// 5.0.0: RollbackRequest.requested_by_role 이 GateExt 의 칸을 $ref 한다(D117 같은 타입은 한 번만). 같은 이유로 참조 해소용으로만 넣는다.
+const SUPPORT = ["_common", "GateExt"];
 
 export function generate(src = contract) {
   const version = /^version\s*=\s*"([^"]+)"/m.exec(src.read("pyproject.toml"))?.[1] ?? "unknown";
