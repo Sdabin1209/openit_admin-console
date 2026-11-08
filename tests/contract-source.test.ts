@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 import { ContractSource, contract, pinnedTag, resolveRepo, workspaceDirs, repoRootFrom } from "../scripts/contract-src.mjs";
 import { generate } from "../scripts/gen-schemas.mjs";
+import { minEnv } from "./min-env.ts";
 
 const git = (repo: string, ...a: string[]) => execFileSync("git", ["-C", repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid", ...a], { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8" });
 const skip = !contract.available() && "고정 태그를 가진 boundary-contracts가 이웃에 없는 환경";
@@ -39,7 +40,7 @@ test("생성 검증기는 이웃이 고정 태그보다 앞서 있어도 같다"
   // 이웃 리포를 복제해 고정 태그 뒤에 스키마를 바꾼 커밋을 더한다(원래 이웃은 건드리지 않는다).
   const repo = mkdtempSync(join(tmpdir(), "admin-console-cs-"));
   try {
-    execFileSync("git", ["clone", "-q", "--no-hardlinks", contract.repo, repo], { stdio: "ignore" });
+    execFileSync("git", ["clone", "-q", "--no-hardlinks", contract.repo, repo], { stdio: "ignore", env: minEnv() });
     const f = join(repo, "schemas", "ApprovalRequest.schema.json");
     writeFileSync(f, '{"앞서 간 스키마": true}');
     writeFileSync(join(repo, "pyproject.toml"), 'version = "99.0.0"\n');
@@ -70,7 +71,7 @@ test("git worktree(build/wt-*) 안의 리포도 본 리포의 워크스페이스
     git(main, "init", "-q"); writeFileSync(join(main, "f"), "x"); git(main, "add", "f"); git(main, "commit", "-qm", "i");
     const wt = join(main, "build", "wt-x");
     git(main, "worktree", "add", "-q", wt);
-    const real = (p: string) => execFileSync("realpath", [p], { encoding: "utf8" }).trim();
+    const real = (p: string) => execFileSync("realpath", [p], { encoding: "utf8", env: minEnv() }).trim();
     assert.ok(workspaceDirs(wt).map(real).includes(real(ws)), "worktree 에서 워크스페이스를 구한다");
     assert.ok(workspaceDirs(main).map(real).includes(real(ws)), "일반 리포에서도 같다");
   } finally { rmSync(ws, { recursive: true, force: true }); }

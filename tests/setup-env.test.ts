@@ -7,6 +7,7 @@ import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, chmodSync, rmSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as v from "../app/types/contract-validators.cjs";
+import { minEnv } from "./min-env.ts";
 
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const lastLine = (s: string) => s.trimEnd().split("\n").pop()!;
@@ -32,7 +33,7 @@ test("선언한 test_command를 리포 루트에서 실행하면 영역 시험�
   // 전체를 다시 돌리면 이 시험이 자기 자신을 부른다. NODE_OPTIONS의 이름 필터(node:test가 인식한다)로 가벼운 시험 하나만 남겨 '명령이 시험 러너를 실제로 띄운다'를 확인한다.
   // NODE_TEST_CONTEXT: 바깥 러너의 자식 표시를 물려받으면 안쪽 러너가 일반 출력을 내지 않는다.
   // 왜 인자가 아니라 환경 변수: node --test "glob" 뒤의 옵션은 러너 옵션이 아니라 시험 파일의 인자가 된다.
-  const r = spawnSync(cmd, args, { cwd: REPO, encoding: "utf8", env: { ...process.env, NODE_TEST_CONTEXT: undefined, NODE_OPTIONS: "--test-name-pattern=Dockerfile.ARG.에서" } });
+  const r = spawnSync(cmd, args, { cwd: REPO, encoding: "utf8", env: minEnv({ NODE_OPTIONS: "--test-name-pattern=Dockerfile.ARG.에서" }) });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /ℹ pass [1-9]/);
 });

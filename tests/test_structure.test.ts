@@ -6,6 +6,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, basename } from "node:path";
 import { contract } from "../scripts/contract-src.mjs";
 import { loadAjv, internalNames } from "../scripts/gen-types.mjs";
+import { minEnv } from "./min-env.ts";
 
 const ROOT = new URL("../", import.meta.url).pathname;
 const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => {
@@ -61,7 +62,7 @@ test("4. 모든 스키마에 통과·거부 예시가 있고 결과가 맞다", 
 });
 
 test("5. types/가 schemas/에서 다시 생성한 결과와 같다", { skip: !contract.available() && "고정 태그의 계약 리포가 없다" }, () => {
-  execFileSync("node", ["scripts/gen-types.mjs", "--check"], { cwd: ROOT, stdio: "pipe" });
+  execFileSync("node", ["scripts/gen-types.mjs", "--check"], { cwd: ROOT, stdio: "pipe", env: minEnv() });
 });
 
 test("6. 시험을 뺀 모든 코드 파일이 components/, wiring/, types/, ui/ 또는 진입점 중 하나에 속한다", () => {

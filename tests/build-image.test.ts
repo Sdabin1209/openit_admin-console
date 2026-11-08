@@ -10,6 +10,7 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync, chmodSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as v from "../app/types/contract-validators.cjs";
+import { minEnv } from "./min-env.ts";
 
 const REPO = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const ID = "sha256:" + "ab".repeat(32);
@@ -134,7 +135,7 @@ test("docker build가 실패하면 실패하고 결과 줄을 내지 않는다",
 });
 
 test("요청 파일이 없거나 JSON이 아니면 실패한다", () => {
-  const r = spawnSync("bash", ["scripts/build-image.sh", "/nonexistent.json"], { cwd: REPO, encoding: "utf8" });
+  const r = spawnSync("bash", ["scripts/build-image.sh", "/nonexistent.json"], { cwd: REPO, encoding: "utf8", env: minEnv() });
   assert.notEqual(r.status, 0);
 });
 
