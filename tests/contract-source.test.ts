@@ -47,12 +47,18 @@ test("생성 검증기는 이웃이 고정 태그보다 앞서 있어도 같다"
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
 
-test("옆 폴더에도 원격에도 없으면 시간 안에 (timeoutMs 상한) 실패하고 고치는 법(환경 변수 이름)을 말한다", () => {
-  // 왜 연결 불가 주소: 실제 원격에 기대지 않고 '접근 안 됨'을 재현한다. 고치기 전에는 원인을 말하지 않는 오류였고(원격 받기 무제한) 시험 전체가 수 분 멈췄다.
-  assert.throws(
-    () => resolveRepo("v0.0.0-nonexistent", { name: "no-such-neighbor-repo", env: "OPENIT_NO_SUCH_REPO_FOR_TEST", remote: "ssh://127.0.0.1:1/none.git", timeoutMs: 5000 }),
-    (e: Error) => /OPENIT_NO_SUCH_REPO_FOR_TEST/.test(e.message) && /v0\.0\.0-nonexistent/.test(e.message) && /no-such-neighbor-repo/.test(e.message),
-  );
+test("원격 받기가 끝나지 않으면 timeoutMs 안에 '끝나지 않았다'로 실패하고 고치는 법(환경 변수 이름)을 말한다", () => {
+  // 왜 가짜 git: 끝나지 않는 clone 을 PATH 앞의 대역 명령으로 재현해, 실제 경과 시간을 재지 않고 우리 코드의 timeout 옵션만 지킨다(timeout 을 빼면 이 시험이 멈추거나 실패한다).
+  const bin = mkdtempSync(join(tmpdir(), "fakegit-"));
+  const oldPath = process.env.PATH;
+  try {
+    writeFileSync(join(bin, "git"), '#!/bin/sh\ncase "$*" in *clone*) exec sleep 60;; *) exit 1;; esac\n', { mode: 0o755 });
+    process.env.PATH = `${bin}:${oldPath}`;
+    assert.throws(
+      () => resolveRepo("v0.0.0-nonexistent", { name: "no-such-neighbor-repo", env: "OPENIT_NO_SUCH_REPO_FOR_TEST", remote: "ssh://127.0.0.1:1/none.git", timeoutMs: 300 }),
+      (e: Error) => /300ms 안에 끝나지 않았다/.test(e.message) && /OPENIT_NO_SUCH_REPO_FOR_TEST/.test(e.message) && /no-such-neighbor-repo/.test(e.message),
+    );
+  } finally { process.env.PATH = oldPath; rmSync(bin, { recursive: true, force: true }); }
 });
 
 test("git worktree(build/wt-*) 안의 리포도 본 리포의 워크스페이스에서 이웃을 찾는다", () => {

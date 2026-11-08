@@ -92,7 +92,7 @@ npm run smoke         # 이미지 빌드 + 실행 + /healthz 등 확인(Docker �
 | --- | --- | --- | --- |
 | `npm test` | 217개 중 통과 217, 실패 0, 건너뜀 0(2026-11-08, 환경 변수 없이 git worktree 에서 실행) | 0 | 2026-11-08 |
 | `npx tsc --noEmit` | 오류 없음 | 0 | 2026-11-08 |
-| `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험 7개, 라벨, non-root, 종료 신호 | 0 (`admin-console:smoke-ba690b5-28454`) | 2026-11-08 |
+| `npm run smoke` | 이미지 빌드, `/healthz`·`/readyz`, 정적 서버 시험 7개, 라벨, non-root, 종료 신호 | 0 (`admin-console:smoke-dd67455-22584`) | 2026-11-08 |
 
 기준: 계약 boundary-contracts v4.0.5(`Dockerfile`의 `ARG BOUNDARY_CONTRACTS`가 정본). 계약 시험은 이웃 리포의 고정 태그 내용을 git에서 읽는다. 이 영역은 DB가 없고 백엔드 서버 코드가 없는 브라우저 앱과 Caddy 정적 서버라서 PG 시험은 해당 없음.
 
