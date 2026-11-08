@@ -15,3 +15,4 @@ export function surveySchemaJson(name: string): any;
 export const REMOTE_TIMEOUT_MS: number;
 export function workspaceDirs(repoRoot?: string): string[];
 export function repoRootFrom(moduleUrl: string | URL): string;
+export function registerContractStableUris(ajv: any, src?: ContractSource): void;

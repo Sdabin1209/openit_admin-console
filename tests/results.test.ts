@@ -1,4 +1,4 @@
-import { surveySchemaJson, contract } from "../scripts/contract-src.mjs";
+import { surveySchemaJson, contract, registerContractStableUris } from "../scripts/contract-src.mjs";
 // 규칙 U83 문진 결과 화면(의사용): 목록·상세·빈칸 사유·확인 표시·도착 알림(SSE result_ready)·403 안내. 기준은 계약 PUBLIC_API B(boundary-contracts v3.2.0).
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
@@ -192,7 +192,9 @@ test("실시간 연결이 403으로 거절되면 live=false이고 화면은 그�
 
 test("모의 서버 출력이 문진 스키마 SessionResult를 통과한다(확인 표시 필드 제외)", async () => {
   const schema = surveySchemaJson("SessionResult");   // 고정 태그(scripts/contract-src.mjs SURVEY_SCHEMA_TAG)
-  const v = new Ajv({ strict: false, allErrors: true }).compile(schema);
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  registerContractStableUris(ajv);   // 문진 스키마 5.0.0 의 계약 안정 URI $ref 를 고정 태그 계약에서 푼다
+  const v = ajv.compile(schema);
   const s = await startMock();
   try {
     const page = (await (await fetch(`${s.base}/v1/results`)).json()) as { items: unknown[] };

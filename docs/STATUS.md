@@ -116,3 +116,4 @@
 - 롤백 `request_id`(접두사 + UUID)가 계약 `Id`에 맞는지 `tests/audit.test.ts`가 계약에서 읽은 패턴으로 본다(`crypto.randomUUID` 있을 때와 없을 때 둘 다).
 - `route_parse`의 빈·디코딩 실패 ID 분기는 `schemas/README.md` 스키마 밖 조건 6번에 근거를 적었다.
 - 4.x 저장 데이터: 이 영역은 저장소가 없는 브라우저 앱이라 해당 없음.
+- 고정 갱신: 계약 v5.0.1(안정 URI 등록), 문진 스키마 survey-schema-v5.0.0. 문진 스키마 5.0.0은 계약을 안정 URI로 `$ref`하므로 `scripts/contract-src.mjs`의 `registerContractStableUris`가 같은 고정 태그의 계약·문진 스키마를 그 URI로 Ajv에 등록하고 `tests/results.test.ts`가 쓴다(사본 없음).

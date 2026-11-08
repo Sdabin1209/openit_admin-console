@@ -64,7 +64,25 @@ export function resolveRepo(tag, { name = "boundary-contracts", env = "OPENIT_BO
 }
 
 // 이 영역이 소비하는 문진 스키마(결과 화면의 SessionResult 등)의 고정 판. 시험은 옆 폴더 작업 트리가 아니라 이 태그에서 읽는다
-export const SURVEY_SCHEMA_TAG = "survey-schema-v4.1.4";
+export const SURVEY_SCHEMA_TAG = "survey-schema-v5.0.0";
+// 왜: 문진 스키마 5.0.0 은 계약 스키마를 안정 URI($ref https://openit.example/contracts/v5/<이름>.schema.json)로 위임한다(계약 5.0.1). 표준 Ajv 는 그 URI 를 풀지 못하므로
+// 시험이 문진 스키마를 컴파일하기 전에, 같은 고정 태그의 계약 스키마를 그 URI 로 등록한다(사본이 아니라 계약에서 읽는다).
+const STABLE_URI = (name) => `https://openit.example/contracts/v5/${name}.schema.json`;
+export function registerContractStableUris(ajv, src = contract) {
+  for (const f of src.list("schemas").filter((f) => f.endsWith(".schema.json"))) {
+    const uri = STABLE_URI(f.replace(".schema.json", ""));
+    if (ajv.getSchema(uri)) continue;
+    // 왜 $id 를 안정 URI 로 바꾼 사본: 계약 스키마 안의 상대 $ref(_common.schema.json#…)가 같은 URI 폴더 안에서 풀리게 한다. 내용은 그대로다.
+    ajv.addSchema({ ...src.json(`schemas/${f}`), $id: uri });
+  }
+  // 계약 스키마가 문진 스키마를 https://openit.example/survey/v1/<이름>.json 으로 가리킨다(계약 schema_sources.SURVEY_URI 와 같은 규칙). 같은 방식으로 고정 태그의 문진 스키마를 등록한다.
+  const repo = resolveRepo(SURVEY_SCHEMA_TAG, { name: "survey-service", env: "OPENIT_SURVEY_SERVICE_REPO", remote: "git@github.com:Sdabin1209/openit_survey-service.git" });
+  const names = execFileSync("git", ["-C", repo, "ls-tree", "--name-only", `${SURVEY_SCHEMA_TAG}:schema/schemas`], { encoding: "utf8" }).split("\n").filter((n) => n.endsWith(".json"));
+  for (const n of names) {
+    const uri = `https://openit.example/survey/v1/${n}`;
+    if (!ajv.getSchema(uri)) ajv.addSchema({ ...surveySchemaJson(n.replace(".json", "")), $id: uri });
+  }
+}
 export function surveySchemaJson(name) {
   const repo = resolveRepo(SURVEY_SCHEMA_TAG, { name: "survey-service", env: "OPENIT_SURVEY_SERVICE_REPO", remote: "git@github.com:Sdabin1209/openit_survey-service.git" });
   return JSON.parse(execFileSync("git", ["-C", repo, "show", `${SURVEY_SCHEMA_TAG}:schema/schemas/${name}.json`], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }));
