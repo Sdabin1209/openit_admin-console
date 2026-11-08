@@ -15,7 +15,7 @@ const hasTag = (dir, tag) => { try { execFileSync("git", ["-C", dir, "rev-parse"
 // 왜 30초: 측정하지 않은 값이다. --depth 1 로 한 태그만 받으므로 정상 접속이면 수 초 안에 끝난다고 보고, 접속이 안 될 때 시험 전체가 수 분 멈추지 않게 하는 실패 상한이다(D125: 목표가 아니라 상한).
 export const REMOTE_TIMEOUT_MS = 30_000;
 // 왜 git-common-dir: 리포가 git worktree(build/wt-*)에 있으면 위 폴더가 워크스페이스가 아니다. 본 리포 위치는 worktree 와 상관없이 같은 값이므로
-// 그 위 폴더를 워크스페이스로 본다폴더 깊이를 세지 않는다. 일반 clone 이면 repo 의 바로 위 폴더와 같다.
+// 그 위 폴더를 워크스페이스로 본다. 폴더 깊이를 세지 않는다. 일반 clone 이면 repo 의 바로 위 폴더와 같다.
 // 왜 fileURLToPath: URL.pathname 은 공백·한글을 %20 같은 퍼센트 인코딩으로 남겨 그런 경로의 리포에서 폴더를 못 찾는다.
 export const repoRootFrom = (moduleUrl) => fileURLToPath(new URL("../", moduleUrl));
 const REPO_ROOT = repoRootFrom(import.meta.url);

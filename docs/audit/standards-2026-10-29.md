@@ -187,7 +187,7 @@ O (재발명)
 
 ## 6. 점검하지 못한 것
 
-- 실행하지 않았다: `npm test`, `npm run typecheck`, `npm run build`, `npm run smoke`(이미지 빌드), `node scripts/gen-schemas.mjs --check`. 따라서 README가 적은 통과 기록은 이 점검의 확인이 아니다.
+- 실행하지 않았다: `npm test`, `npm run typecheck`, `npm run build`, `npm run smoke`(이미지 빌드), `node scripts/gen-schemas.mjs --check`. 따라서 README가 적은 통과 수치(85개 통과)는 이 점검의 확인이 아니다. (개수는 당시 기록)
 - 실제 브라우저에서의 CSP 아래 번들 실행, 키보드 흐름, 스크린리더, 색 대비, `<dialog>` 모달 포커스 동작. 정적 읽기만 했다.
 - 실제 게이트웨이(deploy)가 `X-Openit-User`를 지우고 붙이는지, `/v1`을 어떻게 프록시하는지, CSRF 검사·HTTPS·인증. 이 영역 밖이고 deploy 리포를 읽지 않았다.
 - 실제 release-gate·ops-feedback 서버의 동작. 계약 패키지의 참조 서버(`conformance/servers.py`)도 경로 목록만 보고 동작은 읽지 않았다.
