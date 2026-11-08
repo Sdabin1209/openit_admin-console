@@ -23,3 +23,9 @@ export const StaffPushPayload: V;
 export const PIPELINE_SCHEMA_VERSION: string;
 export const CONTRACT_VERSION: string;
 export const ACTION_RULES_VERSION: string;
+// 계약 JSON 공통 규칙(CONVENTIONS 10절) 점검: scripts/ijson-check.cjs, 한도는 gen-schemas.mjs 가 고정 태그 strict_json.py 에서 읽어 넣는다
+export const ijson: {
+  valueProblem(value: unknown): string | null;
+  textProblem(text: string): string | null;
+  limits: { maxDepth: number; maxBytes: number; maxNodes: number; maxSafeInt: number };
+};

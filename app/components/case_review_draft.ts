@@ -1,6 +1,7 @@
 // 컴포넌트 case_review_draft: CaseReviewForm -> 결과(CaseReviewDraft | FormIssues). 검토자가 쓴 글을 보내도 되는 검토 내용으로 바꾼다.
 // 종류별 모델 입출력 검사(ActionExtraction 등)는 출력 스키마 CaseReviewDraft가 계약 스키마를 가리켜 한다. 값은 오류 문구에 싣지 않는다(검토자 입력에 개인정보가 있을 수 있다).
 import * as v from "../types/validators.cjs";
+import * as c from "../types/contract-validators.cjs";
 import type { CaseReviewForm } from "../types/CaseReviewForm.ts";
 import type { CaseReviewDraft } from "../types/CaseReviewDraft.ts";
 
@@ -16,6 +17,9 @@ function parseObject(text: string): Parsed {
     return { ok: false, message: "JSON 문법이 맞지 않는다." };
   }
   if (!x || typeof x !== "object" || Array.isArray(x)) return { ok: false, message: "JSON 객체여야 한다." };
+  // 계약 JSON 공통 규칙(CONVENTIONS 10절, I-JSON): JSON.parse 는 1e999 를 Infinity 로 읽고 보낼 때 null 로 바꾼다 — 받기 전에 거부한다
+  const problem = c.ijson.textProblem(text) ?? c.ijson.valueProblem(x);
+  if (problem) return { ok: false, message: `계약 JSON 규칙 위반: ${problem}` };
   return { ok: true, value: x as Record<string, unknown> };
 }
 

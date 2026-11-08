@@ -7,6 +7,7 @@ import standaloneCode from "ajv/dist/standalone/index.js";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { contract } from "./contract-src.mjs";
+import { fileURLToPath } from "node:url";
 
 const OUT = new URL("../app/types/contract-validators.cjs", import.meta.url);
 // 모델 입출력(검토자 입력 검사) + 이 영역이 주고받는 경계 형식(D107로 승격된 것, conformance/promoted/admin-console.MANIFEST.json).
@@ -43,11 +44,22 @@ export function generate(src = contract) {
   // 왜 생성물에 상수로: 라벨의 계약 버전은 요청 값이 아니라 이 검증기를 실제로 만든 버전이어야 거짓이 되지 않는다(U50). 규칙 버전은 계약 데이터가 정본이라 손으로 적지 않는다(계약 3.0.0).
   const rules = JSON.parse(src.read("boundary_contracts/data/action_extraction_rules.json")).rules_version;
   if (typeof rules !== "string" || !rules) throw new Error("action_extraction_rules.json에서 rules_version을 찾지 못했다");
+  // 계약 JSON 공통 규칙의 한도(CONVENTIONS 10절): 정본 strict_json.py 에서 읽는다. 사본 상수를 두지 않는다.
+  const sj = src.read("boundary_contracts/strict_json.py");
+  const num = (name) => {
+    const m = new RegExp(`^${name}\\s*=\\s*(.+?)\\s*(#.*)?$`, "m").exec(sj);
+    if (!m) throw new Error(`strict_json.py에서 ${name}을 찾지 못했다`);
+    return m[1].split(/(?<!\*)\*(?!\*)/).map((t) => { const p = t.trim().split("**"); return p.length === 2 ? Number(p[0]) ** Number(p[1]) : Number(p[0]); }).reduce((a, b) => a * b, 1);
+  };
+  const limits = { maxDepth: num("MAX_JSON_DEPTH"), maxBytes: num("MAX_JSON_BYTES"), maxNodes: num("MAX_JSON_NODES"), maxSafeInt: num("MAX_SAFE_INT") };
+  if (Object.values(limits).some((x) => !Number.isFinite(x) || x <= 0)) throw new Error("strict_json.py 한도를 읽지 못했다");
+  const ijsonSrc = readFileSync(fileURLToPath(new URL("./ijson-check.cjs", import.meta.url)), "utf8");
   const code = standaloneCode(ajv, Object.fromEntries(NAMES.map((n) => [n, `${n}.schema.json`])));
   const header = `// 생성물: scripts/gen-schemas.mjs (직접 고치지 않는다). 원본: boundary-contracts ${version}\n// source-sha256: ${JSON.stringify(sources)}\n`;
   // 왜 인라인: 생성 코드가 require("ajv/dist/runtime/ucs2length")를 부르면 빌드 진입점이 npm ci(네트워크) 없이는 검증기를 못 쓴다.
   // 같은 함수(ajv 8.20.0, MIT, 12줄)를 생성물 안에 두어 node만으로 돌게 한다. 브라우저 번들에도 같은 함수가 들어간다.
-  return header + bundleStandalone(code) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\nexports.CONTRACT_VERSION = ${JSON.stringify("v" + version)};\nexports.ACTION_RULES_VERSION = ${JSON.stringify(rules)};\n`;
+  return header + bundleStandalone(code) + `\nexports.PIPELINE_SCHEMA_VERSION = ${JSON.stringify(pipeline)};\nexports.CONTRACT_VERSION = ${JSON.stringify("v" + version)};\nexports.ACTION_RULES_VERSION = ${JSON.stringify(rules)};\n`
+    + `exports.ijson = (function () { const module = { exports: null }; ${ijsonSrc.replace(/^\/\/.*$/gm, "")}\n return module.exports; })()(${JSON.stringify(limits)});\n`;
 }
 
 if (process.argv[1] && import.meta.url === new URL(process.argv[1], "file://").href) {

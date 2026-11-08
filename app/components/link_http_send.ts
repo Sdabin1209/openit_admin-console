@@ -1,6 +1,7 @@
 // 통신 컴포넌트 link_http_send (보내는 쪽): HttpRequestSpec -> HttpOutcome. 같은 출처의 /v1을 부르는 유일한 곳이다(규칙: HTTP는 link_* 안에만).
 // Authorization은 다루지 않는다(게이트웨이가 붙인다). 계약 오류 본문 BoundaryError를 ErrorInfo로 바꾼다.
 import * as v from "../types/validators.cjs";
+import * as c from "../types/contract-validators.cjs";
 import type { HttpSendConfig } from "../types/HttpSendConfig.ts";
 import type { HttpRequestSpec } from "../types/HttpRequestSpec.ts";
 import type { HttpOutcome } from "../types/HttpOutcome.ts";
@@ -55,6 +56,11 @@ export function createHttpSend(config: HttpSendConfig, ports: HttpPorts): HttpSe
   const timers: Timers = ports.timers;
   return async (spec) => {
     v.assertValid(v.HttpRequestSpec, spec, "link_http_send");
+    // 계약 JSON 공통 규칙(CONVENTIONS 10절): JSON.stringify 는 NaN·Infinity 를 null 로 바꿔 내용을 몰래 바꾼다. 어기는 값은 보내지 않는다(요청 0회)
+    if (spec.body !== undefined) {
+      const problem = c.ijson.valueProblem(spec.body) ?? c.ijson.textProblem(JSON.stringify(spec.body));
+      if (problem) return fail("INVALID_RECORD", 0, `보낼 값이 계약 JSON 규칙을 어긴다: ${problem}`, false);
+    }
     const ctl = new AbortController();
     // 시간 제한은 응답 본문을 다 읽을 때까지 걸어 둔다(헤더만 오고 본문이 멈추는 경우).
     const timer = timers.set(() => ctl.abort(), config.timeoutMs);

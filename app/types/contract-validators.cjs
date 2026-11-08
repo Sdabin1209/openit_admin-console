@@ -472,7 +472,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             if (data4.value !== void 0) {
               let data5 = data4.value;
-              if (typeof data5 !== "boolean" && !(typeof data5 == "number") && typeof data5 !== "string" && data5 !== null) {
+              if (typeof data5 !== "boolean" && !(typeof data5 == "number" && isFinite(data5)) && typeof data5 !== "string" && data5 !== null) {
                 const err16 = { instancePath: instancePath + "/state/" + key2.replace(/~/g, "~0").replace(/\//g, "~1") + "/value", schemaPath: "#/properties/state/additionalProperties/properties/value/type", keyword: "type", params: { type: schema31.properties.state.additionalProperties.properties.value.type }, message: "must be boolean,number,string,null" };
                 if (vErrors === null) {
                   vErrors = [err16];
@@ -1593,7 +1593,7 @@ function validate22(data, { instancePath = "", parentData, parentDataProperty, r
               }
               if (data33.value !== void 0) {
                 let data37 = data33.value;
-                if (typeof data37 !== "boolean" && !(typeof data37 == "number") && typeof data37 !== "string") {
+                if (typeof data37 !== "boolean" && !(typeof data37 == "number" && isFinite(data37)) && typeof data37 !== "string") {
                   const err73 = { instancePath: instancePath + "/values/" + i1 + "/value", schemaPath: "#/properties/values/items/allOf/0/then/properties/value/type", keyword: "type", params: { type: schema34.properties.values.items.allOf[0].then.properties.value.type }, message: "must be boolean,number,string" };
                   if (vErrors === null) {
                     vErrors = [err73];
@@ -1862,7 +1862,7 @@ function validate22(data, { instancePath = "", parentData, parentDataProperty, r
             }
             if (data33.value !== void 0) {
               let data46 = data33.value;
-              if (typeof data46 !== "boolean" && !(typeof data46 == "number") && typeof data46 !== "string" && data46 !== null) {
+              if (typeof data46 !== "boolean" && !(typeof data46 == "number" && isFinite(data46)) && typeof data46 !== "string" && data46 !== null) {
                 const err93 = { instancePath: instancePath + "/values/" + i1 + "/value", schemaPath: "#/properties/values/items/properties/value/type", keyword: "type", params: { type: schema34.properties.values.items.properties.value.type }, message: "must be boolean,number,string,null" };
                 if (vErrors === null) {
                   vErrors = [err93];
@@ -6046,7 +6046,7 @@ function validate29(data, { instancePath = "", parentData, parentDataProperty, r
                     }
                     if (data36.value !== void 0) {
                       let data40 = data36.value;
-                      if (typeof data40 !== "boolean" && !(typeof data40 == "number") && typeof data40 !== "string") {
+                      if (typeof data40 !== "boolean" && !(typeof data40 == "number" && isFinite(data40)) && typeof data40 !== "string") {
                         const err83 = { instancePath: instancePath + "/expected/values/" + i1 + "/value", schemaPath: "ActionExtraction.schema.json/properties/values/items/allOf/0/then/properties/value/type", keyword: "type", params: { type: schema34.properties.values.items.allOf[0].then.properties.value.type }, message: "must be boolean,number,string" };
                         if (vErrors === null) {
                           vErrors = [err83];
@@ -6315,7 +6315,7 @@ function validate29(data, { instancePath = "", parentData, parentDataProperty, r
                   }
                   if (data36.value !== void 0) {
                     let data49 = data36.value;
-                    if (typeof data49 !== "boolean" && !(typeof data49 == "number") && typeof data49 !== "string" && data49 !== null) {
+                    if (typeof data49 !== "boolean" && !(typeof data49 == "number" && isFinite(data49)) && typeof data49 !== "string" && data49 !== null) {
                       const err103 = { instancePath: instancePath + "/expected/values/" + i1 + "/value", schemaPath: "ActionExtraction.schema.json/properties/values/items/properties/value/type", keyword: "type", params: { type: schema34.properties.values.items.properties.value.type }, message: "must be boolean,number,string,null" };
                       if (vErrors === null) {
                         vErrors = [err103];
@@ -7646,7 +7646,7 @@ function validate59(data, { instancePath = "", parentData, parentDataProperty, r
       var _valid1 = _errs20 === errors;
       valid6 = valid6 || _valid1;
       const _errs22 = errors;
-      if (!(typeof data4 == "number")) {
+      if (!(typeof data4 == "number" && isFinite(data4))) {
         const err15 = { instancePath: instancePath + "/value", schemaPath: "#/properties/value/anyOf/3/type", keyword: "type", params: { type: "number" }, message: "must be number" };
         if (vErrors === null) {
           vErrors = [err15];
@@ -8462,7 +8462,7 @@ function validate67(data, { instancePath = "", parentData, parentDataProperty, r
     }
     for (const key1 in data) {
       let data0 = data[key1];
-      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)))) {
+      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)) && isFinite(data0))) {
         const err6 = { instancePath: instancePath + "/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/CountMap/additionalProperties/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err6];
@@ -8471,7 +8471,7 @@ function validate67(data, { instancePath = "", parentData, parentDataProperty, r
         }
         errors++;
       }
-      if (typeof data0 == "number") {
+      if (typeof data0 == "number" && isFinite(data0)) {
         if (data0 < 0 || isNaN(data0)) {
           const err7 = { instancePath: instancePath + "/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/CountMap/additionalProperties/minimum", keyword: "minimum", params: { comparison: ">=", limit: 0 }, message: "must be >= 0" };
           if (vErrors === null) {
@@ -10152,7 +10152,7 @@ function validate107(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs4 === errors;
       valid1 = valid1 || _valid0;
       const _errs6 = errors;
-      if (!(typeof data0 == "number")) {
+      if (!(typeof data0 == "number" && isFinite(data0))) {
         const err4 = { instancePath: instancePath + "/amount", schemaPath: "#/properties/amount/anyOf/1/type", keyword: "type", params: { type: "number" }, message: "must be number" };
         if (vErrors === null) {
           vErrors = [err4];
@@ -10601,7 +10601,7 @@ function validate105(data, { instancePath = "", parentData, parentDataProperty, 
   var _valid2 = _errs13 === errors;
   valid5 = valid5 || _valid2;
   const _errs15 = errors;
-  if (!(typeof data == "number")) {
+  if (!(typeof data == "number" && isFinite(data))) {
     const err6 = { instancePath, schemaPath: "#/anyOf/3/anyOf/1/type", keyword: "type", params: { type: "number" }, message: "must be number" };
     if (vErrors === null) {
       vErrors = [err6];
@@ -12410,7 +12410,7 @@ function validate143(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs4 === errors;
       valid1 = valid1 || _valid0;
       const _errs6 = errors;
-      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)))) {
+      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)) && isFinite(data0))) {
         const err4 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err4];
@@ -16160,7 +16160,7 @@ function validate212(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs8 === errors;
       valid1 = valid1 || _valid0;
       const _errs10 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err13 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err13];
@@ -16714,7 +16714,7 @@ function validate254(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs8 === errors;
       valid1 = valid1 || _valid0;
       const _errs10 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err13 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err13];
@@ -17794,7 +17794,7 @@ function validate249(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs12 === errors;
       valid3 = valid3 || _valid1;
       const _errs14 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err8 = { instancePath: instancePath + "/revision", schemaPath: "#/properties/revision/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err8];
@@ -18090,7 +18090,7 @@ function validate291(data, { instancePath = "", parentData, parentDataProperty, 
   var _valid2 = _errs7 === errors;
   valid3 = valid3 || _valid2;
   const _errs9 = errors;
-  if (!(typeof data == "number" && (!(data % 1) && !isNaN(data)))) {
+  if (!(typeof data == "number" && (!(data % 1) && !isNaN(data)) && isFinite(data))) {
     const err2 = { instancePath, schemaPath: "#/anyOf/0/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
     if (vErrors === null) {
       vErrors = [err2];
@@ -18579,7 +18579,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
       var _valid0 = _errs10 === errors;
       valid3 = valid3 || _valid0;
       const _errs12 = errors;
-      if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)))) {
+      if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)) && isFinite(data2))) {
         const err35 = { instancePath: instancePath + "/contract_version", schemaPath: "#/properties/contract_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err35];
@@ -19405,7 +19405,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid14 = _errs97 === errors;
           valid34 = valid34 || _valid14;
           const _errs99 = errors;
-          if (!(typeof data15 == "number" && (!(data15 % 1) && !isNaN(data15)))) {
+          if (!(typeof data15 == "number" && (!(data15 % 1) && !isNaN(data15)) && isFinite(data15))) {
             const err89 = { instancePath: instancePath + "/orchestrator_input/session_question_bank_version", schemaPath: "#/properties/orchestrator_input/anyOf/0/anyOf/2/properties/session_question_bank_version/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err89];
@@ -19537,7 +19537,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid16 = _errs112 === errors;
           valid38 = valid38 || _valid16;
           const _errs114 = errors;
-          if (!(typeof data17 == "number" && (!(data17 % 1) && !isNaN(data17)))) {
+          if (!(typeof data17 == "number" && (!(data17 % 1) && !isNaN(data17)) && isFinite(data17))) {
             const err97 = { instancePath: instancePath + "/orchestrator_input/latest_question_bank_version", schemaPath: "#/properties/orchestrator_input/anyOf/0/anyOf/2/properties/latest_question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err97];
@@ -20105,7 +20105,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
       var _valid26 = _errs170 === errors;
       valid59 = valid59 || _valid26;
       const _errs172 = errors;
-      if (!(typeof data24 == "number" && (!(data24 % 1) && !isNaN(data24)))) {
+      if (!(typeof data24 == "number" && (!(data24 % 1) && !isNaN(data24)) && isFinite(data24))) {
         const err136 = { instancePath: instancePath + "/extract_attempts", schemaPath: "#/properties/extract_attempts/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err136];
@@ -22456,7 +22456,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
       var _valid69 = _errs428 === errors;
       valid149 = valid149 || _valid69;
       const _errs430 = errors;
-      if (!(typeof data64 == "number" && (!(data64 % 1) && !isNaN(data64)))) {
+      if (!(typeof data64 == "number" && (!(data64 % 1) && !isNaN(data64)) && isFinite(data64))) {
         const err288 = { instancePath: instancePath + "/turn_index", schemaPath: "#/properties/turn_index/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err288];
@@ -23018,7 +23018,7 @@ function validate33(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid79 = _errs497 === errors;
           valid175 = valid175 || _valid79;
           const _errs499 = errors;
-          if (!(typeof data74 == "number" && (!(data74 % 1) && !isNaN(data74)))) {
+          if (!(typeof data74 == "number" && (!(data74 % 1) && !isNaN(data74)) && isFinite(data74))) {
             const err329 = { instancePath: instancePath + "/persistence_commit_request/expected_revision", schemaPath: "#/properties/persistence_commit_request/anyOf/0/anyOf/2/properties/expected_revision/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err329];
@@ -25565,7 +25565,7 @@ function validate334(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs20 === errors;
       valid6 = valid6 || _valid1;
       const _errs22 = errors;
-      if (!(typeof data4 == "number")) {
+      if (!(typeof data4 == "number" && isFinite(data4))) {
         const err15 = { instancePath: instancePath + "/value", schemaPath: "#/properties/value/anyOf/3/type", keyword: "type", params: { type: "number" }, message: "must be number" };
         if (vErrors === null) {
           vErrors = [err15];
@@ -26380,7 +26380,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
     }
     for (const key1 in data) {
       let data0 = data[key1];
-      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)))) {
+      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)) && isFinite(data0))) {
         const err6 = { instancePath: instancePath + "/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/CountMap/additionalProperties/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err6];
@@ -26389,7 +26389,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
         }
         errors++;
       }
-      if (typeof data0 == "number") {
+      if (typeof data0 == "number" && isFinite(data0)) {
         if (data0 < 0 || isNaN(data0)) {
           const err7 = { instancePath: instancePath + "/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/CountMap/additionalProperties/minimum", keyword: "minimum", params: { comparison: ">=", limit: 0 }, message: "must be >= 0" };
           if (vErrors === null) {
@@ -28066,7 +28066,7 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs4 === errors;
       valid1 = valid1 || _valid0;
       const _errs6 = errors;
-      if (!(typeof data0 == "number")) {
+      if (!(typeof data0 == "number" && isFinite(data0))) {
         const err4 = { instancePath: instancePath + "/amount", schemaPath: "#/properties/amount/anyOf/1/type", keyword: "type", params: { type: "number" }, message: "must be number" };
         if (vErrors === null) {
           vErrors = [err4];
@@ -28515,7 +28515,7 @@ function validate380(data, { instancePath = "", parentData, parentDataProperty, 
   var _valid2 = _errs13 === errors;
   valid5 = valid5 || _valid2;
   const _errs15 = errors;
-  if (!(typeof data == "number")) {
+  if (!(typeof data == "number" && isFinite(data))) {
     const err6 = { instancePath, schemaPath: "#/anyOf/3/anyOf/1/type", keyword: "type", params: { type: "number" }, message: "must be number" };
     if (vErrors === null) {
       vErrors = [err6];
@@ -30324,7 +30324,7 @@ function validate418(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs4 === errors;
       valid1 = valid1 || _valid0;
       const _errs6 = errors;
-      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)))) {
+      if (!(typeof data0 == "number" && (!(data0 % 1) && !isNaN(data0)) && isFinite(data0))) {
         const err4 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err4];
@@ -34074,7 +34074,7 @@ function validate487(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs8 === errors;
       valid1 = valid1 || _valid0;
       const _errs10 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err13 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err13];
@@ -34628,7 +34628,7 @@ function validate529(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs8 === errors;
       valid1 = valid1 || _valid0;
       const _errs10 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err13 = { instancePath: instancePath + "/question_bank_version", schemaPath: "#/properties/question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err13];
@@ -35708,7 +35708,7 @@ function validate524(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs12 === errors;
       valid3 = valid3 || _valid1;
       const _errs14 = errors;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err8 = { instancePath: instancePath + "/revision", schemaPath: "#/properties/revision/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err8];
@@ -36004,7 +36004,7 @@ function validate566(data, { instancePath = "", parentData, parentDataProperty, 
   var _valid2 = _errs7 === errors;
   valid3 = valid3 || _valid2;
   const _errs9 = errors;
-  if (!(typeof data == "number" && (!(data % 1) && !isNaN(data)))) {
+  if (!(typeof data == "number" && (!(data % 1) && !isNaN(data)) && isFinite(data))) {
     const err2 = { instancePath, schemaPath: "#/anyOf/0/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
     if (vErrors === null) {
       vErrors = [err2];
@@ -36493,7 +36493,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs10 === errors;
       valid3 = valid3 || _valid0;
       const _errs12 = errors;
-      if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)))) {
+      if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)) && isFinite(data2))) {
         const err35 = { instancePath: instancePath + "/contract_version", schemaPath: "#/properties/contract_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err35];
@@ -36724,7 +36724,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
           var _valid5 = _errs41 === errors;
           valid13 = valid13 || _valid5;
           const _errs43 = errors;
-          if (!(typeof data9 == "number" && (!(data9 % 1) && !isNaN(data9)))) {
+          if (!(typeof data9 == "number" && (!(data9 % 1) && !isNaN(data9)) && isFinite(data9))) {
             const err51 = { instancePath: instancePath + "/orchestrator_input/session_question_bank_version", schemaPath: "#/properties/orchestrator_input/anyOf/0/anyOf/2/properties/session_question_bank_version/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err51];
@@ -36856,7 +36856,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
           var _valid7 = _errs56 === errors;
           valid17 = valid17 || _valid7;
           const _errs58 = errors;
-          if (!(typeof data11 == "number" && (!(data11 % 1) && !isNaN(data11)))) {
+          if (!(typeof data11 == "number" && (!(data11 % 1) && !isNaN(data11)) && isFinite(data11))) {
             const err59 = { instancePath: instancePath + "/orchestrator_input/latest_question_bank_version", schemaPath: "#/properties/orchestrator_input/anyOf/0/anyOf/2/properties/latest_question_bank_version/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err59];
@@ -37369,7 +37369,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid16 = _errs110 === errors;
       valid37 = valid37 || _valid16;
       const _errs112 = errors;
-      if (!(typeof data18 == "number" && (!(data18 % 1) && !isNaN(data18)))) {
+      if (!(typeof data18 == "number" && (!(data18 % 1) && !isNaN(data18)) && isFinite(data18))) {
         const err94 = { instancePath: instancePath + "/extract_attempts", schemaPath: "#/properties/extract_attempts/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err94];
@@ -39720,7 +39720,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid59 = _errs368 === errors;
       valid127 = valid127 || _valid59;
       const _errs370 = errors;
-      if (!(typeof data58 == "number" && (!(data58 % 1) && !isNaN(data58)))) {
+      if (!(typeof data58 == "number" && (!(data58 % 1) && !isNaN(data58)) && isFinite(data58))) {
         const err246 = { instancePath: instancePath + "/turn_index", schemaPath: "#/properties/turn_index/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err246];
@@ -40282,7 +40282,7 @@ function validate301(data, { instancePath = "", parentData, parentDataProperty, 
           var _valid69 = _errs437 === errors;
           valid153 = valid153 || _valid69;
           const _errs439 = errors;
-          if (!(typeof data68 == "number" && (!(data68 % 1) && !isNaN(data68)))) {
+          if (!(typeof data68 == "number" && (!(data68 % 1) && !isNaN(data68)) && isFinite(data68))) {
             const err287 = { instancePath: instancePath + "/persistence_commit_request/expected_revision", schemaPath: "#/properties/persistence_commit_request/anyOf/0/anyOf/2/properties/expected_revision/anyOf/1/anyOf/1/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err287];
@@ -42513,7 +42513,7 @@ function validate580(data, { instancePath = "", parentData, parentDataProperty, 
     }
     if (data.exit_code !== void 0) {
       let data3 = data.exit_code;
-      if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)))) {
+      if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)) && isFinite(data3))) {
         const err12 = { instancePath: instancePath + "/exit_code", schemaPath: "#/properties/exit_code/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err12];
@@ -42522,7 +42522,7 @@ function validate580(data, { instancePath = "", parentData, parentDataProperty, 
         }
         errors++;
       }
-      if (typeof data3 == "number") {
+      if (typeof data3 == "number" && isFinite(data3)) {
         if (data3 > 255 || isNaN(data3)) {
           const err13 = { instancePath: instancePath + "/exit_code", schemaPath: "#/properties/exit_code/maximum", keyword: "maximum", params: { comparison: "<=", limit: 255 }, message: "must be <= 255" };
           if (vErrors === null) {
@@ -42545,7 +42545,7 @@ function validate580(data, { instancePath = "", parentData, parentDataProperty, 
     }
     if (data.seconds !== void 0) {
       let data4 = data.seconds;
-      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
         const err15 = { instancePath: instancePath + "/seconds", schemaPath: "#/properties/seconds/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
         if (vErrors === null) {
           vErrors = [err15];
@@ -42554,7 +42554,7 @@ function validate580(data, { instancePath = "", parentData, parentDataProperty, 
         }
         errors++;
       }
-      if (typeof data4 == "number") {
+      if (typeof data4 == "number" && isFinite(data4)) {
         if (data4 < 0 || isNaN(data4)) {
           const err16 = { instancePath: instancePath + "/seconds", schemaPath: "#/properties/seconds/minimum", keyword: "minimum", params: { comparison: ">=", limit: 0 }, message: "must be >= 0" };
           if (vErrors === null) {
@@ -43265,7 +43265,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                 }
                 if (data18.dial !== void 0) {
                   let data19 = data18.dial;
-                  if (!(typeof data19 == "number" && (!(data19 % 1) && !isNaN(data19)))) {
+                  if (!(typeof data19 == "number" && (!(data19 % 1) && !isNaN(data19)) && isFinite(data19))) {
                     const err40 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/dial", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/dial/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
                     if (vErrors === null) {
                       vErrors = [err40];
@@ -43274,7 +43274,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                     }
                     errors++;
                   }
-                  if (typeof data19 == "number") {
+                  if (typeof data19 == "number" && isFinite(data19)) {
                     if (data19 < 1 || isNaN(data19)) {
                       const err41 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/dial", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/dial/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" };
                       if (vErrors === null) {
@@ -43288,7 +43288,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                 }
                 if (data18.response_header !== void 0) {
                   let data20 = data18.response_header;
-                  if (!(typeof data20 == "number" && (!(data20 % 1) && !isNaN(data20)))) {
+                  if (!(typeof data20 == "number" && (!(data20 % 1) && !isNaN(data20)) && isFinite(data20))) {
                     const err42 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/response_header", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/response_header/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
                     if (vErrors === null) {
                       vErrors = [err42];
@@ -43297,7 +43297,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                     }
                     errors++;
                   }
-                  if (typeof data20 == "number") {
+                  if (typeof data20 == "number" && isFinite(data20)) {
                     if (data20 < 1 || isNaN(data20)) {
                       const err43 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/response_header", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/response_header/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" };
                       if (vErrors === null) {
@@ -43311,7 +43311,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                 }
                 if (data18.read !== void 0) {
                   let data21 = data18.read;
-                  if (!(typeof data21 == "number" && (!(data21 % 1) && !isNaN(data21)))) {
+                  if (!(typeof data21 == "number" && (!(data21 % 1) && !isNaN(data21)) && isFinite(data21))) {
                     const err44 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/read", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/read/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
                     if (vErrors === null) {
                       vErrors = [err44];
@@ -43320,7 +43320,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                     }
                     errors++;
                   }
-                  if (typeof data21 == "number") {
+                  if (typeof data21 == "number" && isFinite(data21)) {
                     if (data21 < 1 || isNaN(data21)) {
                       const err45 = { instancePath: instancePath + "/routes/" + i2 + "/timeouts_ms/read", schemaPath: "#/$defs/route/properties/timeouts_ms/properties/read/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" };
                       if (vErrors === null) {
@@ -43344,7 +43344,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
             }
             if (data4.max_body_bytes !== void 0) {
               let data22 = data4.max_body_bytes;
-              if (!(typeof data22 == "number" && (!(data22 % 1) && !isNaN(data22)))) {
+              if (!(typeof data22 == "number" && (!(data22 % 1) && !isNaN(data22)) && isFinite(data22))) {
                 const err47 = { instancePath: instancePath + "/routes/" + i2 + "/max_body_bytes", schemaPath: "#/$defs/route/properties/max_body_bytes/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
                 if (vErrors === null) {
                   vErrors = [err47];
@@ -43353,7 +43353,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                 }
                 errors++;
               }
-              if (typeof data22 == "number") {
+              if (typeof data22 == "number" && isFinite(data22)) {
                 if (data22 > 8589934592 || isNaN(data22)) {
                   const err48 = { instancePath: instancePath + "/routes/" + i2 + "/max_body_bytes", schemaPath: "#/$defs/route/properties/max_body_bytes/maximum", keyword: "maximum", params: { comparison: "<=", limit: 8589934592 }, message: "must be <= 8589934592" };
                   if (vErrors === null) {
@@ -43376,7 +43376,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
             }
             if (data4.upstream_port !== void 0) {
               let data23 = data4.upstream_port;
-              if (!(typeof data23 == "number" && (!(data23 % 1) && !isNaN(data23)))) {
+              if (!(typeof data23 == "number" && (!(data23 % 1) && !isNaN(data23)) && isFinite(data23))) {
                 const err50 = { instancePath: instancePath + "/routes/" + i2 + "/upstream_port", schemaPath: "#/$defs/route/properties/upstream_port/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
                 if (vErrors === null) {
                   vErrors = [err50];
@@ -43385,7 +43385,7 @@ function validate581(data, { instancePath = "", parentData, parentDataProperty, 
                 }
                 errors++;
               }
-              if (typeof data23 == "number") {
+              if (typeof data23 == "number" && isFinite(data23)) {
                 if (data23 > 65535 || isNaN(data23)) {
                   const err51 = { instancePath: instancePath + "/routes/" + i2 + "/upstream_port", schemaPath: "#/$defs/route/properties/upstream_port/maximum", keyword: "maximum", params: { comparison: "<=", limit: 65535 }, message: "must be <= 65535" };
                   if (vErrors === null) {
@@ -43565,7 +43565,7 @@ function validate584(data, { instancePath = "", parentData, parentDataProperty, 
         }
         if (data2.uid !== void 0) {
           let data3 = data2.uid;
-          if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)))) {
+          if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)) && isFinite(data3))) {
             const err10 = { instancePath: instancePath + "/written_by/uid", schemaPath: "#/$defs/Process/properties/uid/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err10];
@@ -43574,7 +43574,7 @@ function validate584(data, { instancePath = "", parentData, parentDataProperty, 
             }
             errors++;
           }
-          if (typeof data3 == "number") {
+          if (typeof data3 == "number" && isFinite(data3)) {
             if (data3 > 2147483647 || isNaN(data3)) {
               const err11 = { instancePath: instancePath + "/written_by/uid", schemaPath: "#/$defs/Process/properties/uid/maximum", keyword: "maximum", params: { comparison: "<=", limit: 2147483647 }, message: "must be <= 2147483647" };
               if (vErrors === null) {
@@ -43597,7 +43597,7 @@ function validate584(data, { instancePath = "", parentData, parentDataProperty, 
         }
         if (data2.gid !== void 0) {
           let data4 = data2.gid;
-          if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)))) {
+          if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
             const err13 = { instancePath: instancePath + "/written_by/gid", schemaPath: "#/$defs/Process/properties/gid/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err13];
@@ -43606,7 +43606,7 @@ function validate584(data, { instancePath = "", parentData, parentDataProperty, 
             }
             errors++;
           }
-          if (typeof data4 == "number") {
+          if (typeof data4 == "number" && isFinite(data4)) {
             if (data4 > 2147483647 || isNaN(data4)) {
               const err14 = { instancePath: instancePath + "/written_by/gid", schemaPath: "#/$defs/Process/properties/gid/maximum", keyword: "maximum", params: { comparison: "<=", limit: 2147483647 }, message: "must be <= 2147483647" };
               if (vErrors === null) {
@@ -43782,7 +43782,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
         }
         if (data1.uid !== void 0) {
           let data2 = data1.uid;
-          if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)))) {
+          if (!(typeof data2 == "number" && (!(data2 % 1) && !isNaN(data2)) && isFinite(data2))) {
             const err12 = { instancePath: instancePath + "/process/uid", schemaPath: "#/$defs/Process/properties/uid/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err12];
@@ -43791,7 +43791,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
             }
             errors++;
           }
-          if (typeof data2 == "number") {
+          if (typeof data2 == "number" && isFinite(data2)) {
             if (data2 > 2147483647 || isNaN(data2)) {
               const err13 = { instancePath: instancePath + "/process/uid", schemaPath: "#/$defs/Process/properties/uid/maximum", keyword: "maximum", params: { comparison: "<=", limit: 2147483647 }, message: "must be <= 2147483647" };
               if (vErrors === null) {
@@ -43814,7 +43814,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
         }
         if (data1.gid !== void 0) {
           let data3 = data1.gid;
-          if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)))) {
+          if (!(typeof data3 == "number" && (!(data3 % 1) && !isNaN(data3)) && isFinite(data3))) {
             const err15 = { instancePath: instancePath + "/process/gid", schemaPath: "#/$defs/Process/properties/gid/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err15];
@@ -43823,7 +43823,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
             }
             errors++;
           }
-          if (typeof data3 == "number") {
+          if (typeof data3 == "number" && isFinite(data3)) {
             if (data3 > 2147483647 || isNaN(data3)) {
               const err16 = { instancePath: instancePath + "/process/gid", schemaPath: "#/$defs/Process/properties/gid/maximum", keyword: "maximum", params: { comparison: "<=", limit: 2147483647 }, message: "must be <= 2147483647" };
               if (vErrors === null) {
@@ -44132,7 +44132,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
         }
         for (const key4 in data17) {
           let data18 = data17[key4];
-          if (!(typeof data18 == "number" && (!(data18 % 1) && !isNaN(data18)))) {
+          if (!(typeof data18 == "number" && (!(data18 % 1) && !isNaN(data18)) && isFinite(data18))) {
             const err42 = { instancePath: instancePath + "/sysctls/" + key4.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/properties/sysctls/additionalProperties/type", keyword: "type", params: { type: "integer" }, message: "must be integer" };
             if (vErrors === null) {
               vErrors = [err42];
@@ -44141,7 +44141,7 @@ function validate583(data, { instancePath = "", parentData, parentDataProperty, 
             }
             errors++;
           }
-          if (typeof data18 == "number") {
+          if (typeof data18 == "number" && isFinite(data18)) {
             if (data18 < 0 || isNaN(data18)) {
               const err43 = { instancePath: instancePath + "/sysctls/" + key4.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/properties/sysctls/additionalProperties/minimum", keyword: "minimum", params: { comparison: ">=", limit: 0 }, message: "must be >= 0" };
               if (vErrors === null) {
@@ -45333,3 +45333,40 @@ validate593.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": 
 exports.PIPELINE_SCHEMA_VERSION = "5.0";
 exports.CONTRACT_VERSION = "v5.0.1";
 exports.ACTION_RULES_VERSION = "2";
+exports.ijson = (function () { const module = { exports: null }; 
+
+
+
+module.exports = function makeIjson(limits) {
+  const LONE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+  // 오류 문구에는 값을 싣지 않는다(검토 내용에 개인정보가 있을 수 있다, INTERFACES I7). 위치(경로)만 말한다.
+  function valueProblem(value) {
+    let nodes = 0;
+    function walk(v, depth, path) {
+      if (++nodes > limits.maxNodes) return "값이 너무 많다";
+      if (typeof v === "number") {
+        if (!Number.isFinite(v)) return `${path || "/"}: 유한하지 않은 수(NaN·Infinity·1e999)는 JSON 이 아니다`;
+        if (Number.isInteger(v) && Math.abs(v) > limits.maxSafeInt) return `${path || "/"}: 정수가 ±2^53 범위를 벗어난다`;
+        return null;
+      }
+      if (typeof v === "string") return LONE.test(v) ? `${path || "/"}: 짝 없는 서로게이트가 있다` : null;
+      if (v === null || typeof v === "boolean") return null;
+      if (typeof v !== "object") return `${path || "/"}: JSON 값이 아니다`;
+      if (depth > limits.maxDepth) return `깊이가 ${limits.maxDepth} 를 넘는다`;
+      if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) { const p = walk(v[i], depth + 1, `${path}/${i}`); if (p) return p; } return null; }
+      for (const k of Object.keys(v)) {
+        if (LONE.test(k)) return `${path || "/"}: 키에 짝 없는 서로게이트가 있다`;
+        const p = walk(v[k], depth + 1, `${path}/${k.replace(/~/g, "~0").replace(/\//g, "~1")}`);
+        if (p) return p;
+      }
+      return null;
+    }
+    return walk(value, 1, "");
+  }
+  function textProblem(text) {
+    return new TextEncoder().encode(text).length > limits.maxBytes ? `본문이 ${limits.maxBytes} 바이트를 넘는다` : null;
+  }
+  return { valueProblem, textProblem, limits };
+};
+
+ return module.exports; })()({"maxDepth":64,"maxBytes":1048576,"maxNodes":524288,"maxSafeInt":9007199254740992});
